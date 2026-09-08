@@ -10,6 +10,14 @@ Autonomous agents participate in an on-chain economy: they earn, trade, and comp
 
 Early hackathon build. Architecture, contracts, and modules are being defined. Expect rapid change.
 
+## Docs
+
+- [PRD](docs/PRD.md) — product, roles, mayor flow, sponsor mapping, demo script
+- [Architecture](docs/ARCHITECTURE.md) — diagrams, chains, contracts, API contract, env vars
+- [Milestones](docs/MILESTONES.md) — M0–M8 task cards with tiers, owners, exit criteria
+- [Agent Runbook](docs/AGENT-RUNBOOK.md) — master/builder/reviewer protocol and checklists
+- [Risks](docs/RISKS.md) · [Status](docs/STATUS.md)
+
 ## Planned components
 
 - **Agent layer** — agents with wallets, identities, and on-chain actions

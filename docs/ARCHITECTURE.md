@@ -1,0 +1,246 @@
+# Agent Town — Architecture (v0.1)
+
+## 1. System overview
+
+```mermaid
+flowchart LR
+  subgraph sepolia [Sepolia: ENSv2 frozen hackathon deployment]
+    EthReg[ETH Registrar: town.eth]
+    SubReg[PermissionedRegistry: town subregistry]
+    TownRegistrar[TownRegistrar.sol: mints role subnames]
+    Resolver[PermissionedResolver: records + EAC roles]
+    UR[UniversalResolverV2]
+  end
+  subgraph arc [Arc Testnet 5042002: USDC is native gas]
+    Treasury[TownTreasury.sol]
+    Jobs[ERC-8183 AgenticCommerce 0x0747EEf0706327138c69792bF28Cd525089e4583]
+    Wallets[Circle Dev-Controlled SCA wallets: one per agent + mayor]
+  end
+  subgraph graph [The Graph: Subgraph Studio]
+    SG[agent-town subgraph]
+  end
+  subgraph backend [apps/api + apps/sim]
+    Tick[Tick engine: role rules]
+    Advisor[Treasurer LLM advisor + narrator]
+    API[REST + SSE]
+    DB[(Supabase Postgres)]
+  end
+  FE[apps/web Next.js desktop]
+  Tick --> Wallets
+  Wallets --> Treasury
+  Wallets --> Jobs
+  Treasury --> SG
+  Jobs --> SG
+  SG --> Tick
+  SG --> Advisor
+  SG --> API
+  Tick --> TownRegistrar
+  Tick --> Resolver
+  UR --> API
+  API --> FE
+  Advisor --> API
+  Tick --> DB
+```
+
+Two chains are forced: ENSv2 exists only on Sepolia; USDC/Arc products exist only on Arc. The binding is an ENS address record with Arc's coinType on each agent name.
+
+## 2. Chains & constants
+
+| Item | Value |
+|---|---|
+| Arc Testnet chain id | `5042002` |
+| Arc RPC | `https://rpc.testnet.arc.io` (alts: blockdaemon, drpc, quicknode subdomains) |
+| Arc explorer | `https://testnet.arcscan.app` |
+| Arc faucet | `https://faucet.circle.com` (rate‑limited: fund one wallet, fan out) |
+| Arc gas token | USDC, **18 decimals**; 20 gwei `maxFeePerGas` floor; `address(0)` sends revert |
+| ERC‑8183 reference | `0x0747EEf0706327138c69792bF28Cd525089e4583` |
+| USDC ERC‑20 address / system emitter | from https://docs.arc.io/arc/references/contract-addresses.md (verify M0) |
+| ENS coinType for Arc (ENSIP‑11) | `0x80000000 | 5042002` = `2147483648 + 5042002` = **2152525650** |
+| Sepolia chain id | `11155111` |
+| ENSv2 hackathon deployment | addresses from docs.ens.domains banner → hackathon feature branch (**not** the main Sepolia beta). Record in `packages/ens/deployments.json` in M0 |
+| viem | `import { arcTestnet, sepolia } from "viem/chains"` |
+
+## 3. Repository layout (pnpm monorepo)
+
+```
+apps/
+  web/            Next.js (FE owner). Desktop only.
+  api/            Hono/Fastify REST + SSE. Reads subgraph, ENS, Supabase; exposes mayor actions.
+  sim/            Tick engine. Runs role rules, advisor, narrator; writes txs via Circle wallets.
+packages/
+  contracts/      Foundry: TownTreasury.sol, TownRegistrar.sol (+ tests, deploy scripts)
+  subgraph/       schema.graphql, subgraph.yaml, mappings (AssemblyScript)
+  ens/            ENSv2 client: resolve, setRecords, role checks (viem + UniversalResolverV2)
+  circle/         Circle Developer‑Controlled Wallets wrapper (create, fund, execute, poll)
+  graphclient/    Typed subgraph queries (graphql-request + codegen)
+  shared/         zod schemas for API + events; role/rule constants; agent roster
+docs/
+```
+
+## 4. Contracts
+
+### 4.1 `TownTreasury.sol` (Arc)
+
+Mainnet‑portable; all addresses via constructor/config. USDC handled as ERC‑20 interface at the configured address (18 decimals on Arc).
+
+```solidity
+// roles: OWNER (deployer/mayor), TREASURER (agent wallet)
+function deposit(uint256 amount)                              // any agent; savings
+function withdraw(uint256 amount)
+function requestLoan(uint256 amount, uint32 termTicks) returns (uint256 loanId) // borrower → Pending
+function approveLoan(uint256 loanId)                          // TREASURER or OWNER; transfers USDC
+function denyLoan(uint256 loanId)
+function repay(uint256 loanId, uint256 amount)                // borrower; interest = principal*rate*elapsed
+function markDefault(uint256 loanId)                          // TREASURER; after dueBlock + grace
+function setBaseRateBps(uint16 bps)                           // TREASURER or OWNER
+function fund(uint256 amount)                                 // mayor top‑up
+function payStipend(address to, uint256 amount)               // TREASURER; consumer UBI
+// views: balance(), utilisationBps(), loan(id), stats()
+```
+
+Events (indexed by subgraph): `Deposited`, `Withdrawn`, `LoanRequested`, `LoanApproved`, `LoanDenied`, `Repaid`, `Defaulted`, `BaseRateSet`, `Funded`, `StipendPaid`.
+
+### 4.2 Jobs: ERC‑8183 reference contract (Arc)
+
+Use as‑is: `createJob(provider, evaluator, expiredAt, description, hook)` → fund escrow (USDC) → provider `submit(deliverableHash)` → evaluator `complete` → settlement. Merchant = client + evaluator, worker = provider. Events consumed by subgraph.
+
+### 4.3 `TownRegistrar.sol` (Sepolia, ENSv2)
+
+Built on the "For Contract Developers" pattern. Owns the town subregistry via EAC roles.
+
+```solidity
+enum Role { Treasurer, Merchant, Worker, Consumer }
+function register(string label, address owner, Role role) returns (uint256 tokenId)
+```
+Per role, on mint:
+- `treasurer`: full admin on own name; granted `ROLE_SET_TEXT` on **every** agent name for keys `town.credit-score`, `town.reviews` (accountability).
+- `merchant`: transferable; can set `agent-context`, `description`, `town.price`.
+- `worker`: **non‑transferable**; can set `agent-context`, `description` only.
+- `consumer`: **expiring** (short expiry, renewable by registrar).
+- `bank.<town>.eth`: **record alias** → treasurer's records.
+
+Do not cache `tokenId`s: they change after any role grant/revoke (mutable token IDs). Re-read via registry.
+
+### 4.4 ENS records per agent name
+
+| Key | Value |
+|---|---|
+| `addr(coinType 2152525650)` | agent's Arc Circle wallet address |
+| `addr(60)` | same address (EVM) for wallets that ignore coinType |
+| `agent-context` (ENSIP‑26) | markdown: role, town, endpoints, registry pointers |
+| `agent-endpoint[web]` | `https://<app>/agents/<name>` |
+| `town.role` | `treasurer|merchant|worker|consumer` |
+| `town.credit-score` | `0–100` (treasurer‑only writer) |
+| `town.reviews` | JSON array of `{by, tick, score, note}` (treasurer‑only writer) |
+| `avatar` | sprite URL |
+
+Resolution in app: `UniversalResolverV2.resolve(dnsEncode(name), calls[])`. Reverse (primary name) for Arc addresses is optional stretch.
+
+## 5. Subgraph (`agent-town`, network: Arc Testnet)
+
+```graphql
+type Agent @entity { id: Bytes! ensName: String role: String balanceDeposited: BigInt! loansTaken: Int! defaults: Int! jobsCompleted: Int! earned: BigInt! spent: BigInt! }
+type Loan @entity { id: ID! borrower: Agent! principal: BigInt! rateBps: Int! status: String! requestedAt: BigInt! approvedAt: BigInt repaid: BigInt! defaultedAt: BigInt }
+type Job @entity { id: ID! client: Agent! provider: Agent! amount: BigInt! status: String! createdAt: BigInt! settledAt: BigInt }
+type Payment @entity(immutable: true) { id: Bytes! from: Agent! to: Agent! amount: BigInt! kind: String! tx: Bytes! timestamp: BigInt! }
+type TreasurySnapshot @entity(immutable: true) { id: Bytes! balance: BigInt! outstanding: BigInt! baseRateBps: Int! timestamp: BigInt! }
+type TownStat @entity(timeseries: true) { id: Int8! timestamp: Timestamp! volume: BigInt! }
+type TownDaily @aggregation(intervals: ["hour","day"], source: "TownStat") { id: Int8! timestamp: Timestamp! gdp: BigInt! @aggregate(fn: "sum", arg: "volume") }
+```
+
+Data sources: `TownTreasury` (all events), `AgenticCommerce` ERC‑8183 (job lifecycle events). `ensName` is written by the sim into an on‑chain `AgentRegistered(address, string ensName)` event emitted by `TownTreasury.registerAgent` so the subgraph can join names without off‑chain input.
+
+Consumers: `apps/sim` (rules), advisor tool `querySubgraph(gql)`, `apps/api` scoreboard. Query via Studio endpoint with `GRAPH_API_KEY`.
+
+## 6. Backend
+
+### 6.1 Tick engine (`apps/sim`)
+- `TICK_MS` (default 15 000). Per tick: pull subgraph state → for each agent run `decide(state) → Action[]` → execute via `packages/circle` → persist tick log + narration.
+- Idempotency: each action keyed by `(tick, agent, kind)`; skip if already has tx.
+- Circle execution: `createContractExecutionTransaction` / `createTransferTransaction`, then poll until `COMPLETE`.
+- Feature flags: `LLM_ADVISOR=on|off`, `LLM_NARRATOR=on|off`, `STORYLINE=demo|free`.
+
+### 6.2 Treasurer advisor
+Input JSON: borrower name, credit score (ENS), balance history + defaults (subgraph), treasury utilisation, base rate. Output: `{decision: approve|deny|flag, maxAmount, reasoning, confidence}`. Guard: `maxAmount ≤ rulesMax`; on error/timeout ≥ 8 s → rules decision. Provider abstraction: Anthropic or OpenAI via Vercel AI SDK.
+
+### 6.3 API (`apps/api`) — contract frozen in M0
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/state` | tick, storyline phase, flags |
+| GET | `/agents` | roster: ensName, role, arcAddress, balance, creditScore, position, lastDecision, narration |
+| GET | `/agents/:name` | detail + loans + jobs (subgraph) |
+| GET | `/scoreboard` | gdp, treasuryBalance, outstanding, defaultRate, baseRateBps, ticks |
+| GET | `/events` | SSE: `tick`, `tx`, `narration`, `loan_flagged`, `scoreboard` |
+| GET | `/loans?status=pending` | flagged loans for mayor |
+| POST | `/mayor/fund` | `{amount}` → tx hash |
+| POST | `/mayor/loan-decision` | `{loanId, approve}` → tx hash |
+| POST | `/mayor/rate` | `{bps}` → tx hash |
+
+All shapes in `packages/shared/api.ts` (zod). A mock server (`apps/api --mock`) serves fixtures so FE work never blocks on chain readiness.
+
+### 6.4 Supabase tables
+`ticks(id, ts, phase)`, `actions(tick, agent, kind, tx, status)`, `narration(tick, agent, text)`, `cache_agents(name, json, ts)`.
+
+## 7. Sequence: merchant loan
+
+```mermaid
+sequenceDiagram
+  participant Sim
+  participant SG as Subgraph
+  participant ENS as ENSv2 Sepolia
+  participant Adv as LLM Advisor
+  participant CW as Circle Wallets
+  participant TT as TownTreasury Arc
+  Sim->>SG: merchant cash, open jobs
+  Sim->>CW: merchant.requestLoan(amount)
+  CW->>TT: tx LoanRequested
+  Sim->>SG: borrower history, utilisation
+  Sim->>ENS: text(merchant, town.credit-score)
+  Sim->>Adv: decide(signals)
+  Adv-->>Sim: approve + reasoning (or fallback rules)
+  Sim->>CW: treasurer.approveLoan(id)
+  CW->>TT: tx LoanApproved, USDC to merchant
+  TT-->>SG: indexed
+  Sim->>ENS: treasurer sets town.reviews on merchant
+  Sim-->>API: SSE tx + narration
+```
+
+## 8. Environment variables (`.env.example`)
+
+```
+# Arc / chain
+ARC_RPC_URL=https://rpc.testnet.arc.io
+ARC_USDC_ADDRESS=
+TOWN_TREASURY_ADDRESS=
+ERC8183_ADDRESS=0x0747EEf0706327138c69792bF28Cd525089e4583
+SEPOLIA_RPC_URL=
+DEPLOYER_PRIVATE_KEY=            # Foundry deploys only
+# Circle
+CIRCLE_API_KEY=
+CIRCLE_ENTITY_SECRET=
+CIRCLE_WALLET_SET_ID=
+# ENS
+ENS_TOWN_NAME=
+ENS_UNIVERSAL_RESOLVER_V2=
+ENS_TOWN_REGISTRY=
+ENS_TOWN_RESOLVER=
+ENS_TOWN_REGISTRAR=
+ENS_TREASURER_PRIVATE_KEY=       # Sepolia signer for record writes
+# Graph
+GRAPH_API_KEY=
+SUBGRAPH_URL=
+# LLM
+LLM_PROVIDER=anthropic|openai|off
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+# App
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+TICK_MS=15000
+NEXT_PUBLIC_API_URL=
+```
+
+## 9. Frontend (owner: FE dev) — inputs it needs
+- `packages/shared` types, mock server, sprite/role list, SSE event names.
+- Screens: Town map (canvas or CSS grid; 4 buildings; agents move per `position`), Agent card, Bank panel, Scoreboard bar, Event feed, Mayor panel. Desktop 1440×900 target.
+- Link‑outs: arcscan tx/address, ENS name (app‑side resolution display).
