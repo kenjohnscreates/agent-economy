@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
-| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · **live tick 1** Gate A · M6.2 #35–#37 · 12-tick still gated · M6.3 footage later |
+| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · **live 12-tick ran** (partial vs dirty chain) · M6.2 #35–#38 · M6.3 footage later |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -373,4 +373,14 @@ In progress: —
 Blocked: 12-tick live (`run 12-tick`); mayor loan-decision **#3/#4**; fund re-seed; `revokeName`
 Risks changed: —
 Next up: Checkpoint Thu 22:00. FE M5.8 independent.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 16:45 EDT
+Done: Pushed STATUS `f9542e0`. Gate A `approve` + **`run 12-tick`**. Circle faucet 403 (mayor/deployer). Deployer only 0.45 USDC — full `fund --yes` aborted. Top-up: bo→gus 1.1 [0xa2ea792a…](https://testnet.arcscan.app/tx/0xa2ea792a08593361cc465d36ada0a4ea86a91bab46e977efcb4414f5d9f69837) · bo→hal 1.1 [0x29d2aa7a…](https://testnet.arcscan.app/tx/0x29d2aa7a522f23e92f3e54f6e8913d6778477c0d263cbbc91885729098bf0955).
+**LIVE `--ticks 12 --yes`** 12/12, `execute=LIVE` (~154 s). Complete: gus/hal **buy** t1–3; bo/cy **post_job** t1–4; ada **pay_stipend** t3+t6; dee **deposit** t3; ada **set_rate 839** [0xd0e92927…](https://testnet.arcscan.app/tx/0xd0e9292733035eb06c396ed4eebcdebc9692dec33174d1d2170276e3f3657b69). `J-demo` accept/deliver **skipped** (#38). Failed (reverts, dirty chain): request_loan t1–4 (loans **#3/#4** already pending); repay t5–9 (L-1 already repaid); mark_default t7 (loan #2 already defaulted); stipend t9+t12.
+Did not revoke names. Did not mayor-approve #3/#4.
+In progress: —
+Blocked: faucet/deployer USDC for a clean re-seed; mayor loan-decision #3/#4 (say `approve` if you want those disbursed)
+Risks changed: live storyline vs already-used loans/jobs — P1 for a clean demo reset
+Next up: Checkpoint Thu 22:00. Need faucet USDC or human faucet at https://faucet.circle.com before a clean 12-tick. FE independent.
 Checkpoint call: none (Thu 10 Sep 22:00)
