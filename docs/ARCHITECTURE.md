@@ -261,5 +261,5 @@ NEXT_PUBLIC_API_URL=
 
 ## 9. Frontend (owner: FE dev) — inputs it needs
 - `packages/shared` types, mock server, sprite/role list, SSE event names.
-- Screens: Town map (canvas or CSS grid; 4 buildings; agents move per `position`), Agent card, Bank panel, Scoreboard bar, Event feed, Mayor panel. Desktop 1440×900 target.
+- Screens: Town map (canvas or CSS grid; 4 buildings; agents move per `position`), Agent card, Bank panel (incl. rate breakdown tooltip from `scoreboard.signals`: market APY, spread, default premium, source subgraph, timestamp, `stale` badge), Scoreboard bar, Event feed, Mayor panel. Desktop 1440×900 target.
 - Link‑outs: arcscan tx/address, ENS name (app‑side resolution display).

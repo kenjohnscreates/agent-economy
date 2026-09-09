@@ -83,7 +83,7 @@ Checkpoints (master decides scope cuts): **Thu 22:00**, **Sat 12:00**.
 | M5.1 | App shell, theme, layout 1440×900; API client from `packages/shared` | T3 | renders against mock | M0.7 |
 | M5.2 | Town map: 4 buildings, 8 sprites, movement from `position`, hover → Agent card | T2 | smooth at 60 fps | M5.1 |
 | M5.3 | Agent card: ENS name, role, balance, credit score, last decision, narration, links | T3 | — | M5.1 |
-| M5.4 | Bank panel: balance, utilisation, base rate, loans, advisor reasoning | T3 | — | M5.1 |
+| M5.4 | Bank panel: balance, utilisation, base rate, loans, advisor reasoning; rate breakdown tooltip from `/scoreboard.signals` (market APY + spread + premium, source subgraph, timestamp, `stale` badge) | T3 | — | M5.1 |
 | M5.5 | Scoreboard bar + GDP sparkline | T3 | — | M5.1 |
 | M5.6 | Event feed (SSE) with tx links + narration | T2 | — | M5.1 |
 | M5.7 | Mayor panel: fund, loan queue approve/deny, rate slider; toasts with tx links | T2 | POSTs hit mock then real | M5.1 |
