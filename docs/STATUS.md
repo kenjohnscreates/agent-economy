@@ -10,7 +10,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1–M1.5 LIVE** · job 185726 `bo`→`dee` 0.5 USDC · treasury 3 USDC · M1.6 #23 |
+| M1 Arc treasury + Circle wallets | done | BE | **M1.1–M1.6 LIVE** · job 185726 · loans 1 repaid / 2 defaulted · treasury `0xCE0e…FfC1` |
 | M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** · **M2.2** #17 · **M2.3 script** #21 `8d36ede` (dry-run) · live mint needs `approve M2.3` |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
@@ -181,4 +181,12 @@ In progress: M1.6 #23
 Blocked: M2.3 live mint (`approve M2.3`); Studio deploy key
 Risks changed: —
 Next up: #23 merge+`--yes`; `approve M2.3`; Studio key
+Checkpoint call: none
+
+## Wed 9 Sep 02:32 EDT
+Done: **M1.6 LIVE** — PR #23 squash-merged `25102bd` (rebased onto #22). T2 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/23#pullrequestreview-5150543537). vitest 57/57. registerAgent [0xb0f06587…](https://testnet.arcscan.app/tx/0xb0f06587294bc4811afc8ff3fd52ac1f54dc67c622e1d7ac2901c8e83903cb00) · deposit 0.2 [0x13c69835…](https://testnet.arcscan.app/tx/0x13c69835f005e36a5427f1ed9a82187bdd9dd3880cbff4e689df1a9d7620c711) · requestLoan #1 [0x3e1b5819…](https://testnet.arcscan.app/tx/0x3e1b5819ccd9416c8df08e71ace9d34bf8103fa7e946f62f6509fe372adeee13) · approveLoan [0x4e460541…](https://testnet.arcscan.app/tx/0x4e460541a1dd9f985b1a7aae7649c2d837134fd3fc27ccc03ce19123ea200de3) · repay [0x2fc2528d…](https://testnet.arcscan.app/tx/0x2fc2528dbda43f5ed489dce5c8a297e359ac666739abdcd0536f0ad002604eec) · loan #2 default path · markDefault [0xc0b0575e…](https://testnet.arcscan.app/tx/0xc0b0575e8a91fa12795b5c024affbabeb8c2c5e71a559079d7f3533d7c78fa89). **M1 board → done.**
+In progress: —
+Blocked: M2.3 live mint (`approve M2.3`); Studio deploy key (`studio deploy key set`)
+Risks changed: —
+Next up: `approve M2.3`; Studio key → M3.4; M2.4/M2.5
 Checkpoint call: none
