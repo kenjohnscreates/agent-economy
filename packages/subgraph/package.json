@@ -1,0 +1,10 @@
+{
+  "name": "@agent-town/subgraph",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Town subgraph (Arc Testnet) — schema, manifest, AssemblyScript mappings",
+  "scripts": {
+    "codegen": "echo \"subgraph lands in M3\"",
+    "build": "echo \"subgraph lands in M3\""
+  }
+}
