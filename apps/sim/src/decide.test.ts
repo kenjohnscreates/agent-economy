@@ -1,4 +1,4 @@
-// Fixture-driven PRD §5 role rules: buy/post_job/loan/repay/accept/deliver/
+// Fixture-driven PRD §5 role rules: buy/post_job/complete_job/loan/repay/accept/deliver/
 // deposit/approve/flag/mark_default/stipend/set_rate. decide is pure — no fetch.
 import {
   BASE_RATE_SPREAD_BPS,
@@ -21,7 +21,10 @@ import {
 
 const gus = rosterEntry("gus");
 const bo = rosterEntry("bo");
+const cy = rosterEntry("cy");
 const dee = rosterEntry("dee");
+const eli = rosterEntry("eli");
+const fay = rosterEntry("fay");
 const ada = rosterEntry("ada");
 
 function ctx(world: WorldState, phase: TickContext["phase"] = "boom"): TickContext {
@@ -119,6 +122,33 @@ describe("merchant (PRD §5)", () => {
     });
     expect(decide(bo, ctx(exact))).toEqual([{ kind: "idle" }]);
   });
+
+  it("client merchant emits complete_job for submitted; ignores open/funded/completed", () => {
+    const submitted = loadWorld(3, {
+      inventory: { bo: 4, cy: 4 },
+      jobs: [
+        { id: "J-b", client: "bo", provider: "dee", amountUsdc: "1000000", status: "submitted" },
+        { id: "J-a", client: "bo", provider: "eli", amountUsdc: "2000000", status: "submitted" },
+        { id: "J-cy", client: "cy", provider: "dee", amountUsdc: "9000000", status: "submitted" },
+      ],
+    });
+    expect(decide(bo, ctx(submitted))).toEqual([{ kind: "complete_job", jobId: "J-a" }]);
+    expect(decide(cy, ctx(submitted))).toEqual([{ kind: "complete_job", jobId: "J-cy" }]);
+
+    for (const status of ["open", "funded", "completed"] as const) {
+      expect(
+        decide(
+          bo,
+          ctx(
+            loadWorld(3, {
+              inventory: { bo: 4 },
+              jobs: [{ id: "J-x", client: "bo", provider: "dee", amountUsdc: "1000000", status }],
+            }),
+          ),
+        ),
+      ).toEqual([{ kind: "idle" }]);
+    }
+  });
 });
 
 describe("worker (PRD §5)", () => {
@@ -153,6 +183,50 @@ describe("worker (PRD §5)", () => {
 
   it("no open job and nothing to deliver/deposit → idle", () => {
     expect(decide(dee, ctx(emptyWorld(1)))).toEqual([{ kind: "idle" }]);
+  });
+
+  it("accepts funded (and open) roster jobs; ignores submitted/completed/rejected", () => {
+    const world = loadWorld(2, {
+      jobs: [
+        { id: "J-open", client: "bo", provider: "", amountUsdc: "1000000", status: "open" },
+        { id: "J-funded", client: "cy", provider: "", amountUsdc: "3000000", status: "funded" },
+        { id: "J-sub", client: "bo", provider: "", amountUsdc: "9000000", status: "submitted" },
+        { id: "J-done", client: "cy", provider: "", amountUsdc: "8000000", status: "completed" },
+        { id: "J-rej", client: "bo", provider: "", amountUsdc: "7000000", status: "rejected" },
+      ],
+    });
+    expect(decide(dee, ctx(world))).toEqual([
+      { kind: "accept_job", jobId: "J-funded", amountUsdc: "3000000" },
+    ]);
+  });
+
+  it("only the named roster worker accepts; empty provider is highest-pay open/funded", () => {
+    const named = loadWorld(2, {
+      jobs: [
+        { id: "J-dee", client: "bo", provider: "dee", amountUsdc: "1000000", status: "funded" },
+        { id: "J-eli", client: "cy", provider: "eli", amountUsdc: "9000000", status: "funded" },
+      ],
+    });
+    expect(decide(dee, ctx(named))).toEqual([
+      { kind: "accept_job", jobId: "J-dee", amountUsdc: "1000000" },
+    ]);
+    expect(decide(eli, ctx(named))).toEqual([
+      { kind: "accept_job", jobId: "J-eli", amountUsdc: "9000000" },
+    ]);
+    expect(decide(fay, ctx(named))).toEqual([{ kind: "idle" }]);
+
+    const openMarket = loadWorld(2, {
+      jobs: [
+        { id: "J-low", client: "bo", provider: "", amountUsdc: "1000000", status: "open" },
+        { id: "J-high", client: "cy", provider: "", amountUsdc: "2500000", status: "funded" },
+      ],
+    });
+    expect(decide(dee, ctx(openMarket))).toEqual([
+      { kind: "accept_job", jobId: "J-high", amountUsdc: "2500000" },
+    ]);
+    expect(decide(eli, ctx(openMarket))).toEqual([
+      { kind: "accept_job", jobId: "J-high", amountUsdc: "2500000" },
+    ]);
   });
 });
 
