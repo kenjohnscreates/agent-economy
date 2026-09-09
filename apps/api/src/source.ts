@@ -37,9 +37,9 @@ export interface DataSource {
   getAgent(name: string): AgentDetailResponse;
   getScoreboard(): ScoreboardResponse;
   getLoans(query: LoansQuery): LoansResponse;
-  mayorFund(body: MayorFundRequest): TxResponse;
-  mayorLoanDecision(body: MayorLoanDecisionRequest): TxResponse;
-  mayorRate(body: MayorRateRequest): TxResponse;
+  mayorFund(body: MayorFundRequest): TxResponse | Promise<TxResponse>;
+  mayorLoanDecision(body: MayorLoanDecisionRequest): TxResponse | Promise<TxResponse>;
+  mayorRate(body: MayorRateRequest): TxResponse | Promise<TxResponse>;
   /** Subscribe to live events; returns an unsubscribe fn. */
   subscribe(listener: SseListener): () => void;
 }

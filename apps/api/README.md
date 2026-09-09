@@ -11,4 +11,6 @@ Endpoints — `GET /health`, `/state`, `/agents`, `/agents/:name`, `/scoreboard`
 SSE: `curl -N localhost:3001/events` → `event: tick|tx|narration|loan_flagged|scoreboard` + `data: <json>`.
 Mayor: `curl -X POST localhost:3001/mayor/fund -H 'content-type: application/json' -d '{"amountUsdc":"5000000"}'`
 
-Real mode (no `--mock`) answers 501 until M4.7. Scripts: `dev:mock`, `start:mock`, `build`, `test`, `lint`.
+Real mode (`API_MODE=real` or omit `--mock`): subgraph + ENS + Arc USDC balances; tick from Supabase when configured.
+Needs `SUBGRAPH_URL` in `.env`. Mayor POSTs require `ALLOW_BROADCAST=true` (default dry-run → 501).
+`pnpm --filter @agent-town/api dev` (real) · `dev:mock` · `build` · `test` · `lint`.
