@@ -1,0 +1,88 @@
+# Scalars + Query root for codegen (entity types live in packages/subgraph/schema.graphql).
+scalar BigInt
+scalar Bytes
+scalar Timestamp
+scalar Int8
+
+enum OrderDirection {
+  asc
+  desc
+}
+
+type Query {
+  agent(id: Bytes!): Agent
+  agents(
+    first: Int
+    skip: Int
+    where: Agent_filter
+    orderBy: Agent_orderBy
+    orderDirection: OrderDirection
+  ): [Agent!]!
+  loan(id: ID!): Loan
+  loans(
+    first: Int
+    skip: Int
+    where: Loan_filter
+    orderBy: Loan_orderBy
+    orderDirection: OrderDirection
+  ): [Loan!]!
+  jobs(
+    first: Int
+    skip: Int
+    where: Job_filter
+    orderBy: Job_orderBy
+    orderDirection: OrderDirection
+  ): [Job!]!
+  payments(
+    first: Int
+    skip: Int
+    where: Payment_filter
+    orderBy: Payment_orderBy
+    orderDirection: OrderDirection
+  ): [Payment!]!
+  treasuryState(id: ID!): TreasuryState
+}
+
+input Agent_filter {
+  id: Bytes
+  id_in: [Bytes!]
+  ensName: String
+}
+
+enum Agent_orderBy {
+  id
+}
+
+input Loan_filter {
+  borrower: Bytes
+  borrower_in: [Bytes!]
+  status: String
+}
+
+enum Loan_orderBy {
+  requestedAt
+}
+
+input Job_filter {
+  or: [Job_filter!]
+  status_in: [String!]
+  client_: Agent_filter
+  provider_: Agent_filter
+  client: Bytes
+  provider: Bytes
+}
+
+enum Job_orderBy {
+  createdAt
+}
+
+input Payment_filter {
+  or: [Payment_filter!]
+  kind: String
+  from_: Agent_filter
+  to_: Agent_filter
+}
+
+enum Payment_orderBy {
+  timestamp
+}

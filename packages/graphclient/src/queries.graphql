@@ -1,0 +1,169 @@
+fragment AgentFields on Agent {
+  id
+  ensName
+  role
+  balanceDeposited
+  loansTaken
+  defaults
+  jobsCompleted
+  earned
+  spent
+}
+
+fragment LoanFields on Loan {
+  id
+  principal
+  rateBps
+  status
+  requestedAt
+  approvedAt
+  repaid
+  defaultedAt
+  borrower {
+    id
+    ensName
+  }
+}
+
+fragment JobFields on Job {
+  id
+  amount
+  status
+  createdAt
+  settledAt
+  client {
+    id
+    ensName
+  }
+  provider {
+    id
+    ensName
+  }
+}
+
+query AgentById($id: Bytes!) {
+  agent(id: $id) {
+    ...AgentFields
+  }
+}
+
+query AgentsByEnsName($ensName: String!) {
+  agents(where: { ensName: $ensName }, first: 1) {
+    ...AgentFields
+  }
+}
+
+query AgentLoans($borrower: Bytes!, $first: Int!) {
+  loans(
+    where: { borrower: $borrower }
+    first: $first
+    orderBy: requestedAt
+    orderDirection: desc
+  ) {
+    ...LoanFields
+  }
+}
+
+query AgentJobs($address: Bytes!, $first: Int!) {
+  jobs(
+    where: { or: [{ client: $address }, { provider: $address }] }
+    first: $first
+    orderBy: createdAt
+    orderDirection: desc
+  ) {
+    ...JobFields
+  }
+}
+
+query OpenTownJobs($statuses: [String!], $roster: [Bytes!], $first: Int!) {
+  jobs(
+    where: {
+      or: [
+        { status_in: $statuses, client_: { id_in: $roster } }
+        { status_in: $statuses, provider_: { id_in: $roster } }
+      ]
+    }
+    first: $first
+    orderBy: createdAt
+    orderDirection: desc
+  ) {
+    ...JobFields
+  }
+}
+
+query TownLoans($roster: [Bytes!], $first: Int!) {
+  loans(
+    where: { borrower_in: $roster }
+    first: $first
+    orderBy: requestedAt
+    orderDirection: desc
+  ) {
+    ...LoanFields
+  }
+}
+
+query BorrowerLoans($borrower: Bytes!, $first: Int!) {
+  loans(
+    where: { borrower: $borrower }
+    first: $first
+    orderBy: requestedAt
+    orderDirection: desc
+  ) {
+    ...LoanFields
+  }
+}
+
+query TreasuryStateQuery {
+  treasuryState(id: "treasury") {
+    id
+    balance
+    outstanding
+    baseRateBps
+  }
+}
+
+query RosterAgents($roster: [Bytes!]) {
+  agents(where: { id_in: $roster }) {
+    id
+    jobsCompleted
+    defaults
+  }
+}
+
+query OutstandingTownLoans($roster: [Bytes!]) {
+  loans(where: { status: "approved", borrower_in: $roster }) {
+    id
+  }
+}
+
+query TownJobPayments($roster: [Bytes!], $first: Int!) {
+  payments(
+    where: {
+      or: [
+        { kind: "job_pay", from_: { id_in: $roster } }
+        { kind: "job_pay", to_: { id_in: $roster } }
+      ]
+    }
+    first: $first
+    orderBy: timestamp
+    orderDirection: asc
+  ) {
+    amount
+    timestamp
+    from {
+      id
+    }
+    to {
+      id
+    }
+  }
+}
+
+query LoanById($id: ID!) {
+  loan(id: $id) {
+    id
+    status
+    principal
+    repaid
+  }
+}
