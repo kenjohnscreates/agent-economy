@@ -178,6 +178,44 @@ describe("executeProposedAction (mocked Circle)", () => {
     }
   });
 
+  it("post_job decodes jobId then fund_escrow funds that id", async () => {
+    const client = mockClient();
+    const jobIdFromTxHash = vi.fn(async () => "42");
+    const post = await executeProposedAction(
+      { tick: 1, agent: "bo", action: { kind: "post_job", amountUsdc: "1200000" } },
+      { ...deps(client), jobIdFromTxHash },
+    );
+    expect(post).toMatchObject({ status: "complete", jobId: "42" });
+    expect(jobIdFromTxHash).toHaveBeenCalledWith("0xabc");
+
+    const fund = await executeProposedAction(
+      {
+        tick: 1,
+        agent: "bo",
+        action: { kind: "fund_escrow", amountUsdc: "1200000", jobId: "42" },
+      },
+      deps(client),
+    );
+    expect(fund.status).toBe("complete");
+    const calls = vi.mocked(client.createContractExecutionTransaction).mock.calls;
+    const setBudget = calls.find(
+      (c) => c[0]?.abiFunctionSignature === "setBudget(uint256,uint256,bytes)",
+    );
+    expect(setBudget?.[0]?.abiParameters?.[0]).toBe("42");
+    const fundCall = calls.find((c) => c[0]?.abiFunctionSignature === "fund(uint256,bytes)");
+    expect(fundCall?.[0]?.abiParameters?.[0]).toBe("42");
+  });
+
+  it("fund_escrow without jobId → skipped (no throw)", async () => {
+    const client = mockClient();
+    const result = await executeProposedAction(
+      { tick: 1, agent: "bo", action: { kind: "fund_escrow", amountUsdc: "1200000" } },
+      deps(client),
+    );
+    expect(result).toEqual({ status: "skipped" });
+    expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
+  });
+
   it("timeout → pending with txId", async () => {
     const client = mockClient();
     const waitComplete = vi.fn(async (_c, txId: string) => {
@@ -259,11 +297,6 @@ describe("engine + executeAction", () => {
   });
 
   it("failure → ledger status failed", async () => {
-    const client = mockClient({
-      getTransaction: vi.fn(async () => ({
-        data: { transaction: tx("FAILED", { errorReason: "DENIED" }) },
-      })),
-    });
     const executeAction = vi.fn(async () => ({
       status: "failed" as const,
       error: "mock denied",
@@ -297,5 +330,31 @@ describe("engine + executeAction", () => {
     });
     const approve = (await ledger.listActions()).find((a) => a.kind === "approve_loan");
     expect(approve?.status).toBe("failed");
+  });
+
+  it("threads post_job jobId into same-tick fund_escrow", async () => {
+    const client = mockClient();
+    const ledger = new MemoryLedger();
+    const config = parseSimConfig(
+      { ALLOW_BROADCAST: "true", SIM_EXECUTE: "on" },
+      { once: false, yes: false },
+    );
+    await runSingleTick(ledger, config, {
+      executeAction: createExecuteAction({
+        ...deps(client),
+        jobIdFromTxHash: async () => "7",
+      }),
+      getWorld: async (tick) =>
+        loadWorld(tick, {
+          restockCostUsdc: "1000000",
+          inventory: { bo: 1 },
+          balances: { bo: "2000000" },
+        }),
+    });
+    const actions = await ledger.listActions();
+    expect(actions.find((a) => a.kind === "post_job")?.status).toBe("complete");
+    expect(actions.find((a) => a.kind === "fund_escrow")?.status).toBe("complete");
+    const calls = vi.mocked(client.createContractExecutionTransaction).mock.calls;
+    expect(calls.some((c) => c[0]?.abiParameters?.[0] === "7")).toBe(true);
   });
 });

@@ -39,10 +39,10 @@ async function persistAction(
   action: ReturnType<typeof decide>[number],
   config: SimConfig,
   executeAction?: ExecuteActionFn,
-): Promise<ActionStatus> {
+): Promise<{ status: ActionStatus; jobId?: string }> {
   const existing = await ledger.findAction(tick, agent, action.kind);
-  if (existing?.status === "complete") return existing.status;
-  if (existing) return existing.status;
+  if (existing?.status === "complete") return { status: existing.status };
+  if (existing) return { status: existing.status };
 
   const skipExecute =
     !executeAction || !config.executeEnabled || EXECUTE_SKIP_KINDS.has(action.kind);
@@ -55,7 +55,7 @@ async function persistAction(
       tx: null,
       status: "skipped",
     });
-    return "skipped";
+    return { status: "skipped" };
   }
 
   const result = await executeAction({ tick, agent, action });
@@ -76,7 +76,9 @@ async function persistAction(
   }
 
   await ledger.insertAction({ tick, agent, kind: action.kind, tx, status });
-  return status;
+  const jobId =
+    result.status === "complete" && "jobId" in result ? result.jobId : undefined;
+  return { status, jobId };
 }
 
 /** Demo uses the PRD §12 table; free-run holds a constant boom phase. */
@@ -126,15 +128,21 @@ export async function runSingleTick(
   const world = deps.getWorld ? await deps.getWorld(nextTick) : emptyWorld(nextTick);
   for (const agent of ROSTER) {
     const proposed = decide(agent, { tick: nextTick, phase, world });
+    let createdJobId: string | undefined;
     for (const action of proposed) {
-      const status = await persistAction(
+      const execAction =
+        action.kind === "fund_escrow" && !action.jobId && createdJobId
+          ? { ...action, jobId: createdJobId }
+          : action;
+      const { status, jobId } = await persistAction(
         ledger,
         nextTick,
         agent.name,
-        action,
+        execAction,
         config,
         deps.executeAction,
       );
+      if (action.kind === "post_job" && jobId) createdJobId = jobId;
       if (action.kind === "repay" || action.kind === "mark_default") {
         await maybeApplyEnsSideEffects(
           { agent: agent.name, kind: action.kind, tick: nextTick, status },

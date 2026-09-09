@@ -43,7 +43,7 @@ export interface ExecuteActionInput {
 }
 
 export type ExecuteActionResult =
-  | { status: "complete"; txHash: string; txId?: string }
+  | { status: "complete"; txHash: string; txId?: string; jobId?: string }
   | { status: "pending"; txId: string; error?: string }
   | { status: "failed"; error: string; txId?: string; txHash?: string }
   | { status: "skipped" };
@@ -60,6 +60,8 @@ export interface CircleExecuteDeps {
   transferUsdc?: typeof transferUsdc;
   waitComplete?: typeof waitComplete;
   uuid?: () => string;
+  /** Decode on-chain jobId from a createJob receipt (live + mocked tests). */
+  jobIdFromTxHash?: (txHash: string) => Promise<string>;
 }
 
 const SKIP_KINDS = new Set<ProposedAction["kind"]>(["idle", "set_credit_score", "append_review"]);
@@ -147,10 +149,7 @@ function circleErrorMessage(err: unknown): string {
 }
 
 /** Pure mapping for tests — returns planned Circle op labels without calling the client. */
-export function describeExecutePlan(
-  input: ExecuteActionInput,
-  roster: WalletRoster = readRoster(),
-): string[] {
+export function describeExecutePlan(input: ExecuteActionInput): string[] {
   const { agent, action } = input;
   switch (action.kind) {
     case "idle":
@@ -337,10 +336,14 @@ export async function executeProposedAction(
           ],
           label: "createJob",
         });
-        return { status: "complete", txHash: done.txHash, txId: done.txId };
+        const jobId = deps.jobIdFromTxHash
+          ? await deps.jobIdFromTxHash(done.txHash)
+          : undefined;
+        return { status: "complete", txHash: done.txHash, txId: done.txId, jobId };
       }
 
       case "fund_escrow": {
+        if (!action.jobId) return { status: "skipped" };
         const amount = requireAmount(action, "fund_escrow");
         const jobId = parseJobId(action.jobId, "fund_escrow");
         const merchant = agentWallet;
