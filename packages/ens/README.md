@@ -32,3 +32,28 @@ pnpm --filter @agent-town/ens deploy-town-subregistry -- --broadcast
 
 Env: `SEPOLIA_RPC_URL` (read-only fallback: publicnode), `ENS_TREASURER_PRIVATE_KEY` (must own `botanica.eth`), `ENS_TOWN_NAME=botanica`.
 Clients resolve via `UpgradableUniversalResolverProxy` (`deployments.json`). After broadcast, `getSubregistry("botanica")` returns the factory proxy. Never persist `tokenId` (R3); `town.json` stores addresses only.
+
+## Mint 8 agent subnames (M2.3)
+
+Mints `ada|bo|cy|dee|eli|fay|gus|hal.botanica.eth` via `TownRegistrar.register` (onlyOwner) and sets ARCHITECTURE §4.4 records: `addr(2152525650)`, `addr(60)`, `agent-context`, `town.role`, `avatar`. Does **not** set `town.credit-score`. **Default is dry-run.** `--broadcast` also requires `ALLOW_BROADCAST=true` (orchestrator after review).
+
+| Command (`pnpm --filter @agent-town/ens mint-agent-names -- …`) | Broadcasts | Needs key |
+| --- | --- | --- |
+| *(no flag)* / `--dry-run` · grant + register + `setAddress`/`setText` calldata, `eth_call` sims, UniversalResolverV2 resolve plan | no | no |
+| `--broadcast` · refused unless `ALLOW_BROADCAST=true`. Grants EAC, `register()` × 8, record multicall; re-reads tokenId via labelhash (printed only, R3) | yes | yes |
+
+```bash
+pnpm --filter @agent-town/ens mint-agent-names -- --dry-run
+# after review (orchestrator; also deploy TownRegistrar first):
+ALLOW_BROADCAST=true forge script script/DeployTownRegistrar.s.sol --rpc-url "$SEPOLIA_RPC_URL" --broadcast --evm-version paris
+ALLOW_BROADCAST=true pnpm --filter @agent-town/ens mint-agent-names -- --broadcast
+```
+
+Foundry equivalent (same `ALLOW_BROADCAST` guard, paris):
+
+```bash
+cd packages/contracts
+forge script script/MintAgentNames.s.sol --rpc-url "$SEPOLIA_RPC_URL" --evm-version paris
+```
+
+Env: `SEPOLIA_RPC_URL`, `ENS_TOWN_REGISTRY` / `ENS_TOWN_RESOLVER` (`town.json`), `ENS_TOWN_REGISTRAR` (after M2.2 deploy), `ENS_TREASURER_PRIVATE_KEY` (broadcast), `PUBLIC_APP_URL` (avatar origin; default `http://localhost:3000` so avatar is `{origin}/sprites/<name>.png` from the roster). Wallets: `packages/circle/roster.json`. Roles: `packages/shared` ROSTER. Resolve via `UpgradableUniversalResolverProxy` `0xd26f…f142`. Never persist `tokenId` (R3).
