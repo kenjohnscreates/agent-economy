@@ -1,6 +1,6 @@
 # Signal C — external subgraphs (M0.9)
 
-Picked via Subgraph MCP on **2026-09-09**. Cache / stale / `EXTERNAL_SIGNALS` is **M4.9** — this file is IDs + sample queries only.
+Picked via Subgraph MCP on **2026-09-09**. **M4.9 implemented** — `fetchExternalSignals` in `src/externalSignals/` (per-tick cache, 5s timeout, stale fallback). This file remains IDs + sample queries.
 
 Gateway: `https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/{id}` (key stays in local `.env`, never git).
 

@@ -4,7 +4,7 @@
  * IDs, 30-day volume ranking, schema paths, and sample GraphQL:
  *   packages/graphclient/external.md
  *
- * Fetch + per-tick cache + stale fallback is M4.9 — do not implement here.
+ * Fetch + per-tick cache + stale fallback: see externalSignals/fetchExternalSignals.ts.
  */
 export const EXT_LENDING_SUBGRAPH_ID =
   "JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk" as const;
