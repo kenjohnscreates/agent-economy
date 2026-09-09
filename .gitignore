@@ -39,3 +39,7 @@ venv/
 
 # Foundry
 broadcast/
+
+# TypeScript / test output
+*.tsbuildinfo
+coverage/
