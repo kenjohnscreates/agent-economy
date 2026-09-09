@@ -31,7 +31,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import {
   CircleEnvSchema,
-  absoluteFee,
+  DEFAULT_FEE,
   buildFundPlan,
   createCircleClient,
   executeContract,
@@ -61,6 +61,7 @@ const { values: flags } = parseArgs({
 const broadcast = Boolean(flags.yes) && !flags["dry-run"];
 
 const treasuryAbi = parseAbi(["function fund(uint256 amount)"]);
+// Arc SCA Circle txs need feeLevel (DEFAULT_FEE); absoluteFee is EOA/viem only.
 const ARC_MIN_FEE = parseGwei("20");
 const ARC_TIP = parseGwei("1");
 
@@ -231,7 +232,7 @@ async function runCircleTransfer(
       walletId: step.fromWalletId,
       to: step.to,
       amountUsdc: send6.toString(),
-      fee: absoluteFee({ gasLimit: 100_000n }),
+      fee: DEFAULT_FEE,
       idempotencyKey: randomUUID(),
     });
     const tx = await waitComplete(client, txId);
@@ -270,7 +271,7 @@ async function runCircleFund(
       contractAddress: ARC_USDC_ADDRESS,
       abiFunctionSignature: "approve(address,uint256)",
       abiParameters: [step.treasury, amt],
-      fee: absoluteFee({ gasLimit: 80_000n }),
+      fee: DEFAULT_FEE,
       idempotencyKey: randomUUID(),
     });
     const approveTx = await waitComplete(client, approve.txId);
@@ -282,7 +283,7 @@ async function runCircleFund(
       contractAddress: step.treasury,
       abiFunctionSignature: "fund(uint256)",
       abiParameters: [amt],
-      fee: absoluteFee({ gasLimit: 120_000n }),
+      fee: DEFAULT_FEE,
       idempotencyKey: randomUUID(),
     });
     const fundTx = await waitComplete(client, fund.txId);

@@ -21,9 +21,10 @@ export type Fee = FeeConfiguration<FeeLevel>;
 /** Arc rejects (silently drops) txs with maxFeePerGas < 20 gwei — docs.arc.io/arc/references/gas-and-fees */
 export const ARC_MIN_MAX_FEE_GWEI = 20n;
 
+/** Arc SCA Circle txs require feeLevel (LOW|MEDIUM|HIGH), not type:"absolute". */
 export const DEFAULT_FEE: Fee = { type: "level", config: { feeLevel: "MEDIUM" } };
 
-/** Absolute EVM fee (gwei strings per Circle docs); clamps maxFee to the Arc 20 gwei floor. */
+/** EOA/viem only — Arc SCA Circle txs need `feeLevel` (DEFAULT_FEE), not type:"absolute". Clamps maxFee to 20 gwei. */
 export function absoluteFee(input: {
   gasLimit: string | bigint;
   maxFeeGwei?: string | bigint;

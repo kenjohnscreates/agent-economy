@@ -16,7 +16,7 @@ Circle Developer-Controlled **SCA** wallets on `ARC-TESTNET` — 8 agents + `may
 
 - USDC ERC-20 `0x3600…` = **6 dec**; native gas balance = **18 dec**. Never mix (`src/amounts.ts`).
 - Circle `amount` fields are _decimal_ strings (`"3.5"`), not base units — convert at the edge only.
-- Arc drops txs with `maxFeePerGas < 20 gwei`; `absoluteFee()` clamps. Default fee is `feeLevel: MEDIUM`.
+- Arc SCA Circle txs need `feeLevel` (`DEFAULT_FEE` MEDIUM); `absoluteFee` is EOA/viem only (`maxFeePerGas` ≥ 20 gwei).
 - SCA `txHash` appears only from `CONFIRMED`; poll with `waitComplete`, don't assume it at `SENT`.
 - Re-running `setup-wallets --yes` is idempotent (roster.json → `listWallets(refId)` → create only missing).
 - Re-running `fund --yes` is idempotent (skip wallets/treasury already at target). `--dry-run` is the default; refuses to broadcast without `--yes`.
