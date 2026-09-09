@@ -20,6 +20,7 @@ dataSources:
         - Loan
         - Payment
         - TreasurySnapshot
+        - TreasuryState
         - TownStat
       abis:
         - name: TownTreasury

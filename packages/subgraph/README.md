@@ -8,7 +8,14 @@ Indexes `TownTreasury` + ERC-8183 `AgenticCommerce` on **Arc Testnet**. Network 
 pnpm --filter @agent-town/subgraph codegen
 ```
 
-Requires Node ≥20. Uses `@graphprotocol/graph-cli@0.98.1` (Studio-aligned) and `graph-ts@0.35.1`. Mapping bodies are empty stubs until M3.2; `graph build` is wired but Studio deploy is M3.3.
+Requires Node ≥20. Uses `@graphprotocol/graph-cli@0.98.1` (Studio-aligned), `graph-ts@0.35.1`, and `matchstick-as@0.6.0`. Studio deploy is M3.3 — do not deploy from this card.
+
+```bash
+pnpm --filter @agent-town/subgraph build
+pnpm --filter @agent-town/subgraph test
+```
+
+`test` runs `graph codegen && graph test` (Matchstick). Covers `handleAgentRegistered`, `handleLoanApproved`, `handleJobCompleted`. Raw ERC-20 `Transfer` is not indexed (RISKS R4).
 
 ## Addresses
 
