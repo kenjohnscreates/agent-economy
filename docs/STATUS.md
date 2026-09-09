@@ -13,7 +13,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M1 Arc treasury + Circle wallets | in_progress | BE | **M1.3 done** (#8 `ad0c17b`, 34/34 tests, no live calls) · PR #9 M1.1 OPEN MERGEABLE, T1 review in flight · M1.2 deploy gated (A) · `setup-wallets --yes` gated (B) |
 | M2 ENSv2 namespace | todo | BE | |
 | M3 Subgraph | todo | BE | |
-| M4 Sim, agents, API | in_progress | BE | PR #10 M4.1 OPEN (7/7 tests); T1 review in flight; will need `pnpm-lock.yaml` rebase onto main after #8 |
+| M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10 `8443cde`, 7/7 tests) · M4.5 narrator spawned |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
 | M7 Review + docs | todo | reviewer | |
@@ -69,4 +69,12 @@ In progress: PR #9 M1.1 T1 review; PR #10 M4.1 T1 review (lockfile conflict vs #
 Blocked: M0.4 broadcast (gate A — `.env` `SEPOLIA_RPC_URL` + `ENS_TREASURER_PRIVATE_KEY` + `approve M0.4`); M0.9 (Graph key, gate B); **M1.3 wallets** `setup-wallets --yes` (gate B — say `approve M1.3 wallets`); M1.2 deploy (gate A, after #9 merges)
 Risks changed: —
 Next up: merge #9/#10 on APPROVE; human gates above
+Checkpoint call: none
+
+## Wed 9 Sep 00:39 EDT
+Done: M4.1 — PR #10 squash-merged `8443cde` after lockfile rebase onto #8. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/10#pullrequestreview-5149809489). Evidence: vitest **7/7**; `--once` → tick 1; `--ticks 5` phases boom×3,borrow×2; LLM flags default off; MemoryLedger; SQL `001_ledger.sql`. Nits: short headers; MemoryLedger tick id uniqueness; extra TICK_MS sleep after last loop tick.
+In progress: PR #9 M1.1 T1 review; M4.5 narrator (T3) spawned
+Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); M1.2 (A, after #9)
+Risks changed: —
+Next up: merge #9 on APPROVE → spawn M3.1 schema; M4.5 review
 Checkpoint call: none
