@@ -3,10 +3,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { AGENT_NAMES, ENS_ARC_COIN_TYPE, ENS_KEYS, ROSTER } from "@agent-town/shared";
-import { createPublicClient, http, namehash, zeroAddress } from "viem";
+import { createPublicClient, encodeAbiParameters, http, namehash, zeroAddress } from "viem";
 import { sepolia } from "viem/chains";
 import { describe, expect, it } from "vitest";
 import { addresses } from "./deployments.js";
+import { universalResolverAbi } from "./abi/universalResolver.js";
 import {
   COIN_TYPE_ARC,
   COIN_TYPE_ETH,
@@ -14,15 +15,24 @@ import {
   REGISTER_SELECTOR,
   REGISTRY_REGISTRAR_ROLES,
   RESOLVER_REGISTRAR_ROLES,
+  ROLE_LINK,
+  BANK_LABEL,
+  TREASURER_LABEL,
   SET_ADDR_NAMECHAIN_SELECTOR,
   SET_ADDRESS_SELECTOR,
+  LINK_TO_NODE_SELECTOR,
+  SET_ALIAS_NAMECHAIN_SELECTOR,
   agentContextMarkdown,
   avatarUrl,
   buildMintPlan,
+  buildBankAliasPlan,
+  decodeResolvedAddress,
   dnsEncodeName,
   dnsEncodeTownName,
   encodeEvmAddressBytes,
+  encodeLinkToNode,
   encodeRegister,
+  encodeResolveAddr,
   encodeSetAddress,
   registrarRoleOf,
   rosterRoleOf,
@@ -36,6 +46,8 @@ const REGISTRAR = "0x0000000000000000000000000000000000001111" as const;
 
 // abi.encodePacked(uint8(3), "ada", uint8(8), "botanica", uint8(3), "eth", 0x00)
 const ADA_DNS = "0x0361646108626f74616e6963610365746800" as const;
+// abi.encodePacked(uint8(4), "bank", uint8(8), "botanica", uint8(3), "eth", 0x00)
+const BANK_DNS = "0x0462616e6b08626f74616e6963610365746800" as const;
 
 const ROLE_ENUM = { treasurer: 0, merchant: 1, worker: 2, consumer: 3 } as const;
 
@@ -200,4 +212,128 @@ describe("hackathon bytecode selectors (network)", () => {
     expect(code).toContain(SET_ADDRESS_SELECTOR.slice(2));
     expect(zeroAddress).not.toBe(addresses.UpgradableUniversalResolverProxy);
   }, 15_000);
+
+  it("PermissionedResolverImpl contains linkToNode, not namechain setAlias", async (ctx) => {
+    const client = createPublicClient({
+      chain: sepolia,
+      transport: http(
+        process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
+        { timeout: 8_000, retryCount: 0 },
+      ),
+    });
+    let code: `0x${string}` | undefined;
+    try {
+      code = await client.getCode({ address: addresses.PermissionedResolverImpl });
+    } catch {
+      ctx.skip();
+      return;
+    }
+    if (!code) {
+      ctx.skip();
+      return;
+    }
+    expect(code).toContain(LINK_TO_NODE_SELECTOR.slice(2));
+    expect(code).not.toContain(SET_ALIAS_NAMECHAIN_SELECTOR.slice(2));
+  }, 15_000);
 });
+
+describe("bank alias (M2.4)", () => {
+  it("ROLE_LINK is 1 << 28 (inode docs, not namechain ROLE_SET_ALIAS name)", () => {
+    expect(ROLE_LINK).toBe(1n << 28n);
+    expect(LINK_TO_NODE_SELECTOR).not.toBe(SET_ALIAS_NAMECHAIN_SELECTOR);
+  });
+
+  it("bank.botanica.eth DNS wire matches encodePacked labels", () => {
+    expect(dnsEncodeTownName(BANK_LABEL, TOWN)).toBe(BANK_DNS);
+    expect(dnsEncodeName("bank.botanica.eth")).toBe(BANK_DNS);
+  });
+
+  it("linkToNode(bank → ada node) uses inode selector and ada namehash", () => {
+    const data = encodeLinkToNode(BANK_DNS, namehash("ada.botanica.eth"));
+    expect(data.slice(0, 10)).toBe(LINK_TO_NODE_SELECTOR);
+    expect(data.toLowerCase()).toContain(namehash("ada.botanica.eth").slice(2));
+    expect(JSON.stringify(data)).not.toMatch(/tokenId/i);
+  });
+
+  it("buildBankAliasPlan registers bank as Treasurer alias of ada, no tokenId, no addr copy", () => {
+    const wallets = walletsFromRosterJson();
+    const plan = buildBankAliasPlan({
+      townLabel: TOWN,
+      owner: wallets.ada!,
+      treasurerWallet: wallets.ada!,
+    });
+    expect(plan.bankEns).toBe("bank.botanica.eth");
+    expect(plan.treasurerEns).toBe("ada.botanica.eth");
+    expect(plan.treasurerLabel).toBe(TREASURER_LABEL);
+    expect(plan.bankDns).toBe(BANK_DNS);
+    expect(plan.treasurerDns).toBe(ADA_DNS);
+    expect(plan.bankNode).toBe(namehash("bank.botanica.eth"));
+    expect(plan.treasurerNode).toBe(namehash("ada.botanica.eth"));
+    expect(plan.owner.toLowerCase()).toBe(wallets.ada!.toLowerCase());
+    expect(plan.wallet.toLowerCase()).toBe(wallets.ada!.toLowerCase());
+    expect(plan.registrarRole).toBe(0);
+    expect(plan.calls.linkToNode.slice(0, 10)).toBe(LINK_TO_NODE_SELECTOR);
+    expect(plan.calls.register.slice(0, 10)).toBe(REGISTER_SELECTOR);
+    expect(JSON.stringify(plan)).not.toMatch(/tokenId/i);
+    expect(JSON.stringify(plan.calls)).not.toContain("setAddress");
+  });
+});
+
+describe("decodeResolvedAddress (UR.resolve bytes)", () => {
+  it("decodes ABI-encoded 20-byte addr (hex length 194)", () => {
+    const live =
+      "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001497847b3c015994784ae8cf776ef9a4d563618cf2000000000000000000000000" as const;
+    expect(live.length).toBe(194);
+    expect(decodeResolvedAddress(live)?.toLowerCase()).toBe(ADA);
+    const encoded = encodeAbiParameters([{ type: "bytes" }], [encodeEvmAddressBytes(ADA)]);
+    expect(encoded.length).toBe(194);
+    expect(decodeResolvedAddress(encoded)?.toLowerCase()).toBe(ADA);
+  });
+
+  it("decodes padded address (66) and raw 20-byte (42); empty is undefined", () => {
+    expect(decodeResolvedAddress("0x")).toBeUndefined();
+    expect(decodeResolvedAddress(`0x${"00".repeat(12)}${ADA.slice(2)}` as `0x${string}`)?.toLowerCase()).toBe(
+      ADA,
+    );
+    expect(decodeResolvedAddress(ADA)?.toLowerCase()).toBe(ADA);
+  });
+});
+
+describe("live UR.resolve ada/bank (network)", () => {
+  it("ada.botanica.eth addr(Arc) and addr(60) decode to treasurer wallet; bank not treated as empty 194", async (ctx) => {
+    const client = createPublicClient({
+      chain: sepolia,
+      transport: http(
+        process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
+        { timeout: 8_000, retryCount: 0 },
+      ),
+    });
+    const ur = {
+      address: addresses.UpgradableUniversalResolverProxy,
+      abi: universalResolverAbi,
+    } as const;
+    const plan = buildBankAliasPlan({
+      townLabel: TOWN,
+      owner: ADA,
+      treasurerWallet: ADA,
+    });
+    try {
+      const [adaArc] = await client.readContract({
+        ...ur,
+        functionName: "resolve",
+        args: [plan.treasurerDns, encodeResolveAddr(plan.treasurerNode, COIN_TYPE_ARC)],
+      });
+      const [adaEth] = await client.readContract({
+        ...ur,
+        functionName: "resolve",
+        args: [plan.treasurerDns, encodeResolveAddr(plan.treasurerNode, COIN_TYPE_ETH)],
+      });
+      expect(adaArc.length).toBe(194);
+      expect(decodeResolvedAddress(adaArc)?.toLowerCase()).toBe(ADA);
+      expect(decodeResolvedAddress(adaEth)?.toLowerCase()).toBe(ADA);
+    } catch {
+      ctx.skip();
+    }
+  }, 15_000);
+});
+

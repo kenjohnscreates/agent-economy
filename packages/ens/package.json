@@ -22,7 +22,8 @@
     "lint": "eslint src scripts",
     "register-town": "tsx scripts/register-town.ts",
     "deploy-town-subregistry": "tsx scripts/deploy-town-subregistry.ts",
-    "mint-agent-names": "tsx scripts/mint-agent-names.ts"
+    "mint-agent-names": "tsx scripts/mint-agent-names.ts",
+    "record-bank-alias": "tsx scripts/record-bank-alias.ts"
   },
   "dependencies": {
     "@agent-town/shared": "workspace:*",

@@ -29,6 +29,29 @@ contract MockTownResolver is ITownResolver {
         _addr[keccak256(name)][coinType] = addressBytes;
     }
 
+    mapping(bytes32 => bytes32) public linkedNode;
+    mapping(bytes32 => uint256) internal _recordByNode;
+
+    function linkToNode(bytes calldata sourceName, bytes32 targetNode) external {
+        if (!_has(0, msg.sender, ResolverRoles.ROLE_LINK)) {
+            revert EACUnauthorizedAccountRoles(0, ResolverRoles.ROLE_LINK, msg.sender);
+        }
+        if (targetNode == bytes32(0)) revert InvalidRecord();
+        linkedNode[keccak256(sourceName)] = targetNode;
+        _recordByNode[keccak256(sourceName)] = _recordByNode[targetNode] == 0 ? 1 : _recordByNode[targetNode];
+    }
+
+    function linkToRecord(bytes calldata sourceName, uint256 recordId) external {
+        if (!_has(0, msg.sender, ResolverRoles.ROLE_LINK)) {
+            revert EACUnauthorizedAccountRoles(0, ResolverRoles.ROLE_LINK, msg.sender);
+        }
+        _recordByNode[keccak256(sourceName)] = recordId;
+    }
+
+    function getRecordId(bytes32 node) external view returns (uint256) {
+        return _recordByNode[node];
+    }
+
     function grantSetterRoles(bytes calldata setter, address account) external {
         if (!_has(0, msg.sender, ResolverRoles.ROLE_SET_TEXT_ADMIN)) {
             revert EACUnauthorizedAccountRoles(0, ResolverRoles.ROLE_SET_TEXT_ADMIN, msg.sender);
