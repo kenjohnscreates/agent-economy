@@ -43,4 +43,12 @@ describe("DEMO_STORYLINE", () => {
     expect(Object.keys(DEMO_STORYLINE)).toHaveLength(12);
     expect(phaseForTick(99)).toBe("recover");
   });
+
+  it("phaseForTick floors non-integers and clamps < 1 to tick 1", () => {
+    expect(phaseForTick(5.5)).toBe("borrow");
+    expect(phaseForTick(8.99)).toBe("default");
+    expect(phaseForTick(0)).toBe("boom");
+    expect(phaseForTick(-3)).toBe("boom");
+    expect(phaseForTick(Number.NaN)).toBe("boom");
+  });
 });

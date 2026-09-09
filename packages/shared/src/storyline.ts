@@ -35,8 +35,11 @@ export const DEMO_STORYLINE: Readonly<Record<number, StorylinePhase>> = {
   12: "recover",
 };
 
-/** Phase for a tick; tick 0 (not started) is 'boom', > DEMO_TICKS is 'recover'. */
+/**
+ * Phase for a tick. Non-integers are floored, values < 1 (incl. tick 0 / NaN)
+ * clamp to 1 → 'boom'; ticks > DEMO_TICKS stay 'recover'.
+ */
 export function phaseForTick(tick: number): StorylinePhase {
-  if (tick <= 0) return "boom";
-  return DEMO_STORYLINE[tick] ?? "recover";
+  const t = Number.isFinite(tick) ? Math.max(1, Math.floor(tick)) : 1;
+  return DEMO_STORYLINE[t] ?? "recover";
 }

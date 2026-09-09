@@ -5,12 +5,16 @@ import {
   API_DEFAULT_PORT,
   API_ROUTES,
   AgentSummarySchema,
+  JOB_STATUSES,
+  JobSchema,
   LoanSchema,
   MayorFundRequestSchema,
   MayorRateRequestSchema,
+  ScoreboardResponseSchema,
   StateResponseSchema,
 } from "./api.js";
 import { FIXTURES } from "./fixtures.js";
+import { LOAN_TERM_TICKS, NARRATION_MAX_CHARS } from "./rules.js";
 
 describe("api contract rejects bad payloads", () => {
   it("balanceUsdc as number fails", () => {
@@ -26,6 +30,39 @@ describe("api contract rejects bad payloads", () => {
   it("creditScore out of 0–100 fails", () => {
     const bad = { ...FIXTURES.agents[0], creditScore: 101 };
     expect(AgentSummarySchema.safeParse(bad).success).toBe(false);
+  });
+
+  it("job status accepts every ERC-8183 state incl. rejected; unknown fails", () => {
+    const base = FIXTURES.jobs[1];
+    expect(JOB_STATUSES).toContain("rejected");
+    for (const status of JOB_STATUSES) {
+      expect(JobSchema.safeParse({ ...base, status }).success).toBe(true);
+    }
+    const rejected = JobSchema.parse({ ...base, id: "J-3", status: "rejected", settledAtTick: 7 });
+    expect(rejected.status).toBe("rejected");
+    expect(JobSchema.safeParse({ ...base, status: "cancelled" }).success).toBe(false);
+  });
+
+  it("loan has nullable dueAtTick", () => {
+    expect(FIXTURES.loans[0]?.dueAtTick).toBe(4 + LOAN_TERM_TICKS);
+    expect(LoanSchema.safeParse({ ...FIXTURES.loans[0], dueAtTick: null }).success).toBe(true);
+    expect(LoanSchema.safeParse({ ...FIXTURES.loans[0], dueAtTick: -1 }).success).toBe(false);
+  });
+
+  it("agent narration is capped at NARRATION_MAX_CHARS", () => {
+    const bad = { ...FIXTURES.agents[0], narration: "x".repeat(NARRATION_MAX_CHARS + 1) };
+    expect(AgentSummarySchema.safeParse(bad).success).toBe(false);
+    const ok = { ...FIXTURES.agents[0], narration: "x".repeat(NARRATION_MAX_CHARS) };
+    expect(AgentSummarySchema.safeParse(ok).success).toBe(true);
+  });
+
+  it("scoreboard requires a non-negative integer defaults counter", () => {
+    expect(
+      ScoreboardResponseSchema.safeParse({ ...FIXTURES.scoreboard, defaults: -1 }).success,
+    ).toBe(false);
+    expect(
+      ScoreboardResponseSchema.safeParse({ ...FIXTURES.scoreboard, defaults: 1.5 }).success,
+    ).toBe(false);
   });
 
   it("unknown loan status fails", () => {

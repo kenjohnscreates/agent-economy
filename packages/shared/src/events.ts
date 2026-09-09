@@ -3,16 +3,19 @@
 // Inputs: unknown JSON per event. Outputs: `SSE_EVENTS`, per-event payload
 // schemas, and the discriminated union `SseEvent` ({event, data}) for the FE feed.
 import { z } from "zod";
-import { LoanSchema, ScoreboardResponseSchema, TickSchema, TxHashSchema } from "./api.js";
-import { ActionKindSchema } from "./rules.js";
+import {
+  LoanSchema,
+  ScoreboardResponseSchema,
+  TickSchema,
+  TxHashSchema,
+  UsdcSchema,
+} from "./api.js";
+import { ActionKindSchema, NARRATION_MAX_CHARS } from "./rules.js";
 import { StorylinePhaseSchema } from "./storyline.js";
 
 export const SSE_EVENTS = ["tick", "tx", "narration", "loan_flagged", "scoreboard"] as const;
 export const SseEventNameSchema = z.enum(SSE_EVENTS);
 export type SseEventName = z.infer<typeof SseEventNameSchema>;
-
-/** Max narration length so speech bubbles never overflow. */
-export const NARRATION_MAX_CHARS = 120 as const;
 
 export const TX_STATUSES = ["pending", "complete", "failed"] as const;
 export const TxStatusSchema = z.enum(TX_STATUSES);
@@ -27,6 +30,10 @@ export const TxEventSchema = z.object({
   /** Agent label that initiated the action. */
   agent: z.string().min(1),
   kind: ActionKindSchema,
+  /** USDC moved by this tx (6-dec string); null for non-monetary actions. */
+  amountUsdc: UsdcSchema.nullable(),
+  /** Other party: agent label, or "treasury" / "escrow" for contract legs. */
+  counterparty: z.string().min(1).nullable(),
   txHash: TxHashSchema,
   explorerUrl: z.url(),
   status: TxStatusSchema,

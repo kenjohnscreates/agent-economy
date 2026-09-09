@@ -18,6 +18,7 @@ import {
 import { ARC_EXPLORER_URL } from "./constants.js";
 import { type NarrationEvent, type SseEvent, type TickEvent, type TxEvent } from "./events.js";
 import { type AgentName, ROSTER, TOWN_NAME_PLACEHOLDER, ensNameFor } from "./roster.js";
+import { LOAN_TERM_TICKS, computeBaseRateBps, computeTownRateBps } from "./rules.js";
 
 export const FIXTURE_TICK = 7 as const;
 const TOWN = TOWN_NAME_PLACEHOLDER;
@@ -123,7 +124,11 @@ export const agentsFixture: AgentsResponse = [
     balanceUsdc: "900000",
     creditScore: 70,
     position: { building: "homes", x: 0.25, y: 0.75 },
-    lastDecision: { tick: 6, kind: "pay_stipend", summary: "Received 0.5 USDC stipend" },
+    lastDecision: {
+      tick: 7,
+      kind: "idle",
+      summary: "Balance 0.9 < price × 2; waiting (stipend received tick 6)",
+    },
     narration: "Waiting for next stipend before shopping.",
   }),
 ];
@@ -137,6 +142,7 @@ export const loansFixture: Loan[] = [
     status: "approved",
     requestedAtTick: 4,
     approvedAtTick: 4,
+    dueAtTick: 4 + LOAN_TERM_TICKS,
     repaidUsdc: "0",
     defaultedAtTick: null,
     advisor: {
@@ -153,8 +159,10 @@ export const loansFixture: Loan[] = [
     principalUsdc: "1000000",
     rateBps: 610,
     status: "defaulted",
-    requestedAtTick: 3,
-    approvedAtTick: 3,
+    // approved t1 → due t5 (LOAN_TERM_TICKS) → +GRACE_TICKS → defaulted t7
+    requestedAtTick: 1,
+    approvedAtTick: 1,
+    dueAtTick: 1 + LOAN_TERM_TICKS,
     repaidUsdc: "0",
     defaultedAtTick: 7,
     advisor: {
@@ -200,23 +208,34 @@ export const signalsFixture: Signals = {
   },
 };
 
+const TREASURY_BALANCE_USDC = "42500000";
+/** L-1 (3 USDC, approved) + L-2 (1 USDC, defaulted, unrecovered). */
+const OUTSTANDING_USDC = "4000000";
+
+/** utilisation = outstanding / (treasury + outstanding), in bps (bigint math). */
+function utilisationBps(outstanding: string, treasury: string): number {
+  const out = BigInt(outstanding);
+  return Number((out * 10_000n) / (BigInt(treasury) + out));
+}
+
 export const rateFixture: RateBreakdown = {
   marketApyBps: 410,
   spreadBps: 200,
   defaultPremiumBps: 200,
-  utilisationBps: 2400,
-  baseRateBps: 610,
-  townRateBps: 810,
+  utilisationBps: utilisationBps(OUTSTANDING_USDC, TREASURY_BALANCE_USDC), // 860
+  baseRateBps: computeBaseRateBps(410), // 610
+  townRateBps: computeTownRateBps({ marketApyBps: 410, spreadBps: 200, defaultPremiumBps: 200 }), // 810
 };
 
 export const scoreboardFixture: ScoreboardResponse = {
   gdpUsdc: "9870000",
-  treasuryBalanceUsdc: "42500000",
-  outstandingUsdc: "4000000",
-  defaultRateBps: 5000,
+  treasuryBalanceUsdc: TREASURY_BALANCE_USDC,
+  outstandingUsdc: OUTSTANDING_USDC,
+  defaults: loansFixture.filter((l) => l.status === "defaulted").length, // 1
+  defaultRateBps: 5000, // 1 default / 2 loans approved
   baseRateBps: 610,
   ticks: FIXTURE_TICK,
-  jobsCompleted: 3,
+  jobsCompleted: jobsFixture.filter((j) => j.status === "completed").length, // 1
   loansOutstanding: 2,
   gdpSeries: [
     { tick: 1, gdpUsdc: "1060000" },
@@ -260,6 +279,8 @@ export const txEventFixture: TxEvent = {
   tick: FIXTURE_TICK,
   agent: "ada",
   kind: "mark_default",
+  amountUsdc: "1000000",
+  counterparty: "fay",
   txHash: TX_3,
   explorerUrl: `${ARC_EXPLORER_URL}/tx/${TX_3}`,
   status: "complete",
@@ -295,5 +316,8 @@ export const FIXTURES = {
   scoreboard: scoreboardFixture,
   txResponse: txResponseFixture,
   apiError: apiErrorFixture,
+  tickEvent: tickEventFixture,
+  txEvent: txEventFixture,
+  narrationEvent: narrationEventFixture,
   sseEvents: sseEventsFixture,
 } as const;

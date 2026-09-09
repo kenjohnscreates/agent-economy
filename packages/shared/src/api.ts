@@ -6,7 +6,12 @@
 import { z } from "zod";
 import { EnsReviewSchema } from "./ens.js";
 import { BuildingSchema, RoleSchema } from "./roster.js";
-import { ActionKindSchema, BASE_RATE_MAX_BPS, BASE_RATE_MIN_BPS } from "./rules.js";
+import {
+  ActionKindSchema,
+  BASE_RATE_MAX_BPS,
+  BASE_RATE_MIN_BPS,
+  NARRATION_MAX_CHARS,
+} from "./rules.js";
 import { StorylineModeSchema, StorylinePhaseSchema } from "./storyline.js";
 
 // ── primitives ──────────────────────────────────────────────────────────────
@@ -70,7 +75,8 @@ export const AgentSummarySchema = z.object({
   creditScore: z.int().min(0).max(100).nullable(),
   position: PositionSchema,
   lastDecision: LastDecisionSchema.nullable(),
-  narration: z.string().nullable(),
+  /** Latest speech-bubble text; same cap as the SSE `narration` event. */
+  narration: z.string().max(NARRATION_MAX_CHARS).nullable(),
   /** Sprite URL or path. */
   avatar: z.string().min(1),
 });
@@ -106,13 +112,23 @@ export const LoanSchema = z.object({
   status: LoanStatusSchema,
   requestedAtTick: TickSchema,
   approvedAtTick: TickSchema.nullable(),
+  /** approvedAtTick + LOAN_TERM_TICKS; null until approved. */
+  dueAtTick: TickSchema.nullable(),
   repaidUsdc: UsdcSchema,
   defaultedAtTick: TickSchema.nullable(),
   advisor: AdvisorVerdictSchema.nullable(),
 });
 export type Loan = z.infer<typeof LoanSchema>;
 
-export const JOB_STATUSES = ["open", "funded", "submitted", "completed", "expired"] as const;
+/** ERC-8183 lifecycle; terminal states are completed | rejected | expired. */
+export const JOB_STATUSES = [
+  "open",
+  "funded",
+  "submitted",
+  "completed",
+  "rejected",
+  "expired",
+] as const;
 export const JobStatusSchema = z.enum(JOB_STATUSES);
 export type JobStatus = z.infer<typeof JobStatusSchema>;
 
@@ -171,7 +187,14 @@ export const SignalsSchema = z.object({
 });
 export type Signals = z.infer<typeof SignalsSchema>;
 
-/** How the town rate stacks on the real anchor (PRD §12 Bank panel tooltip). */
+/**
+ * How the town rate stacks on the real anchor (PRD §12 Bank panel tooltip).
+ * Formula (see `computeTownRateBps` in rules.ts):
+ *   baseRateBps = clamp(marketApyBps + spreadBps, 100, 2000)
+ *   townRateBps = baseRateBps + defaultPremiumBps
+ * `utilisationBps` = outstanding / (treasuryBalance + outstanding) is reported
+ * for display; it gates loan approvals, it does not move the rate.
+ */
 export const RateBreakdownSchema = z.object({
   marketApyBps: BpsSchema,
   spreadBps: BpsSchema,
@@ -189,6 +212,9 @@ export const ScoreboardResponseSchema = z.object({
   gdpUsdc: UsdcSchema,
   treasuryBalanceUsdc: UsdcSchema,
   outstandingUsdc: UsdcSchema,
+  /** Raw default counter ("Defaults: 1", PRD §6 step 4 / §12). */
+  defaults: z.int().nonnegative(),
+  /** defaults / loans ever approved, in bps. */
   defaultRateBps: BpsSchema,
   baseRateBps: BpsSchema,
   ticks: TickSchema,
