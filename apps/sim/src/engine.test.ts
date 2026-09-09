@@ -52,7 +52,7 @@ describe("runTicks", () => {
 
   it("re-running the same tick/agent/kind does not duplicate actions", async () => {
     const ledger = new MemoryLedger();
-    const config = testConfig({ MAX_TICKS: "1" });
+    const config = testConfig({ MAX_TICKS: "1", STORYLINE: "free" });
     await runSingleTick(ledger, config);
     const first = await ledger.listActions();
     const dup = await ledger.insertAction({
@@ -111,7 +111,7 @@ describe("runTicks", () => {
       throw new Error("nope");
     });
     const ledger = new MemoryLedger();
-    await runSingleTick(ledger, testConfig({ LLM_NARRATOR: "on" }), {
+    await runSingleTick(ledger, testConfig({ LLM_NARRATOR: "on", STORYLINE: "free" }), {
       narratorProvider: { complete },
     });
     const rows = await ledger.listNarration();
@@ -223,7 +223,7 @@ describe("treasurer advisor (M4.4)", () => {
 describe("getWorld injection (M4.2)", () => {
   it("default empty world records idle for all 8 agents on ticks 1 and 3", async () => {
     const ledger = new MemoryLedger();
-    await runTicks(ledger, testConfig({ MAX_TICKS: "3" }), 3);
+    await runTicks(ledger, testConfig({ MAX_TICKS: "3", STORYLINE: "free" }), 3);
     const actions = await ledger.listActions();
     expect(actions).toHaveLength(ROSTER.length * 3);
     expect(actions.every((a) => a.kind === "idle" && a.status === "skipped")).toBe(true);

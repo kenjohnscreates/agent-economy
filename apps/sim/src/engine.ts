@@ -130,7 +130,14 @@ export async function runSingleTick(
   });
 
   const lastKind = new Map<AgentName, ActionKind>();
-  const world = deps.getWorld ? await deps.getWorld(nextTick) : emptyWorld(nextTick);
+  const baseWorld = deps.getWorld ? await deps.getWorld(nextTick) : emptyWorld(nextTick);
+  const prepared = await onTick(nextTick, phase, {
+    mode: config.flags.storyline,
+    stage: "prepare",
+    world: baseWorld,
+    ledger,
+  });
+  const world = prepared.world;
   for (const agent of ROSTER) {
     let proposed = decide(agent, { tick: nextTick, phase, world });
     if (agent.role === "treasurer") {
@@ -168,8 +175,24 @@ export async function runSingleTick(
     lastKind.set(agent.name, proposed[proposed.length - 1]?.kind ?? "idle");
   }
 
+  const finalized = await onTick(nextTick, phase, {
+    mode: config.flags.storyline,
+    stage: "finalize",
+    world,
+    ledger,
+  });
+  for (const { agent, action } of finalized.forcedActions) {
+    const { status } = await persistAction(ledger, nextTick, agent, action, config, deps.executeAction);
+    if (action.kind === "repay" || action.kind === "mark_default") {
+      await maybeApplyEnsSideEffects(
+        { agent, kind: action.kind, tick: nextTick, status },
+        deps.applyEnsSideEffects,
+      );
+    }
+    lastKind.set(agent, action.kind);
+  }
+
   await persistNarration(ledger, config, nextTick, phase, lastKind, deps.narratorProvider);
-  await onTick(nextTick, phase);
   console.log(`[sim] tick ${nextTick} phase=${phase}`);
   return nextTick;
 }
