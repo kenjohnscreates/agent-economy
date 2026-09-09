@@ -15,6 +15,7 @@ import { runLoop, runTicks, type TickDeps } from "./engine.js";
 import { createLedger } from "./ledger/index.js";
 import { createSdkLlmProvider } from "./llm-sdk.js";
 import { createQuerySubgraph } from "./query-subgraph.js";
+import { createDefaultGetWorld } from "./world.js";
 
 const arcTestnet = defineChain({
   id: ARC_TESTNET_CHAIN_ID,
@@ -24,7 +25,9 @@ const arcTestnet = defineChain({
 });
 
 function buildTickDeps(config: ReturnType<typeof parseSimConfig>): TickDeps {
-  const deps: TickDeps = {};
+  const deps: TickDeps = {
+    getWorld: createDefaultGetWorld(process.env),
+  };
   if (config.flags.llmAdvisor && config.llmProvider !== "off") {
     deps.advisorProvider = createSdkLlmProvider(config.llmProvider);
     try {
