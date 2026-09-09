@@ -6,7 +6,7 @@
 | R2 | **Wrong ENS deployment**: must use the **frozen hackathon** Sepolia contracts (per ENS workshop), not the main beta which may change | Contracts break mid‑hack or judges can't verify | Addresses only from docs banner → hackathon branch; stored in `packages/ens/deployments.json`; no other addresses in code | BE | M0.3 |
 | R3 | **Mutable token IDs** in ENSv2: tokenId changes on any role grant/revoke, expiry, re‑registration | Stale ids → failed txs | Never cache tokenId; always re‑read from registry before write; test covers post‑grant write | BE | M2.2 |
 | R4 | **Arc EVM differences**: USDC ERC‑20 interface `0x3600…0000` is **6 decimals** but native gas balance is **18 decimals** (same underlying balance); Arc lacks PUSH0 → `evm_version = "paris"`; 20 gwei `maxFeePerGas` floor; `address(0)` transfers revert; system emitter logs USDC transfers | Off‑by‑1e12 amounts, silent deploy failures, subgraph double counting | Use ERC‑20 interface only and read `decimals()`; `paris` in `foundry.toml`; constants in `packages/shared`; subgraph indexes Treasury/ERC‑8183 events, not raw USDC transfers | BE | M0.8, M1.1 |
-| R5 | **Arc Testnet not in Subgraph Studio** | Graph track requires live Graph provider data; mocked data disqualifies | Verify hour 1 (M0.2). Fallback A: Substreams‑powered subgraph if Arc has Firehose. Fallback B: `TownLedger.sol` mirror on Sepolia written by sim with tx proofs, indexed live by Studio (weaker; disclose in README) | BE | M0.2 |
+| R5 | **Arc Testnet not in Subgraph Studio** — **RESOLVED Sep 8 22:44** (M0.2): networks registry v0.7.119 lists `arc-testnet` (eip155:5042002) and `arc` mainnet (eip155:5042) with the `subgraphs` service; `graph init --network arc-testnet` scaffolds. Studio‑only: `issuanceRewards=false`, no substreams/firehose → fallback A unavailable; only B applies if Studio breaks | Graph track requires live Graph provider data; mocked data disqualifies | Use `network: arc-testnet` in `subgraph.yaml`; query via Studio endpoint. Fallback B: `TownLedger.sol` mirror on Sepolia written by sim with tx proofs, indexed live by Studio (weaker; disclose in README) | BE | M0.2 ✅ |
 | R6 | **Arc "Launch to Mainnet"** requires mainnet‑ready by Sep 30 | Ineligible if contracts have testnet hacks | Config‑driven addresses; deploy script parameterised by chain; no faucet logic in contracts | BE | M7 |
 | R7 | **No LLM key yet** | Advisor/narrator can't run | Feature flags default `off`; rules produce reasoning text; obtain key in M0.1 | BE | M0.1 |
 | R8 | **Faucet rate limits** (Circle faucet) | Not enough USDC to seed 9 wallets | Fund mayor wallet once/day; fan out; keep amounts small (e.g. 2–10 USDC per agent) | BE | M1.4 |
@@ -25,7 +25,8 @@
 - Arc predeploys: Multicall3, Permit2, CREATE2 factory, EURC, CCTP v2, Gateway, StableFX escrow (docs.arc.io contract addresses).
 - DeFi scan result: see R16.
 - Arc docs list The Graph as an Arc indexer (Subgraphs + Explorer) — still confirm Studio network id (R5).
-- Arc Testnet: chain id 5042002, RPC `https://rpc.testnet.arc.io`, viem ships `arcTestnet`.
+- Arc Testnet: chain id 5042002, RPC `https://rpc.testnet.arc.io` (registry alias `https://rpc.testnet.arc.network`, `https://arc-testnet.drpc.org`; all return chainId 0x4cef52), viem ships `arcTestnet`.
+- The Graph: `arc-testnet` and `arc` in networks registry, Studio deploy `https://api.studio.thegraph.com/deploy`; graph-cli 0.98.1 auto-fetches ABIs from `https://testnet.arcscan.app/api`.
 - ERC‑8183 reference on Arc Testnet: `0x0747EEf0706327138c69792bF28Cd525089e4583`; Circle SDK blockchain id `ARC-TESTNET`, SCA wallets.
 - ENSIP‑26 keys: `agent-context`, `agent-endpoint[<protocol>]`.
 - Prize texts read for ENS, Arc, Graph (see PRD §7).
