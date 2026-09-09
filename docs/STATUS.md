@@ -410,6 +410,15 @@ Notes for BE: mock `scoreboard.ticks` lags `/state.tick` by the fixture offset (
 Next up: M5.4 bank panel (rate breakdown tooltip + stale badge), M5.7 mayor panel, then M5.8 after M4.7.
 Checkpoint call: none
 
+## Wed 9 Sep 17:00 EDT (FE)
+Done: **M5.1** landed on `card/M5.1-web-plumbing`, rebased onto main `464ce08` (after M4.9/M4.2), lockfile regenerated with pnpm 10.33.2; PR #39 open for Kenny. **M5.4** bank panel on `card/M5.4-bank-panel` (stacked on M5.1): treasury, utilisation (warn from 60%, danger at the 80% approval cap), base rate, town rate with the rate breakdown tooltip (market APY + spread + default premium = town rate, source lending subgraph + id, raw market APY, fetch time and age), STALE badge from `signals.stale`, loan book from `/loans` (all statuses, refetched per tick and on `loan_flagged`) with the advisor's reasoning, source and confidence on every decision. `lib/rate.ts` helpers unit-tested (10 tests); store keeps the whole loan book and upserts `loan_flagged` into it.
+In progress: M5.2 map (Astra).
+Blocked: —
+Risks changed: —
+Notes for BE: mock flips `signals.stale` every 7th tick, which is how the badge was screenshotted. The FE reads `rate.utilisationBps` straight from `/scoreboard`; nothing is recomputed client-side.
+Next up: M5.7 mayor panel, then M5.8 swap to real now that M4.7 is on main.
+Checkpoint call: none
+
 ## Wed 9 Sep 17:45 EDT
 Done: Denied **#5/#6** [0xcf81d98d…](https://testnet.arcscan.app/tx/0xcf81d98d5efaba4005094aeb41548f39dc5d0c8b4e9ac6eed892341a75f147c2) / [0x55ff12b0…](https://testnet.arcscan.app/tx/0x55ff12b02040365361f4ca29103aff51ee34b0fc0c54a73915380b706efde6f3). Deployer native→gus 1.19 [0xd827fe66…](https://testnet.arcscan.app/tx/0xd827fe6646f93b44305f37a040c2f71ed3c6a9bb4dd2ef0fedd1d2508db582c0) · hal 1.69 [0xf27aa822…](https://testnet.arcscan.app/tx/0xf27aa822e177f51098354a52bd6d0415d5cf0166b4eb429a7374113c0c40b973). `fund()` 5.2 USDC [0xa6b1f2a0…](https://testnet.arcscan.app/tx/0xa6b1f2a05c7de274ff4c0f5389d8087f6037a09a7a3f6a036b10d1e950439fcc) → free 5.5 USDC.
 **LIVE `--ticks 12 --yes`** 12/12, **0 failed** (local execute skip, later #40). Complete: gus/hal **buy** t1–3+t7; bo/cy **post_job** t1–4; t1 **request_loan** → **#7 bo / #8 cy Pending**; dee **deposit** t3; ada **pay_stipend** t3+t6+t9+t12; ada **set_rate** t9. Skipped: J-demo; request_loan t2–4; repay L-1; mark_default L-2. stats: loanCount 8, outstanding 0, defaults 1, rate 839, deposits 0.92, free 1.5 USDC.

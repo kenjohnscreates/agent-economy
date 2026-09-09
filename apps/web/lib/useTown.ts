@@ -1,7 +1,8 @@
 "use client";
 // useTown: the one hook the UI calls. Loads the snapshot, attaches the stream
-// (live SSE or recorded replay) to the reducer, refetches /agents on every tick
-// in live mode (positions and balances only live on /agents), and exposes controls.
+// (live SSE or recorded replay) to the reducer, refetches /agents and /loans on every
+// tick in live mode (positions, balances and the loan book only live there), and
+// exposes controls.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { api } from "./api";
 import { openReplay, type ReplayControls, type ReplayFile } from "./replay";
@@ -59,7 +60,7 @@ export function useTown(source: TownSource | null): {
         const [agents, scoreboard, loans] = await Promise.all([
           api.agents(base),
           api.scoreboard(base),
-          api.loans("pending", base),
+          api.loans(undefined, base),
         ]);
         if (cancelled) return;
         dispatch({ event: "agents", data: agents });
@@ -79,9 +80,9 @@ export function useTown(source: TownSource | null): {
               .then((agents) => guarded({ event: "agents", data: agents }))
               .catch(() => undefined);
           }
-          if (e.event === "loan_flagged") {
+          if (e.event === "tick" || e.event === "loan_flagged") {
             api
-              .loans("pending", base)
+              .loans(undefined, base)
               .then((l) => guarded({ event: "loans", data: l }))
               .catch(() => undefined);
           }

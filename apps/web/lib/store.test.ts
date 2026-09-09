@@ -42,6 +42,21 @@ describe("reduce", () => {
     expect(s.pendingLoans).toEqual([]);
   });
 
+  it("keeps the whole loan book and upserts flagged loans into it", () => {
+    let s = initialState();
+    const loan = { ...FIXTURES.loans[0]!, id: "L-9", status: "pending" as const };
+    const flagged = { ...loan, id: "L-8" };
+    s = reduce(s, { event: "loans", data: [loan, { ...loan, id: "L-7", status: "repaid" }] });
+    expect(s.loans.map((l) => l.id)).toEqual(["L-9", "L-7"]);
+    expect(s.pendingLoans.map((l) => l.id)).toEqual(["L-9"]);
+    s = reduce(s, { event: "loan_flagged", data: flagged });
+    expect(s.loans.map((l) => l.id)).toEqual(["L-9", "L-7", "L-8"]);
+    s = reduce(s, { event: "loan_flagged", data: { ...flagged, principalUsdc: "2000000" } });
+    expect(s.loans).toHaveLength(3);
+    expect(s.loans[2]?.principalUsdc).toBe("2000000");
+    expect(s.pendingLoans.map((l) => l.id)).toEqual(["L-9", "L-8"]);
+  });
+
   it("feed is capped", () => {
     let s = initialState();
     for (let i = 0; i < FEED_CAP + 25; i++)
