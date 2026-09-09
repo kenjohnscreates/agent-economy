@@ -15,6 +15,11 @@ export const ethRegistryAbi = parseAbi([
   "function getOwner(uint256 anyId) view returns (address)", // 0xc41a360a
   "function ownerOf(uint256 tokenId) view returns (address)", // 0x6352211e
   "function getExpiry(uint256 anyId) view returns (uint64)", // 0x13c72608
+  // writes — anyId = labelhash | tokenId | resource. Prefer labelhash (R3).
+  "function setSubregistry(uint256 anyId, address registry)", // 0x341ec559
+  "function setResolver(uint256 anyId, address resolver)", // 0xbc7b6d62
+  "error EACUnauthorizedAccountRoles(uint256 resource, uint256 roleBitmap, address account)",
+  "error InvalidInitialization()",
 ]);
 
 export const RegistryStatus = { AVAILABLE: 0, RESERVED: 1, REGISTERED: 2 } as const;

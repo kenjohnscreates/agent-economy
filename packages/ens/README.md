@@ -14,3 +14,21 @@ ENSv2 client for the **hackathon-frozen Sepolia deployment** (`deployments.json`
 Env: `SEPOLIA_RPC_URL` (read-only fallback: publicnode), `ENS_TREASURER_PRIVATE_KEY` (owner of the name), `ENS_TOWN_NAME=botanica`.
 Human needs: ~0.01 Sepolia ETH for gas on the treasurer; registration is priced in **MockUSDC** (open `mint`, ≈8 USDC/yr for 5+ chars) — `--register` mints the shortfall itself.
 Never persist `tokenId` (R3); subregistry/resolver stay zero until M2.1.
+
+## Deploy town subregistry + PermissionedResolver (M2.1)
+
+Deploys a `UserRegistry` proxy (town PermissionedRegistry) and a `PermissionedResolver` proxy via hackathon `VerifiableFactory`, then points `botanica.eth` at them with `ETHRegistry.setSubregistry/setResolver(labelhash, …)`. **Default is dry-run. Do not pass `--broadcast` until gate A.**
+
+| Command (`pnpm --filter @agent-town/ens deploy-town-subregistry -- …`) | Broadcasts | Needs key |
+| --- | --- | --- |
+| *(no flag)* / `--dry-run` · live name status, factory salts, calldata, `eth_call` of `deployProxy` + `setSubregistry`/`setResolver` | no | no |
+| `--broadcast` · TX: two `deployProxy` + `setSubregistry` + `setResolver`; writes `packages/ens/town.json` and prints `ENS_TOWN_REGISTRY` / `ENS_TOWN_RESOLVER` | yes | yes |
+
+```bash
+pnpm --filter @agent-town/ens deploy-town-subregistry -- --dry-run
+# later, after gate A (Sepolia writes):
+pnpm --filter @agent-town/ens deploy-town-subregistry -- --broadcast
+```
+
+Env: `SEPOLIA_RPC_URL` (read-only fallback: publicnode), `ENS_TREASURER_PRIVATE_KEY` (must own `botanica.eth`), `ENS_TOWN_NAME=botanica`.
+Clients resolve via `UpgradableUniversalResolverProxy` (`deployments.json`). After broadcast, `getSubregistry("botanica")` returns the factory proxy. Never persist `tokenId` (R3); `town.json` stores addresses only.
