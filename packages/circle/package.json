@@ -13,11 +13,21 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "roster.json"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src scripts",
+    "setup-wallets": "node --env-file-if-exists=../../.env --import tsx scripts/setup-wallets.ts",
+    "balances": "node --env-file-if-exists=../../.env --import tsx scripts/balances.ts"
+  },
+  "dependencies": {
+    "@agent-town/shared": "workspace:*",
+    "@circle-fin/developer-controlled-wallets": "10.8.0",
+    "viem": "2.56.3",
+    "zod": "4.5.4"
   }
 }
