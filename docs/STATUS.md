@@ -10,8 +10,8 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** (set `949545dc-…`, 9 SCA) · **M1.2 deployed** `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` · M1.4 fund in flight |
-| M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** registry `0xC4f5…40f9` resolver `0x800d…efc8` · M2.2 spawned |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** · **M1.2** `0xCE0e…FfC1` · M1.4 mayor 19.5 USDC; Circle xfer hotfix #18 |
+| M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** registry `0xC4f5…40f9` resolver `0x800d…efc8` · **M2.2** #17 `8452193` · M2.3 spawned |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · M3.3 can use treasury `0xCE0e…FfC1` |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
@@ -141,4 +141,12 @@ In progress: M2.2 TownRegistrar; M1.4 fund
 Blocked: —
 Risks changed: —
 Next up: M2.2 PR; M1.4 PR → `--yes`; M3.3 pin treasury in Studio
+Checkpoint call: none
+
+## Wed 9 Sep 02:03 EDT
+Done: **M2.2** — PR #17 squash-merged `8452193`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/17#pullrequestreview-5150350146). `forge test` **85/85** (12 TownRegistrar). Negative `test_WorkerCannotSetCreditScore_TreasurerCan`. Paris, no tokenId storage, deploy script dry-run only (`ALLOW_BROADCAST=true` to send).
+In progress: M2.3 mint script; M1.4 Circle xfer #18; M2 registrar not yet on-chain
+Blocked: live `TownRegistrar` deploy + name mints (Sepolia writes — not in original approve-all list)
+Risks changed: —
+Next up: merge #18 → `fund --yes`; M2.3 PR; M3.3
 Checkpoint call: none
