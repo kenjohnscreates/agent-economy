@@ -4,6 +4,7 @@
 // Outputs: dry-run plan (default) or broadcast txs (--yes). Idempotent. Never logs secrets.
 // Usage: pnpm --filter @agent-town/circle fund
 //        pnpm --filter @agent-town/circle fund --yes
+import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 import {
   ARC_EXPLORER_URL,
@@ -30,7 +31,6 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import {
   CircleEnvSchema,
-  TREASURER_NAME,
   absoluteFee,
   buildFundPlan,
   createCircleClient,
@@ -118,7 +118,8 @@ async function fees(pub: PublicClient): Promise<{
   maxPriorityFeePerGas: bigint;
 }> {
   const est = await pub.estimateFeesPerGas().catch(() => undefined);
-  const maxFeePerGas = est?.maxFeePerGas && est.maxFeePerGas > ARC_MIN_FEE ? est.maxFeePerGas : ARC_MIN_FEE;
+  const maxFeePerGas =
+    est?.maxFeePerGas && est.maxFeePerGas > ARC_MIN_FEE ? est.maxFeePerGas : ARC_MIN_FEE;
   const maxPriorityFeePerGas =
     est?.maxPriorityFeePerGas && est.maxPriorityFeePerGas > 0n ? est.maxPriorityFeePerGas : ARC_TIP;
   return { maxFeePerGas, maxPriorityFeePerGas };
@@ -126,6 +127,23 @@ async function fees(pub: PublicClient): Promise<{
 
 function explorerTx(hash: string): string {
   return `${ARC_EXPLORER_URL}/tx/${hash}`;
+}
+
+/** Circle SDK errors often stash `code` / `response.data`; print them, never secrets. */
+function formatCircleError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  const rec = err as Error & { code?: unknown; response?: { data?: unknown } };
+  const parts = [err.message];
+  if (rec.code != null) parts.push(`code ${rec.code}`);
+  const data = rec.response?.data;
+  if (data !== undefined) {
+    try {
+      parts.push(typeof data === "string" ? data : JSON.stringify(data));
+    } catch {
+      // ignore unserializable bodies
+    }
+  }
+  return parts.join(" — ");
 }
 
 function printHeader(input: {
@@ -208,18 +226,25 @@ async function runCircleTransfer(
   });
   if (!parsed.success) return false;
   const client = createCircleClient(env);
-  const { txId } = await transferUsdc(client, {
-    walletId: step.fromWalletId,
-    to: step.to,
-    amountUsdc: send6.toString(),
-    fee: absoluteFee({ gasLimit: 100_000n }),
-    idempotencyKey: `m1.4-xfer-${step.toName}-${send6.toString()}`,
-  });
-  const tx = await waitComplete(client, txId);
-  console.log(
-    `  circle ${step.fromName}→${step.toName}  ${formatUsdc6(send6)}  ${tx.txHash ? explorerTx(tx.txHash) : txId}`,
-  );
-  return true;
+  try {
+    const { txId } = await transferUsdc(client, {
+      walletId: step.fromWalletId,
+      to: step.to,
+      amountUsdc: send6.toString(),
+      fee: absoluteFee({ gasLimit: 100_000n }),
+      idempotencyKey: randomUUID(),
+    });
+    const tx = await waitComplete(client, txId);
+    console.log(
+      `  circle ${step.fromName}→${step.toName}  ${formatUsdc6(send6)}  ${tx.txHash ? explorerTx(tx.txHash) : txId}`,
+    );
+    return true;
+  } catch (e) {
+    console.error(
+      `  ! Circle transfer ${step.fromName}→${step.toName} failed: ${formatCircleError(e)}`,
+    );
+    throw e;
+  }
 }
 
 async function runCircleFund(
@@ -239,27 +264,36 @@ async function runCircleFund(
   if (!parsed.success) return false;
   const client = createCircleClient(env);
   const amt = step.amountUsdc6.toString();
-  const approve = await executeContract(client, {
-    walletId: step.fromWalletId,
-    contractAddress: ARC_USDC_ADDRESS,
-    abiFunctionSignature: "approve(address,uint256)",
-    abiParameters: [step.treasury, amt],
-    fee: absoluteFee({ gasLimit: 80_000n }),
-    idempotencyKey: `m1.4-approve-${TREASURER_NAME}-${amt}`,
-  });
-  const approveTx = await waitComplete(client, approve.txId);
-  console.log(`  circle approve  ${amt}  ${approveTx.txHash ? explorerTx(approveTx.txHash) : approve.txId}`);
-  const fund = await executeContract(client, {
-    walletId: step.fromWalletId,
-    contractAddress: step.treasury,
-    abiFunctionSignature: "fund(uint256)",
-    abiParameters: [amt],
-    fee: absoluteFee({ gasLimit: 120_000n }),
-    idempotencyKey: `m1.4-fund-${TREASURER_NAME}-${amt}`,
-  });
-  const fundTx = await waitComplete(client, fund.txId);
-  console.log(`  circle fund()   ${amt}  ${fundTx.txHash ? explorerTx(fundTx.txHash) : fund.txId}`);
-  return true;
+  try {
+    const approve = await executeContract(client, {
+      walletId: step.fromWalletId,
+      contractAddress: ARC_USDC_ADDRESS,
+      abiFunctionSignature: "approve(address,uint256)",
+      abiParameters: [step.treasury, amt],
+      fee: absoluteFee({ gasLimit: 80_000n }),
+      idempotencyKey: randomUUID(),
+    });
+    const approveTx = await waitComplete(client, approve.txId);
+    console.log(
+      `  circle approve  ${amt}  ${approveTx.txHash ? explorerTx(approveTx.txHash) : approve.txId}`,
+    );
+    const fund = await executeContract(client, {
+      walletId: step.fromWalletId,
+      contractAddress: step.treasury,
+      abiFunctionSignature: "fund(uint256)",
+      abiParameters: [amt],
+      fee: absoluteFee({ gasLimit: 120_000n }),
+      idempotencyKey: randomUUID(),
+    });
+    const fundTx = await waitComplete(client, fund.txId);
+    console.log(
+      `  circle fund()   ${amt}  ${fundTx.txHash ? explorerTx(fundTx.txHash) : fund.txId}`,
+    );
+    return true;
+  } catch (e) {
+    console.error(`  ! Circle fund() from ${step.fromName} failed: ${formatCircleError(e)}`);
+    throw e;
+  }
 }
 
 async function runDeployerFund(
@@ -396,7 +430,9 @@ async function main(): Promise<void> {
     treasuryUsdc6,
     snaps,
   });
-  console.log(`  preferCircle   ${plan.preferCircle}  mayorTarget ${formatUsdc6(plan.mayorTarget6)}`);
+  console.log(
+    `  preferCircle   ${plan.preferCircle}  mayorTarget ${formatUsdc6(plan.mayorTarget6)}`,
+  );
   console.log("  steps:");
   plan.steps.forEach((s, i) => console.log(`  ${String(i + 1).padStart(2)}. ${formatStep(s)}`));
 
@@ -407,7 +443,11 @@ async function main(): Promise<void> {
   }
 
   const needDeployer = plan.steps.some(
-    (s) => s.kind === "deployer-native" || s.kind === "deployer-fund" || s.kind === "circle-transfer" || s.kind === "circle-fund",
+    (s) =>
+      s.kind === "deployer-native" ||
+      s.kind === "deployer-fund" ||
+      s.kind === "circle-transfer" ||
+      s.kind === "circle-fund",
   );
   let account: Account | undefined;
   let wallet: WalletClient | undefined;
