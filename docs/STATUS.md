@@ -12,7 +12,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
 | M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1–M1.4 LIVE** treasury `0xCE0e…FfC1` **3 USDC** · 8 agents **2 USDC** · mayor **0.5** · M1.5/M1.6 spawned |
 | M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** registry `0xC4f5…40f9` resolver `0x800d…efc8` · **M2.2** #17 `8452193` · M2.3 spawned |
-| M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · M3.3 can use treasury `0xCE0e…FfC1` |
+| M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
@@ -157,4 +157,12 @@ In progress: M1.5 job e2e; M1.6 treasury e2e; M3.3 Studio; M2.3 mint
 Blocked: —
 Risks changed: —
 Next up: M1.5/M1.6/M3.3 PRs; M2.3
+Checkpoint call: none
+
+## Wed 9 Sep 02:23 EDT
+Done: **M3.3 pin** — PR #20 squash-merged `73ac46d`. T3 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/20#pullrequestreview-5150501177). TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` startBlock `61140537` (≤ deploy 61189689). Matchstick 3/3. **Studio deploy not done** — `GRAPH_API_KEY` is a query key; needs Studio wallet **deploy key** + slug `agent-town` (Arc Testnet). `SUBGRAPH_URL` empty.
+In progress: M1.5; M1.6; M2.3 #21
+Blocked: M3.3 live Studio — say `studio deploy key set` after creating https://thegraph.com/studio/ subgraph `agent-town`
+Risks changed: —
+Next up: M1.5/M1.6 PRs; #21 review; Studio key
 Checkpoint call: none
