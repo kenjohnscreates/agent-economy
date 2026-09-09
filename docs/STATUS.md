@@ -366,3 +366,11 @@ Blocked: 12-tick live; mayor fund / loan-decision #3/#4; `revokeName`
 Risks changed: —
 Next up: M6.2d PR; say `run 12-tick` for a full live demo. FE independent.
 Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 16:28 EDT
+Done: **M6.2d** #38 `0d4a76e` T1 APPROVE — fixture `J-demo` now **skipped** on live execute (no failed Circle tx). origin/main `0d4a76e`. 0 open PRs.
+In progress: —
+Blocked: 12-tick live (`run 12-tick`); mayor loan-decision **#3/#4**; fund re-seed; `revokeName`
+Risks changed: —
+Next up: Checkpoint Thu 22:00. FE M5.8 independent.
+Checkpoint call: none (Thu 10 Sep 22:00)
