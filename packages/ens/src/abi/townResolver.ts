@@ -5,10 +5,14 @@ import { parseAbi } from "viem";
 export const townResolverAbi = parseAbi([
   "function setText(bytes name, string key, string value)",
   "function setAddress(bytes name, uint256 coinType, bytes addressBytes)",
+  "function linkToNode(bytes sourceName, bytes32 targetNode)",
+  "function linkToRecord(bytes sourceName, uint256 recordId)",
+  "function getRecordId(bytes32 node) view returns (uint256)",
   "function grantRootRoles(uint256 roleBitmap, address account) returns (bool)",
   "function grantSetterRoles(bytes setter, address account)",
   "function hasRoles(uint256 resource, uint256 roleBitmap, address account) view returns (bool)",
   "function multicall(bytes[] calls) returns (bytes[])",
   "error EACUnauthorizedAccountRoles(uint256 resource, uint256 roleBitmap, address account)",
   "error InvalidEVMAddress(bytes addressBytes)",
+  "error InvalidRecord()",
 ]);

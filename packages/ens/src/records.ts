@@ -11,6 +11,7 @@ import {
   type Role,
 } from "@agent-town/shared";
 import {
+  decodeAbiParameters,
   encodeFunctionData,
   getAddress,
   namehash,
@@ -58,6 +59,14 @@ export const ROLE_SET_ADDRESS_ADMIN = ROLE_SET_ADDRESS << 128n;
 export const ROLE_SET_TEXT_ADMIN = ROLE_SET_TEXT << 128n;
 export const RESOLVER_REGISTRAR_ROLES =
   ROLE_SET_TEXT | ROLE_SET_TEXT_ADMIN | ROLE_SET_ADDRESS | ROLE_SET_ADDRESS_ADMIN;
+
+/** Resolver ROOT bit for inode record linking (`linkToNode` / `linkToRecord`). */
+export const ROLE_LINK = 1n << 28n;
+export const ROLE_LINK_ADMIN = ROLE_LINK << 128n;
+
+/** Bank alias label (ARCHITECTURE §4.3). Treasurer label is roster `ada`. */
+export const BANK_LABEL = "bank";
+export const TREASURER_LABEL = "ada";
 
 /** Placeholder origin for ENS avatar / agent-context endpoints until the FE is live. */
 export const DEFAULT_APP_ORIGIN = "http://localhost:3000";
@@ -295,3 +304,119 @@ export const SET_ADDR_NAMECHAIN_SELECTOR = toFunctionSelector(
 export const REGISTER_SELECTOR = toFunctionSelector(
   "function register(string label, address owner, uint8 role)",
 );
+/** Hackathon inode PermissionedResolver — confirmed in impl 0xa9d3…614e bytecode. */
+export const LINK_TO_NODE_SELECTOR = toFunctionSelector(
+  "function linkToNode(bytes sourceName, bytes32 targetNode)",
+);
+export const LINK_TO_RECORD_SELECTOR = toFunctionSelector(
+  "function linkToRecord(bytes sourceName, uint256 recordId)",
+);
+/** namechain PermissionedResolver alias API — absent from hackathon inode bytecode. */
+export const SET_ALIAS_NAMECHAIN_SELECTOR = toFunctionSelector(
+  "function setAlias(bytes fromName, bytes toName)",
+);
+
+export function encodeLinkToNode(sourceDns: Hex, targetNode: Hex): Hex {
+  return encodeFunctionData({
+    abi: townResolverAbi,
+    functionName: "linkToNode",
+    args: [sourceDns, targetNode],
+  });
+}
+
+export function encodeLinkToRecord(sourceDns: Hex, recordId: bigint): Hex {
+  return encodeFunctionData({
+    abi: townResolverAbi,
+    functionName: "linkToRecord",
+    args: [sourceDns, recordId],
+  });
+}
+
+/**
+ * Decode UniversalResolverV2.resolve inner `bytes` to an EVM address.
+ * Live UR returns ABI-encoded 20-byte addr (hex length 194: offset + len + padded address).
+ */
+export function decodeResolvedAddress(data: Hex): Address | undefined {
+  if (!data || data === "0x") return undefined;
+  try {
+    if (data.length === 194) {
+      const [inner] = decodeAbiParameters([{ type: "bytes" }], data);
+      if (inner.length === 42) return getAddress(inner);
+      if (inner.length >= 42) return getAddress(`0x${inner.slice(2, 42)}`);
+    }
+    if (data.length === 66) {
+      const [addr] = decodeAbiParameters([{ type: "address" }], data);
+      return addr;
+    }
+    if (data.length === 42) return getAddress(data);
+    if (data.length === 130) {
+      const [inner] = decodeAbiParameters([{ type: "bytes" }], data);
+      if (inner.length === 42) return getAddress(inner);
+    }
+  } catch {
+    /* raw */
+  }
+  return undefined;
+}
+
+export interface BankAliasPlan {
+  townLabel: string;
+  bankLabel: typeof BANK_LABEL;
+  treasurerLabel: typeof TREASURER_LABEL;
+  bankEns: string;
+  treasurerEns: string;
+  bankDns: Hex;
+  treasurerDns: Hex;
+  bankNode: Hex;
+  treasurerNode: Hex;
+  owner: Address;
+  wallet: Address;
+  registrarRole: RegistrarRoleId;
+  calls: {
+    register: Hex;
+    linkToNode: Hex;
+    resolveAddrArc: Hex;
+    resolveAddrEth: Hex;
+  };
+}
+
+/**
+ * M2.4 plan: register `bank.<town>.eth` then `linkToNode` → treasurer (ada) record.
+ * Name owner follows live M2.3 (`register` owner = ada Arc wallet). Addr is not copied.
+ */
+export function buildBankAliasPlan(opts: {
+  townLabel: string;
+  owner: Address;
+  treasurerWallet: Address;
+}): BankAliasPlan {
+  const townLabel = opts.townLabel;
+  const owner = getAddress(opts.owner);
+  const wallet = getAddress(opts.treasurerWallet);
+  const bankEns = `${BANK_LABEL}.${townLabel}.eth`;
+  const treasurerEns = `${TREASURER_LABEL}.${townLabel}.eth`;
+  const bankDns = dnsEncodeName(bankEns);
+  const treasurerDns = dnsEncodeName(treasurerEns);
+  const bankNode = namehash(bankEns);
+  const treasurerNode = namehash(treasurerEns);
+  const registrarRole = RegistrarRole.Treasurer;
+  return {
+    townLabel,
+    bankLabel: BANK_LABEL,
+    treasurerLabel: TREASURER_LABEL,
+    bankEns,
+    treasurerEns,
+    bankDns,
+    treasurerDns,
+    bankNode,
+    treasurerNode,
+    owner,
+    wallet,
+    registrarRole,
+    calls: {
+      register: encodeRegister(BANK_LABEL, owner, registrarRole),
+      linkToNode: encodeLinkToNode(bankDns, treasurerNode),
+      resolveAddrArc: encodeResolveAddr(bankNode, COIN_TYPE_ARC),
+      resolveAddrEth: encodeResolveAddr(bankNode, COIN_TYPE_ETH),
+    },
+  };
+}

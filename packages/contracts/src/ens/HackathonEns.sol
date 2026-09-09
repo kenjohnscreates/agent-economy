@@ -98,10 +98,14 @@ interface ITownRegistry {
 /// @notice Minimal hackathon PermissionedResolver surface (live selectors).
 /// @dev `grantRoles` exists on the impl but reverts (`EACCannotGrantRoles`); use `grantSetterRoles`.
 ///      Setters take DNS-encoded names (`bytes`), not namehash. Address writes are `setAddress`
-///      (inode), not namechain `setAddr`.
+///      (inode), not namechain `setAddr`. Record aliasing is `linkToNode` / `linkToRecord`
+///      (ROLE_LINK); namechain `setAlias` is absent from impl 0xa9d3…614e.
 interface ITownResolver {
     function setText(bytes calldata name, string calldata key, string calldata value) external;
     function setAddress(bytes calldata name, uint256 coinType, bytes calldata addressBytes) external;
+    function linkToNode(bytes calldata sourceName, bytes32 targetNode) external;
+    function linkToRecord(bytes calldata sourceName, uint256 recordId) external;
+    function getRecordId(bytes32 node) external view returns (uint256);
     function grantSetterRoles(bytes calldata setter, address account) external;
     function grantRootRoles(uint256 roleBitmap, address account) external returns (bool);
     function revokeRootRoles(uint256 roleBitmap, address account) external returns (bool);
@@ -109,4 +113,5 @@ interface ITownResolver {
     function roles(uint256 resource, address account) external view returns (uint256);
 
     error EACUnauthorizedAccountRoles(uint256 resource, uint256 roleBitmap, address account);
+    error InvalidRecord();
 }

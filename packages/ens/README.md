@@ -58,6 +58,30 @@ forge script script/MintAgentNames.s.sol --rpc-url "$SEPOLIA_RPC_URL" --evm-vers
 
 Env: `SEPOLIA_RPC_URL`, `ENS_TOWN_REGISTRY` / `ENS_TOWN_RESOLVER` (`town.json`), `ENS_TOWN_REGISTRAR` (after M2.2 deploy), `ENS_TREASURER_PRIVATE_KEY` (broadcast), `PUBLIC_APP_URL` (avatar origin; default `http://localhost:3000` so avatar is `{origin}/sprites/<name>.png` from the roster). Wallets: `packages/circle/roster.json`. Roles: `packages/shared` ROSTER. Resolve via `UpgradableUniversalResolverProxy` `0xd26f…f142`. Never persist `tokenId` (R3).
 
+## Record alias `bank.botanica.eth` (M2.4)
+
+Registers `bank.botanica.eth` via `TownRegistrar.register` (role Treasurer, owner = live ada name owner) then **`linkToNode(bank DNS, namehash(ada.botanica.eth))`** on the hackathon PermissionedResolver (impl `0xa9d3…614e`). That is a true inode record alias (`ROLE_LINK`), not an addr copy and not namechain `setAlias` (absent from bytecode). After broadcast, UniversalResolverV2 resolves `bank` identically to `ada` for `addr(2152525650)` and `addr(60)`. **Default is dry-run.** `--broadcast` also requires `ALLOW_BROADCAST=true`.
+
+| Command (`pnpm --filter @agent-town/ens record-bank-alias -- …`) | Broadcasts | Needs key |
+| --- | --- | --- |
+| *(no flag)* / `--dry-run` · live ada resolve, register + `linkToNode` calldata, `eth_call` sims | no | no |
+| `--broadcast` · refused unless `ALLOW_BROADCAST=true`. `register("bank")` if needed, then `linkToNode`; tokenId re-read via labelhash (printed only, R3) | yes | yes |
+
+```bash
+pnpm --filter @agent-town/ens record-bank-alias -- --dry-run
+# after review (orchestrator; do not --broadcast in the PR):
+ALLOW_BROADCAST=true pnpm --filter @agent-town/ens record-bank-alias -- --broadcast
+```
+
+Foundry equivalent (`ALLOW_BROADCAST` guard). Sepolia `eth_call` against hackathon proxies needs **cancun** (paris: `EvmError: NotActivated` on PUSH0). Never change `foundry.toml` default (paris is for Arc).
+
+```bash
+cd packages/contracts
+forge script script/RecordBankAlias.s.sol --rpc-url "$SEPOLIA_RPC_URL" --evm-version cancun
+```
+
+Env: same as M2.3. `town.json` is not written (no new address). Never persist `tokenId` (R3). UR.resolve inner bytes may be ABI-encoded 20-byte addr (hex length 194) — decoded, not treated as empty.
+
 ## Typed client (M2.5)
 
 `resolveAgent`, `setCreditScore`, `appendReview`, `revokeName` — names may be `ada` or `ada.botanica.eth`. Reads go through `UpgradableUniversalResolverProxy.resolve(dnsEncode, profile calldata)` (direct `addr(bytes,uint256)` on the proxy reverts). Writes re-read `getState(labelhash)` immediately before the tx and **never cache `tokenId`** (R3). Default is `simulateContract`; send requires `{ broadcast: true }` **and** `ALLOW_BROADCAST=true`.

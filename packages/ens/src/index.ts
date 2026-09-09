@@ -1,7 +1,8 @@
 // @agent-town/ens — ENSv2 client (resolve, setRecords, role checks) on Sepolia.
 // Addresses: deployments.ts (hackathon-frozen set only, R2). ABIs: src/abi/*.
-// Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1), mint-agent-names.ts (M2.3).
-// Client: resolveAgent / setCreditScore / appendReview / revokeName (M2.5). Never cache tokenIds (R3).
+// Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1), mint-agent-names.ts (M2.3),
+// record-bank-alias.ts (M2.4). Client: resolveAgent / setCreditScore / appendReview / revokeName (M2.5).
+// Never cache tokenIds (R3).
 export const PACKAGE = "@agent-town/ens" as const;
 
 export {
@@ -60,17 +61,24 @@ export {
   RegistrarRole,
   REGISTRY_REGISTRAR_ROLES,
   RESOLVER_REGISTRAR_ROLES,
+  ROLE_LINK,
+  BANK_LABEL,
+  TREASURER_LABEL,
   agentContextMarkdown,
   avatarUrl,
   buildMintPlan,
+  buildBankAliasPlan,
   dnsEncodeName,
   dnsEncodeTownName,
+  decodeResolvedAddress,
   encodeRegister,
   encodeSetAddress,
   encodeSetText,
+  encodeLinkToNode,
   registrarRoleOf,
   rosterRoleOf,
   type AgentMintPlan,
+  type BankAliasPlan,
   type MintPlan,
   type RegistrarRoleId,
 } from "./records.js";
