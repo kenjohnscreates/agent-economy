@@ -23,7 +23,8 @@
     "lint": "eslint src scripts",
     "setup-wallets": "node --env-file-if-exists=../../.env --import tsx scripts/setup-wallets.ts",
     "balances": "node --env-file-if-exists=../../.env --import tsx scripts/balances.ts",
-    "fund": "node --env-file-if-exists=../../.env --import tsx scripts/fund.ts"
+    "fund": "node --env-file-if-exists=../../.env --import tsx scripts/fund.ts",
+    "job-e2e": "node --env-file-if-exists=../../.env --import tsx scripts/job-e2e.ts"
   },
   "dependencies": {
     "@agent-town/shared": "workspace:*",
