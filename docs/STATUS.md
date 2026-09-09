@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
-| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · **live 12-tick ran** (partial vs dirty chain) · M6.2 #35–#38 · M6.3 footage later |
+| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick partial · **loans #3/#4 Active** · M6.2 #35–#38 · M6.3 footage later |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -383,4 +383,12 @@ In progress: —
 Blocked: faucet/deployer USDC for a clean re-seed; mayor loan-decision #3/#4 (say `approve` if you want those disbursed)
 Risks changed: live storyline vs already-used loans/jobs — P1 for a clean demo reset
 Next up: Checkpoint Thu 22:00. Need faucet USDC or human faucet at https://faucet.circle.com before a clean 12-tick. FE independent.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 16:55 EDT
+Done: Gate A `approve` loans **#3/#4**. Treasury liquid was 0.74 USDC (need 1.2 each) — deployer `fund(3 USDC)` [0xdee3b6cc…](https://testnet.arcscan.app/tx/0xdee3b6cc1ca147d045bbccee44b242b7f5cf3c25f79413abd622c906d2e330f9) (approve [0x43af43b7…](https://testnet.arcscan.app/tx/0x43af43b7612e9a6a9f67620e9ba329868b6b9e8c07c645202c56953c58311c5f)). ada **approveLoan #3** bo 1.2 USDC Active [0xe8e1a171…](https://testnet.arcscan.app/tx/0xe8e1a171602cb1389216ad037f0337d8f2c8426ea31293bef01b2ea11467d1c7) · **#4** cy 1.2 USDC Active [0x8a54ea68…](https://testnet.arcscan.app/tx/0x8a54ea6826798cb743faef985806c8faff82a7a84617c644db7ddaa7fde6a0c5).
+In progress: —
+Blocked: `revokeName` still gated
+Risks changed: —
+Next up: Checkpoint Thu 22:00. FE independent.
 Checkpoint call: none (Thu 10 Sep 22:00)
