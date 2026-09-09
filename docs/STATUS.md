@@ -39,7 +39,8 @@ Checkpoint call: none
 
 ## Tue 8 Sep 22:45 EDT
 Done: M0.2 — **R5 RESOLVED**: `arc-testnet` (eip155:5042002) + `arc` mainnet in Graph networks registry with `subgraphs` service; `graph init --network arc-testnet` works. Studio-only (no rewards, no substreams). Evidence: networks-registry v0.7.119, thegraph.com/docs/en/supported-networks, docs.arc.io/arc/tools/data-indexers
-In progress: M0.1 `.env.example` (PR #1, in review), M0.3 ENS hackathon addresses (T3), M0.5 monorepo scaffold (T3), M0.8 Foundry init (T3) — builders on `card/*` branches
+Done: M0.1 `.env.example` — PR #1 merged `58b3a21` (30 vars, reviewer approved, 3 nits: port 3001 to be pinned in M0.7). **Human action open:** create accounts per PR #1 checklist (Circle key/entity secret/wallet set, Studio key, Sepolia ETH, Arc faucet, LLM key, Supabase) and fill local `.env`
+In progress: M0.3 ENS hackathon addresses (T3), M0.5 monorepo scaffold (T3), M0.8 Foundry init (T3) — builders on `card/*` branches
 Blocked: M0.4 — town ENS name not chosen (asked BE)
 Risks changed: R5 resolved (see RISKS.md); fallback A (Substreams) confirmed unavailable, B remains
 Next up: M0.6 shared zod contract → M0.7 mock server (unblocks FE), M0.9 Signal C subgraphs, M0.4 once name chosen
