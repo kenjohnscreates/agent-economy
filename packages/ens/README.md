@@ -57,3 +57,35 @@ forge script script/MintAgentNames.s.sol --rpc-url "$SEPOLIA_RPC_URL" --evm-vers
 ```
 
 Env: `SEPOLIA_RPC_URL`, `ENS_TOWN_REGISTRY` / `ENS_TOWN_RESOLVER` (`town.json`), `ENS_TOWN_REGISTRAR` (after M2.2 deploy), `ENS_TREASURER_PRIVATE_KEY` (broadcast), `PUBLIC_APP_URL` (avatar origin; default `http://localhost:3000` so avatar is `{origin}/sprites/<name>.png` from the roster). Wallets: `packages/circle/roster.json`. Roles: `packages/shared` ROSTER. Resolve via `UpgradableUniversalResolverProxy` `0xd26f…f142`. Never persist `tokenId` (R3).
+
+## Typed client (M2.5)
+
+`resolveAgent`, `setCreditScore`, `appendReview`, `revokeName` — names may be `ada` or `ada.botanica.eth`. Reads go through `UpgradableUniversalResolverProxy.resolve(dnsEncode, profile calldata)` (direct `addr(bytes,uint256)` on the proxy reverts). Writes re-read `getState(labelhash)` immediately before the tx and **never cache `tokenId`** (R3). Default is `simulateContract`; send requires `{ broadcast: true }` **and** `ALLOW_BROADCAST=true`.
+
+```ts
+import { createEnsClient, resolveAgent } from "@agent-town/ens";
+
+const agent = await resolveAgent("ada");
+// {
+//   ensName: "ada.botanica.eth",
+//   wallet: "0x97847b3C015994784Ae8Cf776ef9a4d563618cF2",   // Arc coinType 2152525650
+//   wallet60: "0x97847b3C015994784Ae8Cf776ef9a4d563618cF2",
+//   role: "treasurer",
+//   avatar: "http://localhost:3000/sprites/ada.png",
+//   agentContext: "# ada.botanica.eth\n...",
+// }
+
+const ens = createEnsClient({ publicClient, walletClient });
+await ens.setCreditScore("ada", 80); // simulate
+await ens.appendReview("bo", { by: "ada", tick: 3, score: 70, note: "repaid" });
+await ens.revokeName("hal"); // unregister(live getState tokenId)
+// ALLOW_BROADCAST=true required to actually send:
+await ens.setCreditScore("ada", 80, { broadcast: true });
+```
+
+```bash
+SEPOLIA_RPC_URL=$SEPOLIA_RPC_URL pnpm --filter @agent-town/ens test
+pnpm --filter @agent-town/ens typecheck
+```
+
+Writes in unit tests are mocked / `eth_call` only — this package does not `--broadcast` from CI. `unregister(uint256)` selector `0xa02b161e` is pinned against UserRegistryImpl `0x47b4…2546`. Treasurer has `ROLE_UNREGISTER` on treasurer-minted names (`TREASURER_NAME_ROLES`); worker names are non-transferable — revoke is treasurer/registrar-side.

@@ -1,6 +1,7 @@
 // @agent-town/ens — ENSv2 client (resolve, setRecords, role checks) on Sepolia.
 // Addresses: deployments.ts (hackathon-frozen set only, R2). ABIs: src/abi/*.
 // Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1), mint-agent-names.ts (M2.3).
+// Client: resolveAgent / setCreditScore / appendReview / revokeName (M2.5). Never cache tokenIds (R3).
 export const PACKAGE = "@agent-town/ens" as const;
 
 export {
@@ -24,6 +25,7 @@ export {
   userRegistryInitAbi,
   permissionedResolverInitAbi,
   townRegistryAbi,
+  UNREGISTER_SELECTOR,
   townResolverAbi,
   townRegistrarAbi,
   universalResolverAbi,
@@ -72,3 +74,29 @@ export {
   type MintPlan,
   type RegistrarRoleId,
 } from "./records.js";
+export {
+  REQUIRED_TOWN_CONTRACTS,
+  DEFAULT_TOWN_PATH,
+  parseTown,
+  loadTown,
+  town,
+  townAddresses,
+  type TownFile,
+  type RequiredTownContract,
+} from "./town.js";
+export { decodeUrBytes, decodeUrAddress, decodeUrString } from "./decode.js";
+export {
+  normalizeAgentName,
+  resolveAgent,
+  setCreditScore,
+  appendReview,
+  revokeName,
+  createEnsClient,
+  type EnsPublicClient,
+  type EnsWalletClient,
+  type EnsClientConfig,
+  type EnsClient,
+  type ResolvedAgent,
+  type WriteResult,
+  type NormalizedName,
+} from "./client.js";
