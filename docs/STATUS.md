@@ -10,10 +10,10 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | in_progress | both | done: M0.1 M0.2 M0.3 M0.5 M0.8 M0.6 M0.7 · M0.4 script merged, tx gated (A) · blocked: M0.9 (Graph key) · town = botanica · human: fill `.env` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | PR #9 M1.1 OPEN MERGEABLE unreviewed; PR #8 M1.3 OPEN CONFLICTING (rebase `.env.example`/`pnpm-lock.yaml`); M1.2 deploy + wallet create gated (A/B) |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.3 done** (#8 `ad0c17b`, 34/34 tests, no live calls) · PR #9 M1.1 OPEN MERGEABLE, T1 review in flight · M1.2 deploy gated (A) · `setup-wallets --yes` gated (B) |
 | M2 ENSv2 namespace | todo | BE | |
 | M3 Subgraph | todo | BE | |
-| M4 Sim, agents, API | todo | BE | |
+| M4 Sim, agents, API | in_progress | BE | PR #10 M4.1 OPEN (7/7 tests); T1 review in flight; will need `pnpm-lock.yaml` rebase onto main after #8 |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
 | M7 Review + docs | todo | reviewer | |
@@ -62,3 +62,11 @@ Risks changed: —
 Next up: next master rebases #8, T1-reviews #8+#9, squash-merges on VERDICT: APPROVE. Then gated items only.
 Checkpoint call: none
 Handoff: paste the MASTER ORCHESTRATOR prompt from chat; same protocol (worktrees, §2 briefs, §4 reviews, §7 STATUS). Do not re-ask town name.
+
+## Wed 9 Sep 00:37 EDT
+Done: M1.3 — PR #8 squash-merged `ad0c17b`. Rebased onto main (lockfile regen; kept `CIRCLE_WALLET_SET_NAME=agent-town`). T1 review [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/8#pullrequestreview-5149804947). Evidence: `pnpm --filter @agent-town/circle test` **34/34**; typecheck/build/lint green; `--dry-run` 9 SCA names on `ARC-TESTNET`, 0 API calls; without `--yes` refuses. Nits (non-blocking): README omits `pnpm -r build`; positional `wallets[i]` fallback.
+In progress: PR #9 M1.1 T1 review; PR #10 M4.1 T1 review (lockfile conflict vs #8 — rebase before merge)
+Blocked: M0.4 broadcast (gate A — `.env` `SEPOLIA_RPC_URL` + `ENS_TREASURER_PRIVATE_KEY` + `approve M0.4`); M0.9 (Graph key, gate B); **M1.3 wallets** `setup-wallets --yes` (gate B — say `approve M1.3 wallets`); M1.2 deploy (gate A, after #9 merges)
+Risks changed: —
+Next up: merge #9/#10 on APPROVE; human gates above
+Checkpoint call: none
