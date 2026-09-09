@@ -11,6 +11,7 @@ import { parseSimConfig } from "./config.js";
 import { phaseForConfig, runSingleTick, runTicks } from "./engine.js";
 import { MemoryLedger } from "./ledger/index.js";
 import { staticNarration } from "./narrator.js";
+import { emptyWorld } from "./world.js";
 
 function testConfig(overrides: Record<string, string> = {}) {
   return parseSimConfig({
@@ -161,6 +162,22 @@ describe("parseSimConfig", () => {
     expect(config.flags.llmNarrator).toBe(false);
     expect(config.flags.externalSignals).toBe(true);
     expect(config.flags.storyline).toBe("demo");
+  });
+});
+
+describe("getWorld injection (M4.2)", () => {
+  it("default empty world records idle for all 8 agents on ticks 1 and 3", async () => {
+    const ledger = new MemoryLedger();
+    await runTicks(ledger, testConfig({ MAX_TICKS: "3" }), 3);
+    const actions = await ledger.listActions();
+    expect(actions).toHaveLength(ROSTER.length * 3);
+    expect(actions.every((a) => a.kind === "idle" && a.status === "skipped")).toBe(true);
+  });
+
+  it("getWorld is called with the tick id", async () => {
+    const getWorld = vi.fn(async (tick: number) => emptyWorld(tick));
+    await runSingleTick(new MemoryLedger(), testConfig({ MAX_TICKS: "1" }), { getWorld });
+    expect(getWorld).toHaveBeenCalledWith(1);
   });
 });
 
