@@ -10,13 +10,15 @@ import { agentState } from "./queries/agentState.js";
 const hasSubgraph = Boolean(process.env.SUBGRAPH_URL?.trim());
 
 describe.skipIf(!hasSubgraph)("live Studio subgraph", () => {
-  const client = createGraphClient({
-    url: subgraphUrlFromEnv(),
-    apiKey: process.env.GRAPH_API_KEY,
-  });
+  function liveClient() {
+    return createGraphClient({
+      url: subgraphUrlFromEnv(),
+      apiKey: process.env.GRAPH_API_KEY,
+    });
+  }
 
   it("loan 1 repaid and loan 2 defaulted", async () => {
-    const sdk = createSdk(client);
+    const sdk = createSdk(liveClient());
     const [loan1, loan2] = await Promise.all([
       sdk.LoanById({ id: "1" }),
       sdk.LoanById({ id: "2" }),
@@ -26,7 +28,7 @@ describe.skipIf(!hasSubgraph)("live Studio subgraph", () => {
   });
 
   it("bo agent has ensName bo.botanica.eth", async () => {
-    const state = await agentState(client, "0x337512e3f78e9ad91493a98143b511c46c3775f7");
+    const state = await agentState(liveClient(), "0x337512e3f78e9ad91493a98143b511c46c3775f7");
     expect(state?.agent.ensName).toBe("bo.botanica.eth");
   });
 });
