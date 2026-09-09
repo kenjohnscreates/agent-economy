@@ -1,5 +1,7 @@
 // Role rules (PRD §5) — pure decide(agent, ctx.world) → ProposedAction[].
 // Deterministic: no network, no Date, no LLM. Circle txs are M4.3.
+// Worker: accept_job on open|funded (named roster worker → that agent only).
+// Merchant: complete_job on submitted (client match; oldest id).
 // Stipend: tick % STIPEND_EVERY_TICKS === 0 (3, 6, 9, …); treasurer emits it.
 // Flag to mayor = no approve_loan / deny_loan (loan stays pending). No new ActionKind.
 import {
@@ -92,11 +94,24 @@ function decideConsumer(agent: RosterEntry, world: WorldState): ProposedAction[]
   return [{ kind: "buy", amountUsdc: world.merchantPriceUsdc, to: pickSeller(world) }];
 }
 
+const FUNDABLE_JOB_STATUSES = new Set(["open", "funded"]);
+
+function isRosterWorker(name: string): boolean {
+  return ROSTER.some((a) => a.name === name && a.role === "worker");
+}
+
 function decideMerchant(agent: RosterEntry, world: WorldState): ProposedAction[] {
   const actions: ProposedAction[] = [];
   const cash = usdcBigint(world.balances[agent.name]);
   const stock = world.inventory[agent.name] ?? MERCHANT_MIN_INVENTORY;
   const pay = mulUsdcRatio(world.restockCostUsdc, 6n, 5n); // MERCHANT_JOB_PAY_MULT 1.2
+
+  const submitted = world.jobs
+    .filter((j) => j.status === "submitted" && j.client === agent.name)
+    .sort((a, b) => a.id.localeCompare(b.id))[0];
+  if (submitted) {
+    actions.push({ kind: "complete_job", jobId: submitted.id });
+  }
 
   if (stock < MERCHANT_MIN_INVENTORY) {
     actions.push({ kind: "post_job", amountUsdc: pay });
@@ -118,12 +133,25 @@ function decideMerchant(agent: RosterEntry, world: WorldState): ProposedAction[]
   return actions;
 }
 
-function bestOpenJob(world: WorldState): WorldState["jobs"][number] | undefined {
+function providerAllowsWorker(provider: string, worker: AgentName): boolean {
+  if (!provider) return true;
+  if (isRosterWorker(provider)) return provider === worker;
+  return false;
+}
+
+function bestFundableJob(
+  world: WorldState,
+  worker: AgentName,
+): WorldState["jobs"][number] | undefined {
   const taken = new Set(world.assignments.map((a) => a.jobId));
-  const open = world.jobs.filter(
-    (j) => j.status === "open" && isRosterAgent(j.client) && !taken.has(j.id),
+  const fundable = world.jobs.filter(
+    (j) =>
+      FUNDABLE_JOB_STATUSES.has(j.status) &&
+      isRosterAgent(j.client) &&
+      !taken.has(j.id) &&
+      providerAllowsWorker(j.provider, worker),
   );
-  return open.sort((a, b) => {
+  return fundable.sort((a, b) => {
     const pay = usdcBigint(b.amountUsdc) - usdcBigint(a.amountUsdc);
     if (pay !== 0n) return pay > 0n ? 1 : -1;
     return a.id.localeCompare(b.id);
@@ -139,7 +167,7 @@ function decideWorker(agent: RosterEntry, world: WorldState): ProposedAction[] {
     actions.push({ kind: "deliver", jobId: a.jobId });
   }
   if (held.length === 0) {
-    const job = bestOpenJob(world);
+    const job = bestFundableJob(world, agent.name);
     if (job) actions.push({ kind: "accept_job", jobId: job.id, amountUsdc: job.amountUsdc });
   }
   const payout = world.settledPayouts[agent.name];
