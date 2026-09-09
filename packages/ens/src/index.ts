@@ -1,7 +1,8 @@
 // @agent-town/ens — ENSv2 client (resolve, setRecords, role checks) on Sepolia.
 // Addresses: deployments.ts (hackathon-frozen set only, R2). ABIs: src/abi/*.
 // Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1), mint-agent-names.ts (M2.3),
-// record-bank-alias.ts (M2.4). Client: resolveAgent / setCreditScore / appendReview / revokeName (M2.5).
+// record-bank-alias.ts (M2.4), ens-side-effects.ts (M4.6). Client: resolveAgent / setCreditScore /
+// appendReview / revokeName (M2.5). Side-effects: applyLoanOutcome (repay/default → score/review/revoke).
 // Never cache tokenIds (R3).
 export const PACKAGE = "@agent-town/ens" as const;
 
@@ -108,3 +109,29 @@ export {
   type WriteResult,
   type NormalizedName,
 } from "./client.js";
+export {
+  REPAY_SCORE_DELTA,
+  FIRST_DEFAULT_SCORE,
+  CREDIT_REVIEWER,
+  clampScore,
+  scoreAfterRepay,
+  isDefaultReview,
+  countDefaultReviews,
+  parseAmountUsdc,
+  ledgerKey,
+  formatOutcomeNote,
+  reviewMatchesOutcome,
+  alreadyApplied,
+  requireBroadcastGate,
+  assertTreasurerSigner,
+  planLoanOutcome,
+  applyLoanOutcome,
+  type OutcomeKind,
+  type SideEffectAction,
+  type LoanOutcome,
+  type AgentCreditState,
+  type SideEffectPlan,
+  type ApplyLoanOutcomeResult,
+  type SideEffectClient,
+  type ApplyLoanOutcomeConfig,
+} from "./sideEffects.js";

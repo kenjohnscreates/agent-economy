@@ -163,3 +163,16 @@ describe("parseSimConfig", () => {
     expect(config.flags.storyline).toBe("demo");
   });
 });
+
+describe("ENS side-effects hook (M4.6)", () => {
+  it("--once / skipped actions do not invoke applyEnsSideEffects", async () => {
+    const applyEnsSideEffects = vi.fn(async () => {
+      throw new Error("must not write chain");
+    });
+    const ledger = new MemoryLedger();
+    await runTicks(ledger, testConfig({ MAX_TICKS: "1" }), 1, { applyEnsSideEffects });
+    expect(applyEnsSideEffects).not.toHaveBeenCalled();
+    const actions = await ledger.listActions();
+    expect(actions.every((a) => a.status === "skipped")).toBe(true);
+  });
+});

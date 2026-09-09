@@ -23,7 +23,8 @@
     "register-town": "tsx scripts/register-town.ts",
     "deploy-town-subregistry": "tsx scripts/deploy-town-subregistry.ts",
     "mint-agent-names": "tsx scripts/mint-agent-names.ts",
-    "record-bank-alias": "tsx scripts/record-bank-alias.ts"
+    "record-bank-alias": "tsx scripts/record-bank-alias.ts",
+    "ens-side-effects": "tsx scripts/ens-side-effects.ts"
   },
   "dependencies": {
     "@agent-town/shared": "workspace:*",
