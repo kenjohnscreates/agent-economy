@@ -11,7 +11,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
 | M1 Arc treasury + Circle wallets | done | BE | **M1.1–M1.6 LIVE** · job 185726 · loans 1 repaid / 2 defaulted · treasury `0xCE0e…FfC1` |
-| M2 ENSv2 namespace | in_progress | BE | **M2.1–M2.3 LIVE** · Registrar `0xe4A1…0f7F` · 8 names via UR `0xd26f…f142` · M2.4/M2.5 spawned |
+| M2 ENSv2 namespace | in_progress | BE | **M2.1–M2.3 LIVE** · **M2.5** #24 `e169188` · **M2.4 script** #25 `3fb40be` (dry-run `linkToNode`) · live `bank` needs `approve M2.4` |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
@@ -197,4 +197,13 @@ In progress: M2.4 `bank.botanica.eth` alias; M2.5 ens client
 Blocked: M3.3 Studio deploy key (`studio deploy key set`)
 Risks changed: —
 Next up: M2.4/M2.5 PRs; Studio key → M3.4
+Checkpoint call: none
+
+## Wed 9 Sep 10:15 EDT
+Done: **M2.5** — PR #24 squash-merged `e169188`. T2 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/24#pullrequestreview-5155435040). ENS 52/52. Live `resolveAgent("ada")` → `0x97847b3C…18cF2`. Writes simulate-only unless `{broadcast:true}` + `ALLOW_BROADCAST`.
+Done: **M2.4 script** — PR #25 squash-merged `3fb40be` (rebased onto #24; kept both README/index exports). T2 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/25). True inode alias: `register("bank")` + `linkToNode` (not addr copy). ens 45 then combined; forge 95. **bank.botanica.eth not on-chain yet.**
+In progress: —
+Blocked: M2.4 live alias — say `approve M2.4`; M3.3 Studio deploy key (`studio deploy key set`)
+Risks changed: —
+Next up: `approve M2.4`; Studio key → M3.4
 Checkpoint call: none
