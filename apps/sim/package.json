@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "lint": "eslint src",
-    "tick": "node --env-file-if-exists=../../.env --import tsx src/cli.ts"
+    "tick": "node --env-file-if-exists=../../.env --import tsx src/cli.ts",
+    "reset": "node --env-file-if-exists=../../.env --import tsx scripts/reset.ts"
   },
   "dependencies": {
     "@agent-town/circle": "workspace:*",

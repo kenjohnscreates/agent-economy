@@ -31,16 +31,27 @@ export interface OnTickResult {
   forcedActions: StorylineForcedAction[];
 }
 
-const DEMO_FAY_LOAN: WorldLoan = {
-  id: "L-2",
+const DEMO_FAY_LOAN_ID = "L-2";
+const DEMO_BO_LOAN_ID = "L-1";
+
+const DEMO_FAY_APPROVED: WorldLoan = {
+  id: DEMO_FAY_LOAN_ID,
   borrower: "fay",
   principalUsdc: "1000000",
   status: "approved",
   approvedAtTick: 1,
 };
 
+const DEMO_FAY_DEFAULTED: WorldLoan = {
+  id: DEMO_FAY_LOAN_ID,
+  borrower: "fay",
+  principalUsdc: "1000000",
+  status: "defaulted",
+  approvedAtTick: 1,
+};
+
 const DEMO_BO_LOAN: WorldLoan = {
-  id: "L-1",
+  id: DEMO_BO_LOAN_ID,
   borrower: "bo",
   principalUsdc: "3000000",
   status: "approved",
@@ -52,12 +63,17 @@ function mergeLoan(loans: WorldLoan[], loan: WorldLoan): WorldLoan[] {
   return [...rest, loan];
 }
 
-function hasLoanAction(
-  actions: StorylineForcedAction[],
+function withoutApprovedBoLoan(loans: WorldLoan[]): WorldLoan[] {
+  return loans.filter((l) => !(l.id === DEMO_BO_LOAN_ID && l.status === "approved"));
+}
+
+async function ledgerHasKindEver(
+  ledger: Ledger,
   agent: AgentName,
   kind: ProposedAction["kind"],
-): boolean {
-  return actions.some((a) => a.agent === agent && a.action.kind === kind);
+): Promise<boolean> {
+  const actions = await ledger.listActions();
+  return actions.some((a) => a.agent === agent && a.kind === kind);
 }
 
 /** Demo world overlays so PRD §12 plays from fixtures without live subgraph state. */
@@ -65,7 +81,7 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
   let w = loadWorld(tick, {
     ...world,
     creditScores: {
-      fay: 70,
+      fay: tick >= 8 ? 35 : 70,
       bo: 78,
       ...world.creditScores,
     },
@@ -79,12 +95,8 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
     restockCostUsdc: world.restockCostUsdc === "0" ? "1000000" : world.restockCostUsdc,
   });
 
-  if (tick >= 1) {
-    w = loadWorld(tick, {
-      ...w,
-      loans: mergeLoan(w.loans, DEMO_FAY_LOAN),
-    });
-  }
+  const fayLoan = tick >= 8 ? DEMO_FAY_DEFAULTED : DEMO_FAY_APPROVED;
+  w = loadWorld(tick, { ...w, loans: mergeLoan(w.loans, fayLoan) });
 
   if (phase === "boom" || tick <= 3) {
     w = loadWorld(tick, {
@@ -109,7 +121,7 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
     });
   }
 
-  if (tick >= 5 && tick <= 6) {
+  if (tick >= 5 && tick <= 8) {
     w = loadWorld(tick, {
       ...w,
       loans: mergeLoan(w.loans, DEMO_BO_LOAN),
@@ -122,14 +134,29 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
     });
   }
 
-  if (tick >= 7 && tick <= 8) {
+  if (tick === 9) {
+    w = loadWorld(tick, {
+      ...w,
+      loans: mergeLoan(w.loans, DEMO_BO_LOAN),
+      balances: { ...w.balances, bo: "5000000" },
+      treasury: {
+        ...w.treasury,
+        utilisationBps: 2500,
+        outstandingUsdc: "4000000",
+        defaults: 1,
+        baseRateBps: 610,
+      },
+    });
+  }
+
+  if (tick >= 7 && tick <= 9) {
     w = loadWorld(tick, {
       ...w,
       treasury: {
         ...w.treasury,
         utilisationBps: 2500,
         outstandingUsdc: "4000000",
-        defaults: tick >= 7 ? 1 : 0,
+        defaults: 1,
         baseRateBps: 610,
       },
     });
@@ -143,19 +170,20 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
         utilisationBps: w.treasury.utilisationBps || 2500,
         outstandingUsdc: w.treasury.outstandingUsdc === "0" ? "4000000" : w.treasury.outstandingUsdc,
         defaults: Math.max(w.treasury.defaults, 1),
-        baseRateBps: 610,
+        baseRateBps: tick >= 10 ? 810 : 610,
       },
     });
   }
 
-  if (phase === "recover" || tick >= 11) {
+  if (tick >= 10) {
     w = loadWorld(tick, {
       ...w,
-      loans: mergeLoan(w.loans, DEMO_BO_LOAN),
+      loans: withoutApprovedBoLoan(w.loans),
       balances: { ...w.balances, bo: "5000000" },
       treasury: {
         ...w.treasury,
         defaults: 1,
+        outstandingUsdc: "1000000",
         baseRateBps: 810,
       },
     });
@@ -183,11 +211,7 @@ async function demoForcedActions(
 
   if (tick === 4) {
     const pending = world.loans.some((l) => l.borrower === "bo" && l.status === "pending");
-    if (
-      !pending &&
-      !(await ledgerHasKind(ledger, tick, "bo", "request_loan")) &&
-      !hasLoanAction(forced, "bo", "request_loan")
-    ) {
+    if (!pending && !(await ledgerHasKind(ledger, tick, "bo", "request_loan"))) {
       forced.push({
         agent: "bo",
         action: { kind: "request_loan", amountUsdc: "1200000" },
@@ -195,11 +219,15 @@ async function demoForcedActions(
     }
   }
 
-  if (tick >= 7 && tick <= 8 && phase === "default") {
-    if (!(await ledgerHasKind(ledger, tick, "ada", "mark_default"))) {
+  if (tick === 7 && phase === "default") {
+    if (!(await ledgerHasKindEver(ledger, "ada", "mark_default"))) {
       forced.push({
         agent: "ada",
-        action: { kind: "mark_default", loanId: DEMO_FAY_LOAN.id, amountUsdc: DEMO_FAY_LOAN.principalUsdc },
+        action: {
+          kind: "mark_default",
+          loanId: DEMO_FAY_LOAN_ID,
+          amountUsdc: DEMO_FAY_APPROVED.principalUsdc,
+        },
       });
     }
   }
@@ -215,13 +243,13 @@ async function demoForcedActions(
     }
   }
 
-  if (tick === 11 && phase === "recover") {
-    if (!(await ledgerHasKind(ledger, tick, "bo", "repay"))) {
+  if (tick === 9) {
+    if (!(await ledgerHasKindEver(ledger, "bo", "repay"))) {
       forced.push({
         agent: "bo",
         action: {
           kind: "repay",
-          loanId: DEMO_BO_LOAN.id,
+          loanId: DEMO_BO_LOAN_ID,
           amountUsdc: DEMO_BO_LOAN.principalUsdc,
         },
       });
