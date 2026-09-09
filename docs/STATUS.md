@@ -9,9 +9,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
-| M0 Unblock + scaffold | in_progress | both | done: M0.1 M0.2 M0.3 M0.5 M0.8 M0.6 M0.7 · M0.4 script merged, tx gated (A) · blocked: M0.9 (Graph key) · town = botanica · human: fill `.env` |
+| M0 Unblock + scaffold | in_progress | both | done: M0.1–M0.8 · **M0.4 botanica.eth REGISTERED** (owner `0xD428…6d2A`) · blocked: M0.9 (MCP AUTH_HEADER still placeholder) |
 | M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1 done** (#9 `f3052ac`, forge 73/73, paris, dry-run only) · **M1.3 done** (#8 `ad0c17b`) · M1.2 deploy gated (A — say `approve M1.2`) · `setup-wallets --yes` gated (B) |
-| M2 ENSv2 namespace | todo | BE | |
+| M2 ENSv2 namespace | todo | BE | M0.4 done — M2.1 unblocked (broadcast still gate A) |
 | M3 Subgraph | in_progress | BE | **M3.1 done** (#12) · **M3.2 done** (#13 `afe81ff`, matchstick 3/3, `graph build` ok) · M3.3 waits on M1.2 treasury address (placeholder `0x000…0001`) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
@@ -109,4 +109,12 @@ In progress: —
 Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); **M1.2** (A — `approve M1.2`) — also blocks M1.4/M1.6/M3.3
 Risks changed: —
 Next up: human gates. Code path ready: Circle wrapper, TownTreasury, sim tick+narrator, subgraph mappings.
+Checkpoint call: none
+
+## Wed 9 Sep 01:19 EDT
+Done: M0.4 — **botanica.eth REGISTERED** on ENSv2 hackathon Sepolia. Owner `0xD428294070595052d9E0607f28CDf51b52156d2A` (treasurer). Gate A approved ("approve"). Evidence: commit [0x0efade58…](https://sepolia.etherscan.io/tx/0x0efade580a9b0d0f0d818a783f50e6c6f5c6c3edc6c45f6da4b70667b750af43) · mint [0xaefb7966…](https://sepolia.etherscan.io/tx/0xaefb7966070ddde8980db9772ac3aa2135dc1bd0e395c52045ac69d0a50b7c8c) · approve [0xe132b082…](https://sepolia.etherscan.io/tx/0xe132b082b24e3f2452a3c966810e728d422df2cc2aa9407f0d56631466f5a0d4) · register [0xb5f87ae2…](https://sepolia.etherscan.io/tx/0xb5f87ae2c3be83be65eef6970f95df89c6fdfcb95f9bd9ec3f8dd8f1ca962436). ETHRegistry status REGISTERED; tokenId printed not persisted (R3). Local fixes (not git): `0x` prefix on keys; `SEPOLIA_RPC_URL` → publicnode (`rpc.sepolia.org` 404).
+In progress: —
+Blocked: M0.9 (MCP `AUTH_HEADER` still placeholder; `.env` GRAPH_API_KEY is SET — say `graph key set` after MCP reload); M1.3 wallets (B — `CIRCLE_ENTITY_SECRET` EMPTY + `approve M1.3 wallets`); M1.2 (A — after wallets)
+Risks changed: —
+Next up: M2.1 script/dry-run (broadcast gated); human Circle entity secret
 Checkpoint call: none
