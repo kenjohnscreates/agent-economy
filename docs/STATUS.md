@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
-| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick partial · **loans #3/#4 Active** · M6.2 #35–#38 · M6.3 footage later |
+| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×2 · **#3/#4 repaid** · **#5/#6 pending** · M6.2 #35–#38 |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -391,4 +391,12 @@ In progress: —
 Blocked: `revokeName` still gated
 Risks changed: —
 Next up: Checkpoint Thu 22:00. FE independent.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 17:10 EDT
+Done: Cleared **#3/#4** via repay (interest 0). bo repay #3 [0xa5ca8777…](https://testnet.arcscan.app/tx/0xa5ca877759f40a43838d702dac897ece2d9ba3be654912479714f28c0c295ed6) · cy repay #4 [0x3b7e9d2a…](https://testnet.arcscan.app/tx/0x3b7e9d2ade6fbaf9058cdfbf456637e3dff07643d0e6d5261b3c9636855fe6ee). Then **LIVE `--ticks 12 --yes`** 12/12. New **#5 bo / #6 cy Pending** (request_loan t1 complete). Buys: gus t1+t3, hal t3+t10; t1 hal / t2 both insufficient. Stipend t3+t6+t9 complete, t12 fail. set_rate 839 [0x2a26aa98…](https://testnet.arcscan.app/tx/0x2a26aa98eb7dd7b8a13ad8c3e0a04823a4e2ea49c2fb693cb8c2628591949afa). Still fail: repay L-1 (already repaid), mark_default #2 (already defaulted), request_loan t2–4 (active slot from #5/#6).
+In progress: —
+Blocked: `revokeName`; mayor approve **#5/#6** if wanted
+Risks changed: —
+Next up: Checkpoint Thu 22:00. Storyline still keys repay/default to L-1/L-2.
 Checkpoint call: none (Thu 10 Sep 22:00)
