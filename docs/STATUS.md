@@ -10,8 +10,8 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** (set `949545dc-…`, 9 SCA) · **M1.2 deployed** `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` · M1.4 fund: no PR yet |
-| M2 ENSv2 namespace | in_progress | BE | **M2.1** #15 OPEN; broadcast pre-approved after merge |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** (set `949545dc-…`, 9 SCA) · **M1.2 deployed** `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` · M1.4 fund in flight |
+| M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** registry `0xC4f5…40f9` resolver `0x800d…efc8` · M2.2 spawned |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · M3.3 can use treasury `0xCE0e…FfC1` |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
@@ -133,4 +133,12 @@ In progress: M2.1 #15 T1 review; M1.4 fund (no PR — worktree gone)
 Blocked: —
 Risks changed: R17 pick complete; cache/stale still M4.9
 Next up: merge #15 → `--broadcast` M2.1; respawn M1.4 if needed; M3.3
+Checkpoint call: none
+
+## Wed 9 Sep 01:40 EDT
+Done: **M2.1 LIVE** — PR #15 squash-merged `42a4191`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/15#pullrequestreview-5150184637). Broadcast 4 txs: UserRegistry proxy [0xC4f5B3aa81390932398d23D736A965cA35de40f9](https://sepolia.etherscan.io/address/0xC4f5B3aa81390932398d23D736A965cA35de40f9) ([0xb75e2030…](https://sepolia.etherscan.io/tx/0xb75e20305237826c585fb058b568dd81204bc3935ab1e130438239580aea9193)) · PermissionedResolver [0x800d27e6e8497a57C273C53c86F2ec0713CEefc8](https://sepolia.etherscan.io/address/0x800d27e6e8497a57C273C53c86F2ec0713CEefc8) ([0xeadefb91…](https://sepolia.etherscan.io/tx/0xeadefb91b2289b5472eaed6fa8ec762228c2384a491f8e1e209abce0bc0a3a3f)) · setSubregistry [0x7e4cc836…](https://sepolia.etherscan.io/tx/0x7e4cc83645583bb89ef4b1d5698707bb19e986f64e7f12532069a1ae692ff6f7) · setResolver [0x0c251d58…](https://sepolia.etherscan.io/tx/0x0c251d58fbb6b0c5d172a7f8a8ca064b8b6bc9e966cdbabeffd86d45bddcc5ad). `getSubregistry(botanica)` / `getResolver(botanica)` confirmed. `packages/ens/town.json` committed (no tokenId). Local `.env` `ENS_TOWN_*` set.
+In progress: M2.2 TownRegistrar; M1.4 fund
+Blocked: —
+Risks changed: —
+Next up: M2.2 PR; M1.4 PR → `--yes`; M3.3 pin treasury in Studio
 Checkpoint call: none

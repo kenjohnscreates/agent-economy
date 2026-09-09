@@ -1,0 +1,14 @@
+{
+  "chainId": 11155111,
+  "network": "sepolia",
+  "label": "botanica",
+  "name": "botanica.eth",
+  "contracts": {
+    "TownRegistry": "0xC4f5B3aa81390932398d23D736A965cA35de40f9",
+    "TownResolver": "0x800d27e6e8497a57C273C53c86F2ec0713CEefc8"
+  },
+  "env": {
+    "ENS_TOWN_REGISTRY": "0xC4f5B3aa81390932398d23D736A965cA35de40f9",
+    "ENS_TOWN_RESOLVER": "0x800d27e6e8497a57C273C53c86F2ec0713CEefc8"
+  }
+}
