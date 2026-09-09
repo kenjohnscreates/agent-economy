@@ -8,7 +8,12 @@
 import { ARC_USDC_ADDRESS } from "@agent-town/shared";
 import type { FeeConfiguration } from "@circle-fin/developer-controlled-wallets";
 import { toUsdcDecimalString } from "./amounts.js";
-import type { CircleClient, CircleTx, TxState } from "./client.js";
+import {
+  ARC_TESTNET_BLOCKCHAIN,
+  type CircleClient,
+  type CircleTx,
+  type TxState,
+} from "./client.js";
 
 export type FeeLevel = "LOW" | "MEDIUM" | "HIGH";
 export type Fee = FeeConfiguration<FeeLevel>;
@@ -122,24 +127,27 @@ export interface TransferUsdcInput {
 }
 
 /**
- * ERC-20 USDC transfer via Circle `createTransaction`. Token resolved by
- * `tokenAddress` (0x3600…, 6 dec); the chain comes from `walletId` (SDK type
- * forbids `blockchain` alongside `walletId`) — no tokenId lookup needed.
- * Circle takes a *decimal* amount ("3"), so we convert from base units here.
+ * ERC-20 USDC transfer via Circle `createTransaction`. Token is 0x3600… (6 dec),
+ * never the native 18-dec token. Circle requires `blockchain` with `tokenAddress`
+ * (`tokenId` is mutually exclusive). SDK types forbid `blockchain` alongside
+ * `walletId`, so the payload is cast. Circle takes a *decimal* amount ("2").
  */
 export async function transferUsdc(
   client: CircleClient,
   input: TransferUsdcInput,
 ): Promise<{ txId: string; state: string }> {
+  // walletId + tokenAddress + blockchain: SDK union forbids this combo (`never`),
+  // but Circle API code 2 without blockchain. SDK maps `amount` → REST `amounts`.
   const res = await client.createTransaction({
     walletId: input.walletId,
     tokenAddress: ARC_USDC_ADDRESS,
+    blockchain: ARC_TESTNET_BLOCKCHAIN,
     destinationAddress: input.to,
     amount: [toUsdcDecimalString(input.amountUsdc)],
     fee: input.fee ?? DEFAULT_FEE,
     ...(input.refId ? { refId: input.refId } : {}),
     ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
-  });
+  } as never);
   const id = res.data?.id;
   if (!id) throw new Error("createTransaction returned no tx id");
   return { txId: id, state: res.data?.state ?? "INITIATED" };

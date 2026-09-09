@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { CircleClient, CircleTx } from "./client.js";
+import { ARC_TESTNET_BLOCKCHAIN, type CircleClient, type CircleTx } from "./client.js";
 import {
   ARC_MIN_MAX_FEE_GWEI,
   CircleTxFailed,
@@ -132,9 +132,11 @@ describe("submit helpers", () => {
       amountUsdc: "3500000",
     });
     expect(r.txId).toBe("tx-xfer");
+    // 6-dec ERC-20 (0x3600…), not native 18-dec. Circle needs blockchain with tokenAddress.
     expect(c.createTransaction).toHaveBeenCalledWith({
       walletId: "w-mayor",
       tokenAddress: "0x3600000000000000000000000000000000000000",
+      blockchain: ARC_TESTNET_BLOCKCHAIN,
       destinationAddress: "0x" + "2".repeat(40),
       amount: ["3.5"],
       fee: { type: "level", config: { feeLevel: "MEDIUM" } },
