@@ -10,7 +10,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1–M1.4 LIVE** treasury `0xCE0e…FfC1` **3 USDC** · 8 agents **2 USDC** · mayor **0.5** · M1.5/M1.6 spawned |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1–M1.5 LIVE** · job 185726 `bo`→`dee` 0.5 USDC · treasury 3 USDC · M1.6 #23 |
 | M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** · **M2.2** #17 · **M2.3 script** #21 `8d36ede` (dry-run) · live mint needs `approve M2.3` |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
@@ -173,4 +173,12 @@ In progress: M1.5 #22; M1.6 #23
 Blocked: M2.3 live mint — say `approve M2.3`; M3.3 Studio deploy key
 Risks changed: —
 Next up: #22/#23 review+`--yes`; `approve M2.3`; Studio key
+Checkpoint call: none
+
+## Wed 9 Sep 02:29 EDT
+Done: **M1.5 LIVE** — PR #22 squash-merged `d33bf2b`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/22#pullrequestreview-5150536975). vitest 55/55. jobId **185726** `bo`→`dee` 0.5 USDC. createJob [0xe5067a4f…](https://testnet.arcscan.app/tx/0xe5067a4f899050ee85c4b4b35b98492a7e25413d4332b94eedb7cc30c7c677fb) · fund [0x9afb88e8…](https://testnet.arcscan.app/tx/0x9afb88e869fa675417fff8543bc05f6156820277fe3f04d7eee043b916691608) · submit [0x9e2f4529…](https://testnet.arcscan.app/tx/0x9e2f4529952e9996704ad744275d9c68827fa595f78211f7795ee072b349e2f4) · complete [0x32f6e22b…](https://testnet.arcscan.app/tx/0x32f6e22b40c83f170f92126b6a08487e9a7f2a79d993c1e4d8d751352120cdfb). Worker ERC-20 2 → **2.5 USDC**.
+In progress: M1.6 #23
+Blocked: M2.3 live mint (`approve M2.3`); Studio deploy key
+Risks changed: —
+Next up: #23 merge+`--yes`; `approve M2.3`; Studio key
 Checkpoint call: none
