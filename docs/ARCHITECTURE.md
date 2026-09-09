@@ -52,9 +52,11 @@ Two chains are forced: ENSv2 exists only on Sepolia; USDC/Arc products exist onl
 | Arc RPC | `https://rpc.testnet.arc.io` (alts: blockdaemon, drpc, quicknode subdomains) |
 | Arc explorer | `https://testnet.arcscan.app` |
 | Arc faucet | `https://faucet.circle.com` (rate‑limited: fund one wallet, fan out) |
-| Arc gas token | USDC, **18 decimals**; 20 gwei `maxFeePerGas` floor; `address(0)` sends revert |
+| Arc gas token | Native USDC (**18 decimals** for gas/`eth_getBalance` only); 20 gwei `maxFeePerGas` floor; `address(0)` sends revert |
+| **USDC ERC‑20 interface** | `0x3600000000000000000000000000000000000000`, **6 decimals**. Contracts and all app math use this interface only; never mix with native 18‑dec balance. No wrapped USDC exists. |
+| Solidity target | `evm_version = "paris"` in `foundry.toml` (Arc lacks PUSH0); verify with `--evm-version paris` |
 | ERC‑8183 reference | `0x0747EEf0706327138c69792bF28Cd525089e4583` |
-| USDC ERC‑20 address / system emitter | from https://docs.arc.io/arc/references/contract-addresses.md (verify M0) |
+| Other Arc predeploys | Multicall3 `0xcA11…CA11`, Permit2 `0x0000…8BA3`, CREATE2 factory `0x4e59…956C`, EURC `0x89B5…D72a` |
 | ENS coinType for Arc (ENSIP‑11) | `0x80000000 | 5042002` = `2147483648 + 5042002` = **2152525650** |
 | Sepolia chain id | `11155111` |
 | ENSv2 hackathon deployment | addresses from docs.ens.domains banner → hackathon feature branch (**not** the main Sepolia beta). Record in `packages/ens/deployments.json` in M0 |
@@ -81,7 +83,7 @@ docs/
 
 ### 4.1 `TownTreasury.sol` (Arc)
 
-Mainnet‑portable; all addresses via constructor/config. USDC handled as ERC‑20 interface at the configured address (18 decimals on Arc).
+Mainnet‑portable; all addresses via constructor/config. USDC handled via the ERC‑20 interface at the configured address (`0x3600…0000`, **6 decimals**); use `SafeERC20` and read `decimals()` rather than hardcoding.
 
 ```solidity
 // roles: OWNER (deployer/mayor), TREASURER (agent wallet)
@@ -152,13 +154,26 @@ Data sources: `TownTreasury` (all events), `AgenticCommerce` ERC‑8183 (job lif
 
 Consumers: `apps/sim` (rules), advisor tool `querySubgraph(gql)`, `apps/api` scoreboard. Query via Studio endpoint with `GRAPH_API_KEY`.
 
+### 5.1 External signals (Signal C) — `packages/graphclient/external.ts`
+
+Existing public subgraphs on The Graph Network, queried through the same gateway key. Exact subgraph IDs chosen in M0 via the Subgraph MCP (must show live 30‑day query volume).
+
+| Signal | Source (candidate) | Query | Used by |
+|---|---|---|---|
+| `usdcBorrowApyBps` | Messari standardized **lending** subgraph (Aave V3 Ethereum) | `market(id: USDC).rates(side: BORROWER, type: VARIABLE).rate` | treasurer base rate |
+| `dexVolume24hUsd` | Uniswap V3 Ethereum (Messari standardized **DEX** schema) | `liquidityPool(USDC/WETH).cumulativeVolumeUSD` delta / daily snapshot | merchant price & consumer demand multiplier |
+
+Rules: fetched once per tick, cached in `signals` table with timestamp; on error or > 5 s, use last known value and mark `stale=true` (shown in UI). Never blocks a tick. Exposed on `GET /scoreboard` as `signals` so the UI can show "market rate 4.1% → town rate 6.1%".
+
 ## 6. Backend
 
 ### 6.1 Tick engine (`apps/sim`)
-- `TICK_MS` (default 15 000). Per tick: pull subgraph state → for each agent run `decide(state) → Action[]` → execute via `packages/circle` → persist tick log + narration.
+- `TICK_MS` (default 15 000). Per tick: pull subgraph state + external signals → for each agent run `decide(state) → Action[]` → execute via `packages/circle` → persist tick log + narration.
 - Idempotency: each action keyed by `(tick, agent, kind)`; skip if already has tx.
-- Circle execution: `createContractExecutionTransaction` / `createTransferTransaction`, then poll until `COMPLETE`.
-- Feature flags: `LLM_ADVISOR=on|off`, `LLM_NARRATOR=on|off`, `STORYLINE=demo|free`.
+- Circle execution: `createContractExecutionTransaction` / `createTransferTransaction`, submitted in parallel, then polled until `COMPLETE`. Next tick starts on schedule even if a prior tx is still pending; the ledger records it when it lands.
+- Feature flags: `LLM_ADVISOR=on|off`, `LLM_NARRATOR=on|off`, `STORYLINE=demo|free`, `EXTERNAL_SIGNALS=on|off`.
+- Dev controls: `pnpm tick --once` / `--ticks N` advance manually; `MAX_TICKS` (default 50) stops a forgotten loop; storyline events are keyed by **tick number**, never wall‑clock, so the same script plays at any `TICK_MS`.
+- Cadence profile: dev 60 000 or manual; integration 20–30 000; demo 15 000.
 
 ### 6.2 Treasurer advisor
 Input JSON: borrower name, credit score (ENS), balance history + defaults (subgraph), treasury utilisation, base rate. Output: `{decision: approve|deny|flag, maxAmount, reasoning, confidence}`. Guard: `maxAmount ≤ rulesMax`; on error/timeout ≥ 8 s → rules decision. Provider abstraction: Anthropic or OpenAI via Vercel AI SDK.
@@ -210,7 +225,7 @@ sequenceDiagram
 ```
 # Arc / chain
 ARC_RPC_URL=https://rpc.testnet.arc.io
-ARC_USDC_ADDRESS=
+ARC_USDC_ADDRESS=0x3600000000000000000000000000000000000000   # ERC-20 interface, 6 decimals
 TOWN_TREASURY_ADDRESS=
 ERC8183_ADDRESS=0x0747EEf0706327138c69792bF28Cd525089e4583
 SEPOLIA_RPC_URL=
@@ -229,6 +244,10 @@ ENS_TREASURER_PRIVATE_KEY=       # Sepolia signer for record writes
 # Graph
 GRAPH_API_KEY=
 SUBGRAPH_URL=
+EXT_LENDING_SUBGRAPH_ID=         # Signal C: Messari standardized lending (Aave V3 Ethereum)
+EXT_DEX_SUBGRAPH_ID=             # Signal C: Uniswap V3 Ethereum
+EXTERNAL_SIGNALS=on
+MAX_TICKS=50
 # LLM
 LLM_PROVIDER=anthropic|openai|off
 ANTHROPIC_API_KEY=

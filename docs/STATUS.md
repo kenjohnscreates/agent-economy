@@ -28,3 +28,11 @@ Blocked: —
 Risks changed: —
 Next up: M0.1 keys, M0.2 Arc‑in‑Studio check, M0.3 ENS hackathon addresses, M0.5 scaffold, M0.6/M0.7 API contract + mock (unblocks FE)
 Checkpoint call: none
+
+## Tue 8 Sep 22:00 EDT
+Done: PRD v0.2 — added Signal C (real market rates/volume from public subgraphs) to scope + M0.9/M4.9; B/D moved to prioritised stretch; A rejected (R16 DeFi scan); demo walkthrough (PRD §12); sim dev controls (`--once`, `MAX_TICKS`, tick‑keyed storyline); corrected USDC decimals (ERC‑20 = 6) and `evm_version = "paris"`
+In progress: —
+Blocked: —
+Risks changed: R4 corrected; R16, R17 added
+Next up: M0 (unchanged)
+Checkpoint call: none
