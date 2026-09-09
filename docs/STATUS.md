@@ -12,7 +12,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M0 Unblock + scaffold | in_progress | both | done: M0.1 M0.2 M0.3 M0.5 M0.8 M0.6 M0.7 · M0.4 script merged, tx gated (A) · blocked: M0.9 (Graph key) · town = botanica · human: fill `.env` |
 | M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1 done** (#9 `f3052ac`, forge 73/73, paris, dry-run only) · **M1.3 done** (#8 `ad0c17b`) · M1.2 deploy gated (A — say `approve M1.2`) · `setup-wallets --yes` gated (B) |
 | M2 ENSv2 namespace | todo | BE | |
-| M3 Subgraph | in_progress | BE | **M3.1 done** (#12 `c016f83`, codegen ok, `arc-testnet`) · M3.2 mappings spawned |
+| M3 Subgraph | in_progress | BE | **M3.1 done** (#12) · **M3.2 done** (#13 `afe81ff`, matchstick 3/3, `graph build` ok) · M3.3 waits on M1.2 treasury address (placeholder `0x000…0001`) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
@@ -101,4 +101,12 @@ In progress: M3.2 mappings
 Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); M1.2 (A — `approve M1.2`)
 Risks changed: —
 Next up: M3.2 PR; human gates (unblocks M1.4/M3.3/M0.4/M2)
+Checkpoint call: none
+
+## Wed 9 Sep 01:02 EDT
+Done: M3.2 — PR #13 squash-merged `afe81ff`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/13#pullrequestreview-5149953012). Evidence: Matchstick **3/3**; `graph build` ok. Agent join via `AgentRegistered`; loan SM; JobCompleted → TownStat + `job_pay`; no ERC-20 Transfer. Nits: no loan-disbursement Payment; silent skip if Job missing; BaseRateSet no snapshot.
+In progress: —
+Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); **M1.2** (A — `approve M1.2`) — also blocks M1.4/M1.6/M3.3
+Risks changed: —
+Next up: human gates. Code path ready: Circle wrapper, TownTreasury, sim tick+narrator, subgraph mappings.
 Checkpoint call: none
