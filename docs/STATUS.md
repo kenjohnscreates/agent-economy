@@ -13,7 +13,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1 done** (#9 `f3052ac`, forge 73/73, paris, dry-run only) · **M1.3 done** (#8 `ad0c17b`) · M1.2 deploy gated (A — say `approve M1.2`) · `setup-wallets --yes` gated (B) |
 | M2 ENSv2 namespace | todo | BE | |
 | M3 Subgraph | in_progress | BE | **M3.1 done** (#12 `c016f83`, codegen ok, `arc-testnet`) · M3.2 mappings spawned |
-| M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10 `8443cde`, 7/7 tests) · M4.5 narrator spawned |
+| M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
 | M7 Review + docs | todo | reviewer | |
@@ -93,4 +93,12 @@ In progress: PR #11 M4.5 T1 review; M3.2 mappings spawned
 Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B); M1.2 (A)
 Risks changed: —
 Next up: merge #11 on APPROVE; M3.2 PR; human gates
+Checkpoint call: none
+
+## Wed 9 Sep 00:51 EDT
+Done: M4.5 — PR #11 squash-merged `87f95b9`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/11#pullrequestreview-5149881728). Evidence: vitest **17/17**; 1 tick → 8 bubbles ≤120; LLM default off; timeout/error → static fallback. Nits: ledger doesn't re-clip; timeout unit 30ms not 8s wait.
+In progress: M3.2 mappings
+Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); M1.2 (A — `approve M1.2`)
+Risks changed: —
+Next up: M3.2 PR; human gates (unblocks M1.4/M3.3/M0.4/M2)
 Checkpoint call: none
