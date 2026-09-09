@@ -1,10 +1,14 @@
 // Demo storyline scheduler — PRD §12 script actions at ticks 1,4,7,9,10.
+import { rosterEntry } from "@agent-town/shared";
 import { describe, expect, it } from "vitest";
 import { parseSimConfig } from "./config.js";
+import { decide } from "./decide.js";
 import { runTicks } from "./engine.js";
 import { MemoryLedger } from "./ledger/index.js";
 import { patchDemoWorld } from "./storyline-hooks.js";
-import { emptyWorld } from "./world.js";
+import { emptyWorld, loadWorld } from "./world.js";
+
+const bo = rosterEntry("bo");
 
 function testConfig(overrides: Record<string, string> = {}) {
   return parseSimConfig({
@@ -95,6 +99,12 @@ describe("demo storyline scheduler (M4.8)", () => {
     );
   });
 
+  it("patchDemoWorld overlay wins over live poor gus/hal", () => {
+    const patched = patchDemoWorld(loadWorld(1, { balances: { gus: "1", hal: "1" } }), 1, "boom");
+    expect(patched.balances.gus).toBe("5000000");
+    expect(patched.balances.hal).toBe("5000000");
+  });
+
   it("patchDemoWorld boom job J-demo lets dee accept or deliver", () => {
     const t1 = patchDemoWorld(emptyWorld(1), 1, "boom");
     expect(t1.jobs.find((j) => j.id === "J-demo")).toMatchObject({
@@ -104,7 +114,16 @@ describe("demo storyline scheduler (M4.8)", () => {
       status: "open",
     });
     const t2 = patchDemoWorld(emptyWorld(2), 2, "boom");
+    expect(t2.jobs.find((j) => j.id === "J-demo")?.status).toBe("funded");
     expect(t2.assignments).toContainEqual({ jobId: "J-demo", worker: "dee", acceptedAtTick: 1 });
+    const t3 = patchDemoWorld(emptyWorld(3), 3, "boom");
+    expect(t3.jobs.find((j) => j.id === "J-demo")?.status).toBe("submitted");
+    expect(t3.settledPayouts.dee).toBe("1200000");
+    expect(
+      decide(bo, { tick: 3, phase: "boom", world: t3 }).some(
+        (a) => a.kind === "complete_job" && a.jobId === "J-demo",
+      ),
+    ).toBe(true);
   });
 
   it("patchDemoWorld aligns baseRateBps except hike tick 9 stays behind", () => {

@@ -336,7 +336,7 @@ describe("engine + executeAction", () => {
     const client = mockClient();
     const ledger = new MemoryLedger();
     const config = parseSimConfig(
-      { ALLOW_BROADCAST: "true", SIM_EXECUTE: "on" },
+      { ALLOW_BROADCAST: "true", SIM_EXECUTE: "on", STORYLINE: "free" },
       { once: false, yes: false },
     );
     await runSingleTick(ledger, config, {
