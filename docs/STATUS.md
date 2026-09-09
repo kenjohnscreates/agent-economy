@@ -319,3 +319,17 @@ Blocked: live 12-tick storyline (Gate A — do not run unless explicitly asked).
 Risks changed: —
 Next up: M6.1 dry-run → M6.2 P0/P1 as bugs surface; M7 when integration is green. Checkpoint Thu 10 Sep 22:00.
 Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 14:32 EDT
+Done: STATUS catch-up `be3562e`. **M6.1 dry-run** (no `--yes`, no `ALLOW_BROADCAST`): `pnpm reset` (no-op, Supabase empty) → `STORYLINE=demo MAX_TICKS=12 tick --ticks 12` **12/12 ticks**, `execute=dry-run`. Fixture ledger beats: t1 gus/hal **buy**, t4 bo **request_loan**, t7 ada **mark_default**, t9 bo **repay** + ada **set_rate**. sim tests **88/88**.
+M6.2 triage (P0/P1 only):
+- **P0** worker `accept_job` only matches `status==="open"`; live/subgraph jobs after escrow are `funded`. Merchant **never emits `complete_job`** (kind exists in execute only). Workshop loop cannot settle.
+- **P1** CLI logs tick/phase/forced only — dry-run is a black box.
+- **P1** `patchDemoWorld` has no jobs/assignments → workers idle in dry-run.
+- **P1** `set_rate` every tick 1–9 (`baseRateBps` lags computed). Live 700 vs market+spread+premium ~829 would spam rate txs on a 12-tick `--yes` (still gated).
+- **P1** no pending middling-score loan at t9–10 → mayor flag beat missing (PRD §12).
+In progress: **M6.2a** T1 `card/m6.2a-job-lifecycle` (accept funded + complete_job). **M6.2b** T2 `card/m6.2b-storyline-dryrun` (CLI logs + patch jobs/rate/flag loan).
+Blocked: live 12-tick (Gate A). SUPABASE_* empty — reset/API ledger stay in-memory (human env, not a card).
+Risks changed: —
+Next up: review+merge M6.2 PRs; re-run dry-run; do not wait on FE.
+Checkpoint call: none (Thu 10 Sep 22:00)
