@@ -7,7 +7,8 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
-    "test": "graph codegen && graph test"
+    "test": "graph codegen && graph test",
+    "deploy:studio": "graph codegen && graph build && graph deploy agent-town --version-label 0.0.1"
   },
   "dependencies": {
     "@graphprotocol/graph-ts": "0.35.1"

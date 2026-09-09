@@ -1,5 +1,6 @@
 # Agent Town subgraph — Arc Testnet (RISKS R5: network id is `arc-testnet`).
-# TownTreasury address is a placeholder until M1.2 deploy. M3.3 / packages/contracts/deployments/arc-testnet.json replaces it. Do not invent a live address.
+# TownTreasury: live M1.2 deploy (packages/contracts/deployments/arc-testnet.json).
+# startBlock = deploy receipt block 0x3a5ae39 (tx 0x8b37c596…); AgenticCommerce shares it so Studio does not scan from genesis.
 specVersion: 1.2.0
 schema:
   file: ./schema.graphql
@@ -8,9 +9,9 @@ dataSources:
     name: TownTreasury
     network: arc-testnet
     source:
-      address: "0x0000000000000000000000000000000000000001"
+      address: "0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1"
       abi: TownTreasury
-      startBlock: 0
+      startBlock: 61140537
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -59,7 +60,7 @@ dataSources:
     source:
       address: "0x0747EEf0706327138c69792bF28Cd525089e4583"
       abi: AgenticCommerce
-      startBlock: 0
+      startBlock: 61140537
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
