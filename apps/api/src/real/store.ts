@@ -18,6 +18,7 @@ import {
   type MayorLoanDecisionRequest,
   type MayorRateRequest,
   type ScoreboardResponse,
+  type SseEvent,
   type StateResponse,
   type TxResponse,
 } from "@agent-town/shared";
@@ -38,6 +39,7 @@ import { createBalanceReader, type BalanceReader } from "./balances.js";
 import { parseRealEnv, type RealEnv } from "./env.js";
 import { createLedgerReader, type LedgerReader, type TickAnchor } from "./ledger.js";
 import { mapGdpSeriesPoints, mapJob, mapLoan } from "./map.js";
+import { diffSseEvents, emptySseCursor, type SseCursor } from "./sse.js";
 import {
   defaultMayorWalletIds,
   mayorFund as executeMayorFund,
@@ -95,6 +97,7 @@ export class RealSource implements DataSource {
   private readyPromise: Promise<void> | undefined;
   private timer: ReturnType<typeof setInterval> | undefined;
   private readonly listeners = new Set<SseListener>();
+  private readonly sseCursor: SseCursor = emptySseCursor();
 
   constructor(options: RealSourceOptions) {
     this.tickMs = options.tickMs;
@@ -141,9 +144,7 @@ export class RealSource implements DataSource {
   start(): void {
     if (this.timer) return;
     this.timer = setInterval(() => {
-      void this.refresh()
-        .then(() => this.emitScoreboard())
-        .catch((err: unknown) => console.error("[api] real refresh failed:", err));
+      void this.refresh().catch((err: unknown) => console.error("[api] real refresh failed:", err));
     }, this.pollMs);
   }
 
@@ -152,10 +153,29 @@ export class RealSource implements DataSource {
     this.timer = undefined;
   }
 
-  private emitScoreboard(): void {
-    if (!this.cache) return;
-    const event = { event: "scoreboard" as const, data: this.cache.scoreboard };
+  private emit(event: SseEvent): void {
     for (const listener of this.listeners) listener(event);
+  }
+
+  private emitRefreshEvents(
+    tick: number,
+    phase: StateResponse["phase"],
+    actions: Awaited<ReturnType<LedgerReader["listActions"]>>,
+    narrations: Awaited<ReturnType<LedgerReader["listNarration"]>>,
+    loans: Loan[],
+    scoreboard: ScoreboardResponse,
+  ): void {
+    for (const event of diffSseEvents({
+      cursor: this.sseCursor,
+      tick,
+      phase,
+      actions,
+      narrations,
+      loans,
+      scoreboard,
+    })) {
+      this.emit(event);
+    }
   }
 
   private ensureCache(): RealCache {
@@ -169,7 +189,11 @@ export class RealSource implements DataSource {
   }
 
   async refresh(): Promise<void> {
-    const anchor = await this.ledger.getTickAnchor();
+    const [anchor, ledgerActions, ledgerNarration] = await Promise.all([
+      this.ledger.getTickAnchor(),
+      this.ledger.listActions(),
+      this.ledger.listNarration(),
+    ]);
     const tick = anchor.currentTick;
     const phase = anchor.currentTick > 0 ? anchor.phase : phaseForTick(tick);
     const anchorSec = this.anchorSec(anchor);
@@ -292,6 +316,8 @@ export class RealSource implements DataSource {
       jobsByAgent,
       ensByName,
     };
+
+    this.emitRefreshEvents(tick, phase, ledgerActions, ledgerNarration, loans, scoreboard);
   }
 
   getState(): StateResponse {
@@ -334,7 +360,6 @@ export class RealSource implements DataSource {
     }
     const res = await executeMayorFund(this.mayor, body);
     await this.refresh();
-    this.emitScoreboard();
     return res;
   }
 
@@ -344,7 +369,6 @@ export class RealSource implements DataSource {
     }
     const res = await executeMayorLoanDecision(this.mayor, body);
     await this.refresh();
-    this.emitScoreboard();
     return res;
   }
 
@@ -354,7 +378,6 @@ export class RealSource implements DataSource {
     }
     const res = await executeMayorRate(this.mayor, body);
     await this.refresh();
-    this.emitScoreboard();
     return res;
   }
 

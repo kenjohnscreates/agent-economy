@@ -11,13 +11,27 @@ import {
 import type { SubgraphJob, SubgraphLoan } from "@agent-town/graphclient";
 
 const TICK_LIKE_MAX = 10_000;
+const UNIX_SEC_MIN = 1_000_000_000;
+const SECONDS_PER_DAY = 86_400;
+
+/**
+ * graphclient GDP buckets use day indices (unix/86400, e.g. "20705");
+ * loan/job timestamps use unix seconds (e.g. "1788935601").
+ */
+export function timestampToUnixSec(raw: string): number {
+  const n = Number(BigInt(raw));
+  if (n >= UNIX_SEC_MIN) return n;
+  if (n >= TICK_LIKE_MAX) return n * SECONDS_PER_DAY;
+  return n;
+}
 
 /** Unix seconds or small test ticks → sim tick id. */
 export function toTick(raw: string, anchorSec: number, tickMs: number): number {
   const n = BigInt(raw);
   if (n < BigInt(TICK_LIKE_MAX)) return Number(n);
+  const unixSec = timestampToUnixSec(raw);
   if (!anchorSec || tickMs <= 0) return 0;
-  const elapsed = Number(n) - anchorSec;
+  const elapsed = unixSec - anchorSec;
   if (elapsed < 0) return 1;
   return Math.max(1, Math.floor(elapsed / (tickMs / 1000)) + 1);
 }
@@ -109,11 +123,9 @@ export function mapGdpSeriesPoints(
   tickMs: number,
 ): GdpPoint[] {
   let cumulative = 0n;
-  const sorted = [...points].sort((a, b) => {
-    const da = BigInt(a.timestamp);
-    const db = BigInt(b.timestamp);
-    return da < db ? -1 : da > db ? 1 : 0;
-  });
+  const sorted = [...points].sort(
+    (a, b) => timestampToUnixSec(a.timestamp) - timestampToUnixSec(b.timestamp),
+  );
   return sorted.map((point) => {
     cumulative += BigInt(point.gdpUsdc);
     return {
@@ -128,11 +140,9 @@ export function buildGdpSeries(
   anchorSec: number,
   tickMs: number,
 ): GdpPoint[] {
-  const sorted = [...payments].sort((a, b) => {
-    const da = BigInt(a.timestamp);
-    const db = BigInt(b.timestamp);
-    return da < db ? -1 : da > db ? 1 : 0;
-  });
+  const sorted = [...payments].sort(
+    (a, b) => timestampToUnixSec(a.timestamp) - timestampToUnixSec(b.timestamp),
+  );
   let cumulative = 0n;
   const byTick = new Map<number, bigint>();
   for (const payment of sorted) {

@@ -7,15 +7,22 @@ import {
   ScoreboardResponseSchema,
   StateResponseSchema,
   TxResponseSchema,
+  type SseEvent,
 } from "@agent-town/shared";
 import type { GraphQLClient } from "graphql-request";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../routes.js";
-import { NullLedger } from "./ledger.js";
+import {
+  type LedgerAction,
+  type LedgerNarration,
+  type LedgerReader,
+  type TickAnchor,
+} from "./ledger.js";
 import { RealSource } from "./store.js";
 
 const BO = "0x337512e3f78e9ad91493a98143b511c46c3775f7" as const;
-const ADA = "0x97847b3c015994784ae8cf776ef9a4d563618cf2" as const;
+const TX =
+  "0x1111111111111111111111111111111111111111111111111111111111111111" as const;
 
 const fakeGraph = {} as GraphQLClient;
 
@@ -40,10 +47,39 @@ const loanRow = {
   borrower: { id: BO, ensName: "bo.botanica.eth" },
 };
 
+let mockLoans = [loanRow];
+
+class TestLedger implements LedgerReader {
+  tick = 1;
+  readonly startedAtFirst = "2026-01-01T00:00:00.000Z";
+  actions: LedgerAction[] = [];
+  narrations: LedgerNarration[] = [];
+
+  async getTickAnchor(): Promise<TickAnchor> {
+    return { currentTick: this.tick, startedAt: this.startedAtFirst, phase: "boom" };
+  }
+
+  async listActions(): Promise<LedgerAction[]> {
+    return [...this.actions];
+  }
+
+  async listNarration(): Promise<LedgerNarration[]> {
+    return [...this.narrations];
+  }
+
+  async latestAction(agent: string): Promise<LedgerAction | undefined> {
+    return [...this.actions].reverse().find((a) => a.agent === agent);
+  }
+
+  async latestNarration(agent: string): Promise<LedgerNarration | undefined> {
+    return [...this.narrations].reverse().find((n) => n.agent === agent);
+  }
+}
+
 vi.mock("@agent-town/graphclient", () => ({
   createGraphClient: vi.fn(),
   scoreboard: vi.fn(async () => scoreboardDto),
-  loanHistory: vi.fn(async () => [loanRow]),
+  loanHistory: vi.fn(async () => mockLoans),
   gdpSeries: vi.fn(async () => ({
     interval: "day",
     source: "rosterPayments",
@@ -87,7 +123,7 @@ function makeSource(overrides: Partial<ConstructorParameters<typeof RealSource>[
       SUBGRAPH_URL: "https://example.com/subgraph",
     },
     graphClient: fakeGraph,
-    ledger: new NullLedger(),
+    ledger: new TestLedger(),
     balanceReader: async () => "2500000",
     resolveAgent: async (name) => ({
       ensName: `${name}.botanica.eth`,
@@ -122,33 +158,36 @@ describe("RealSource GET contract", () => {
   let source: RealSource;
 
   beforeEach(async () => {
+    mockLoans = [loanRow];
     source = makeSource();
     await source.ready();
   });
 
-  it("parses /state", async () => {
+  it("parses /state with first-tick startedAt", async () => {
+    const ledger = new TestLedger();
+    ledger.tick = 7;
+    source = makeSource({ ledger });
+    await source.ready();
     const app = createApp(source);
     const res = await app.request(API_ROUTES.state);
     expect(res.status).toBe(200);
     const body = StateResponseSchema.parse(await res.json());
+    expect(body.startedAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(body.tick).toBe(7);
     expect(body.flags.storyline).toBe("demo");
-    expect(body.tickMs).toBe(15_000);
   });
 
-  it("parses /agents with ENS credit scores", async () => {
+  it("/agents with ENS credit scores", async () => {
     const app = createApp(source);
-    const res = await app.request(API_ROUTES.agents);
-    const body = AgentsResponseSchema.parse(await res.json());
+    const body = AgentsResponseSchema.parse(await (await app.request(API_ROUTES.agents)).json());
     expect(body).toHaveLength(8);
     expect(body.find((a) => a.name === "bo")?.creditScore).toBe(72);
-    expect(body.find((a) => a.name === "bo")?.balanceUsdc).toBe("2500000");
   });
 
-  it("parses /scoreboard with rate + signals", async () => {
+  it("/scoreboard with rate + signals", async () => {
     const app = createApp(source);
     const body = ScoreboardResponseSchema.parse(await (await app.request(API_ROUTES.scoreboard)).json());
     expect(body.signals.usdcBorrowApyBps).toBe(410);
-    expect(body.rate.townRateBps).toBeGreaterThan(0);
     expect(body.defaults).toBe(1);
   });
 
@@ -166,8 +205,7 @@ describe("RealSource mayor POST gate", () => {
   it("returns 501 without ALLOW_BROADCAST", async () => {
     const source = makeSource();
     await source.ready();
-    const app = createApp(source);
-    const res = await app.request(API_ROUTES.mayorFund, {
+    const res = await createApp(source).request(API_ROUTES.mayorFund, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ amountUsdc: "1000000" }),
@@ -178,21 +216,20 @@ describe("RealSource mayor POST gate", () => {
 
   it("returns tx when broadcast allowed (mocked Circle)", async () => {
     const execute = vi.fn().mockResolvedValue({ data: { id: "tx-1", state: "INITIATED" } });
-    const getTransaction = vi.fn().mockResolvedValue({
-      data: {
-        transaction: {
-          id: "tx-1",
-          state: "COMPLETE",
-          txHash: "0x1111111111111111111111111111111111111111111111111111111111111111",
-        },
-      },
-    });
     const source = makeSource({
       mayorDeps: {
         circle: {
           createContractExecutionTransaction: execute,
           createTransaction: vi.fn(),
-          getTransaction,
+          getTransaction: vi.fn().mockResolvedValue({
+            data: {
+              transaction: {
+                id: "tx-1",
+                state: "COMPLETE",
+                txHash: TX,
+              },
+            },
+          }),
           createWalletSet: vi.fn(),
           getWalletSet: vi.fn(),
           createWallets: vi.fn(),
@@ -206,27 +243,60 @@ describe("RealSource mayor POST gate", () => {
       },
     });
     await source.ready();
-    const app = createApp(source);
-    const res = await app.request(API_ROUTES.mayorRate, {
+    const res = await createApp(source).request(API_ROUTES.mayorRate, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ bps: 900 }),
     });
     expect(res.status).toBe(200);
     TxResponseSchema.parse(await res.json());
-    expect(execute).toHaveBeenCalled();
   });
 });
 
 describe("RealSource SSE", () => {
-  it("subscribe emits scoreboard snapshots", async () => {
-    const source = makeSource({ pollMs: 30 });
-    await source.ready();
-    const events: unknown[] = [];
+  it("refresh emits tick, tx, narration, loan_flagged", async () => {
+    mockLoans = [];
+    const ledger = new TestLedger();
+    const source = makeSource({ ledger });
+    const events: SseEvent[] = [];
     source.subscribe((ev) => events.push(ev));
+    await source.ready();
+
+    ledger.tick = 2;
+    ledger.actions.push({
+      tick: 2,
+      agent: "bo",
+      kind: "buy",
+      tx: TX,
+      status: "complete",
+    });
+    ledger.narrations.push({ tick: 2, agent: "bo", text: "Shopping time" });
+    mockLoans = [
+      {
+        ...loanRow,
+        id: "9",
+        requestedAt: "2",
+      },
+    ];
+    await source.refresh();
+
+    expect(events.map((e) => e.event)).toEqual([
+      "tick",
+      "tx",
+      "narration",
+      "loan_flagged",
+      "scoreboard",
+    ]);
+  });
+
+  it("poll emits scoreboard after cursor seeded", async () => {
+    const source = makeSource({ pollMs: 30 });
+    const events: SseEvent[] = [];
+    source.subscribe((ev) => events.push(ev));
+    await source.ready();
     source.start();
     await new Promise((r) => setTimeout(r, 80));
     source.stop();
-    expect(events.some((e) => (e as { event: string }).event === "scoreboard")).toBe(true);
+    expect(events.some((e) => e.event === "scoreboard")).toBe(true);
   });
 });

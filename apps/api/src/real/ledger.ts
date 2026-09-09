@@ -2,8 +2,11 @@
 import type { ActionKind, AgentName, StorylinePhase } from "@agent-town/shared";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+export type ActionStatus = "pending" | "complete" | "failed" | "skipped";
+
 export interface TickAnchor {
   currentTick: number;
+  /** ISO ts of tick id=1 (sim start), not the latest tick row. */
   startedAt: string;
   phase: StorylinePhase;
 }
@@ -12,6 +15,8 @@ export interface LedgerAction {
   tick: number;
   agent: AgentName;
   kind: ActionKind;
+  tx: string | null;
+  status: ActionStatus;
 }
 
 export interface LedgerNarration {
@@ -22,6 +27,8 @@ export interface LedgerNarration {
 
 export interface LedgerReader {
   getTickAnchor(): Promise<TickAnchor>;
+  listActions(): Promise<LedgerAction[]>;
+  listNarration(): Promise<LedgerNarration[]>;
   latestAction(agent: AgentName): Promise<LedgerAction | undefined>;
   latestNarration(agent: AgentName): Promise<LedgerNarration | undefined>;
 }
@@ -31,6 +38,14 @@ export class NullLedger implements LedgerReader {
 
   async getTickAnchor(): Promise<TickAnchor> {
     return { currentTick: 0, startedAt: this.startedAt, phase: "boom" };
+  }
+
+  async listActions(): Promise<LedgerAction[]> {
+    return [];
+  }
+
+  async listNarration(): Promise<LedgerNarration[]> {
+    return [];
   }
 
   async latestAction(): Promise<LedgerAction | undefined> {
@@ -52,27 +67,61 @@ export class SupabaseLedgerReader implements LedgerReader {
   }
 
   async getTickAnchor(): Promise<TickAnchor> {
-    const { data, error } = await this.client
-      .from("ticks")
-      .select("id, ts, phase")
-      .order("id", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(`Supabase getTickAnchor: ${error.message}`);
-    if (!data) {
+    const [latestRes, firstRes] = await Promise.all([
+      this.client
+        .from("ticks")
+        .select("id, ts, phase")
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      this.client
+        .from("ticks")
+        .select("ts")
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (latestRes.error) throw new Error(`Supabase getTickAnchor: ${latestRes.error.message}`);
+    if (firstRes.error) throw new Error(`Supabase getTickAnchor first: ${firstRes.error.message}`);
+
+    const latest = latestRes.data;
+    const first = firstRes.data;
+    if (!latest) {
       return { currentTick: 0, startedAt: new Date().toISOString(), phase: "boom" };
     }
     return {
-      currentTick: data.id as number,
-      startedAt: data.ts as string,
-      phase: data.phase as StorylinePhase,
+      currentTick: latest.id as number,
+      startedAt: (first?.ts as string | undefined) ?? (latest.ts as string),
+      phase: latest.phase as StorylinePhase,
     };
+  }
+
+  async listActions(): Promise<LedgerAction[]> {
+    const { data, error } = await this.client.from("actions").select("tick, agent, kind, tx, status");
+    if (error) throw new Error(`Supabase listActions: ${error.message}`);
+    return (data ?? []).map((row) => ({
+      tick: row.tick as number,
+      agent: row.agent as AgentName,
+      kind: row.kind as ActionKind,
+      tx: (row.tx as string | null) ?? null,
+      status: row.status as ActionStatus,
+    }));
+  }
+
+  async listNarration(): Promise<LedgerNarration[]> {
+    const { data, error } = await this.client.from("narration").select("tick, agent, text");
+    if (error) throw new Error(`Supabase listNarration: ${error.message}`);
+    return (data ?? []).map((row) => ({
+      tick: row.tick as number,
+      agent: row.agent as AgentName,
+      text: row.text as string,
+    }));
   }
 
   async latestAction(agent: AgentName): Promise<LedgerAction | undefined> {
     const { data, error } = await this.client
       .from("actions")
-      .select("tick, agent, kind")
+      .select("tick, agent, kind, tx, status")
       .eq("agent", agent)
       .order("tick", { ascending: false })
       .limit(1)
@@ -83,6 +132,8 @@ export class SupabaseLedgerReader implements LedgerReader {
       tick: data.tick as number,
       agent: data.agent as AgentName,
       kind: data.kind as ActionKind,
+      tx: (data.tx as string | null) ?? null,
+      status: data.status as ActionStatus,
     };
   }
 
