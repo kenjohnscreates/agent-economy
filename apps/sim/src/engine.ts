@@ -1,6 +1,7 @@
 // Tick engine — advances ticks, persists ledger rows, fires storyline hooks.
 // Phase comes from phaseForTick when STORYLINE=demo; free-run stays at 'boom'.
 // Stops when tick >= MAX_TICKS. Actions are idempotent on (tick, agent, kind).
+// World via optional getWorld; default emptyWorld keeps decide idle (M4.1 tests).
 // After decide/actions, batches one narration bubble per roster agent (M4.5).
 // M4.6: skipped repay/mark_default never call applyEnsSideEffects (no chain writes).
 import {
@@ -13,6 +14,7 @@ import {
 } from "@agent-town/shared";
 import type { SimConfig } from "./config.js";
 import { decide } from "./decide.js";
+import { emptyWorld, type WorldState } from "./world.js";
 import { maybeApplyEnsSideEffects, type EnsLoanOutcomeEvent } from "./ens-side-effects.js";
 import type { Ledger } from "./ledger/index.js";
 import { narrate, type LlmProvider } from "./narrator.js";
@@ -22,6 +24,8 @@ export interface TickDeps {
   narratorProvider?: LlmProvider;
   /** M4.3 injects `applyLoanOutcome`. Skipped/--once never write chain. */
   applyEnsSideEffects?: (event: EnsLoanOutcomeEvent) => Promise<void>;
+  /** Optional world snapshot (subgraph + Signal C). Default empty → idle. */
+  getWorld?: (tick: number) => WorldState | Promise<WorldState>;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -72,8 +76,9 @@ export async function runSingleTick(
   });
 
   const lastKind = new Map<AgentName, ActionKind>();
+  const world = deps.getWorld ? await deps.getWorld(nextTick) : emptyWorld(nextTick);
   for (const agent of ROSTER) {
-    const proposed = decide(agent, { tick: nextTick, phase });
+    const proposed = decide(agent, { tick: nextTick, phase, world });
     for (const action of proposed) {
       const status = "skipped" as const;
       await ledger.insertAction({
