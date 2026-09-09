@@ -11,7 +11,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
 | M1 Arc treasury + Circle wallets | done | BE | **M1.1–M1.6 LIVE** · job 185726 · loans 1 repaid / 2 defaulted · treasury `0xCE0e…FfC1` |
-| M2 ENSv2 namespace | in_progress | BE | **M2.1–M2.3 LIVE** · **M2.5** #24 `e169188` · **M2.4 script** #25 `3fb40be` (dry-run `linkToNode`) · live `bank` needs `approve M2.4` |
+| M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
@@ -206,4 +206,12 @@ In progress: —
 Blocked: M2.4 live alias — say `approve M2.4`; M3.3 Studio deploy key (`studio deploy key set`)
 Risks changed: —
 Next up: `approve M2.4`; Studio key → M3.4
+Checkpoint call: none
+
+## Wed 9 Sep 10:50 EDT
+Done: **M2.4 LIVE** — `bank.botanica.eth` inode alias → ada. register [0x9c9f68c6…](https://sepolia.etherscan.io/tx/0x9c9f68c610f458c8769942d9cbb32da19795d0ccb9c8ebf0f9a1ddbd63be25a0) · linkToNode [0xa91aceb0…](https://sepolia.etherscan.io/tx/0xa91aceb0fba6ebb838495e50f446a0f14e73a593e7332f2d42bccaadeb7fec53). UR.resolve bank = ada Arc+60 `0x97847b3C015994784Ae8Cf776ef9a4d563618cF2`. **M2 board → done.**
+In progress: M4.6 ENS side-effects spawned
+Blocked: M3.3 Studio deploy key (`studio deploy key set`)
+Risks changed: —
+Next up: M4.6 PR; Studio key → M3.4
 Checkpoint call: none
