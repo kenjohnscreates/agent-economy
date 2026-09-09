@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
-| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · M6.2 P0/P1 #35–#37 · live 12-tick gated · M6.3 footage later |
+| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · **live tick 1** Gate A · M6.2 #35–#37 · 12-tick still gated · M6.3 footage later |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -349,4 +349,20 @@ In progress: —
 Blocked: live 12-tick / `pnpm reset --yes` wallet re-seed / mayor fund+loan-decision (Gate A). Do not `revokeName`. SUPABASE_* empty (in-memory ledger).
 Risks changed: —
 Next up: Checkpoint Thu 10 Sep 22:00. M7 README when you want docs parallel. Say `approve` for live 12-tick (drains USDC — do not run unless asked). FE M5.8 independent.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 16:22 EDT
+Done: Gate A `approve`. **Not** 12-tick (still needs explicit `run 12-tick`). One `STORYLINE=demo --once --yes` LIVE tick 1 boom. execute=LIVE.
+- bo **post_job** job **185764** [0x2d10a247…](https://testnet.arcscan.app/tx/0x2d10a247d3c341158654a4a323c0855be0cc858b78596d5478bea7e0075e2da8)
+- bo **request_loan** #**3** 1.2 USDC [0x7c057264…](https://testnet.arcscan.app/tx/0x7c05726486ffa0c1f9f7a6e38296214a990546b71547c5851de99ebce27c777e)
+- cy **post_job** job **185765** [0x6c8a676a…](https://testnet.arcscan.app/tx/0x6c8a676a9233c60443d91535d3d608f31f9d1c214d31ffdcff0f4a3bc29c775b)
+- cy **request_loan** #**4** 1.2 USDC [0x8b3b9e5c…](https://testnet.arcscan.app/tx/0x8b3b9e5cbf7e90282b7d85d78b11b5bcea5d7a77e121f325fe277cd216b87452)
+- gus **buy** 0.6828 USDC [0xd626f3d8…](https://testnet.arcscan.app/tx/0xd626f3d8b378053cb7bac19fa06c36aea6ba61d2302115c392fa5d68631319ea)
+- hal **buy** 0.6828 USDC [0x11898994…](https://testnet.arcscan.app/tx/0x11898994538b452528c6e599c0cb05bad91c7542c7d336187ee84aa8d30e0181)
+- dee **accept_job** failed: fixture id `J-demo` (no digits). No ENS writes (tick 1; CLI has no `applyEnsSideEffects`).
+Loans **#3/#4 pending** (ada ran before merchants). Did not fund re-seed. Did not revoke names.
+In progress: **M6.2d** skip synthetic job ids on live execute (J-demo)
+Blocked: 12-tick live; mayor fund / loan-decision #3/#4; `revokeName`
+Risks changed: —
+Next up: M6.2d PR; say `run 12-tick` for a full live demo. FE independent.
 Checkpoint call: none (Thu 10 Sep 22:00)
