@@ -1,6 +1,6 @@
 // @agent-town/ens — ENSv2 client (resolve, setRecords, role checks) on Sepolia.
 // Addresses: deployments.ts (hackathon-frozen set only, R2). ABIs: src/abi/*.
-// Registration script: scripts/register-town.ts (M0.4). Resolver client lands M0.3+.
+// Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1, no broadcast by default).
 export const PACKAGE = "@agent-town/ens" as const;
 
 export {
@@ -20,7 +20,24 @@ export {
   RegistryStatus,
   rentPriceOracleAbi,
   mockUsdcAbi,
+  verifiableFactoryAbi,
+  userRegistryInitAbi,
+  permissionedResolverInitAbi,
 } from "./abi/index.js";
+export {
+  ALL_ROLES,
+  SALT_VERSION,
+  encodeDeployProxy,
+  encodeRegistryInit,
+  encodeResolverInit,
+  encodeSetResolver,
+  encodeSetSubregistry,
+  labelhashOf,
+  registrySalt,
+  resolverSalt,
+  townDeployRecord,
+  type TownDeployRecord,
+} from "./factory.js";
 export {
   commitWindow,
   makeCommitment,

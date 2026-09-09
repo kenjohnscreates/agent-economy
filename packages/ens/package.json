@@ -20,7 +20,8 @@
     "typecheck": "tsc -p tsconfig.scripts.json",
     "test": "vitest run",
     "lint": "eslint src scripts",
-    "register-town": "tsx scripts/register-town.ts"
+    "register-town": "tsx scripts/register-town.ts",
+    "deploy-town-subregistry": "tsx scripts/deploy-town-subregistry.ts"
   },
   "dependencies": {
     "viem": "2.56.3"
