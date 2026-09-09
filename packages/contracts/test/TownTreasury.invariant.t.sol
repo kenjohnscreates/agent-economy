@@ -106,6 +106,7 @@ contract TreasuryHandler is Test {
         TownTreasury.Loan memory l = treasury.loan(id);
         if (l.status != TownTreasury.LoanStatus.Active) return;
         uint256 defaultable = uint256(l.dueAt) + treasury.gracePeriodSeconds() + 1;
+        // forge-lint: disable-next-line(block-timestamp)
         if (block.timestamp < defaultable) vm.warp(defaultable); // time only moves forward
         vm.prank(treasurer);
         treasury.markDefault(id);

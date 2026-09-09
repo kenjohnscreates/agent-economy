@@ -98,7 +98,11 @@ contract TownTreasury is Ownable2Step, AccessControl, ReentrancyGuard {
     event LoanDenied(uint256 indexed loanId, address indexed borrower);
     /// @param amount USDC pulled in this repayment. @param interestPaid interest portion of this repayment.
     event Repaid(
-        uint256 indexed loanId, address indexed borrower, uint256 amount, uint256 principalRemaining, uint256 interestPaid
+        uint256 indexed loanId,
+        address indexed borrower,
+        uint256 amount,
+        uint256 principalRemaining,
+        uint256 interestPaid
     );
     event Defaulted(uint256 indexed loanId, address indexed borrower, uint256 principalRemaining);
     event BaseRateSet(uint16 bps);
