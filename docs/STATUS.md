@@ -10,7 +10,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | in_progress | both | done: M0.1 M0.2 M0.3 M0.5 M0.8 M0.6 M0.7 · in flight: M0.4 (gate A) · blocked: M0.9 (Graph key) · town = botanica · human: fill `.env` |
-| M1 Arc treasury + Circle wallets | todo | BE | |
+| M1 Arc treasury + Circle wallets | in_progress | BE | M1.1 TownTreasury.sol (T1) + M1.3 Circle wrapper (T1, no live calls) started 23:35 Tue; M1.2 deploy + wallet creation gated (A/B) |
 | M2 ENSv2 namespace | todo | BE | |
 | M3 Subgraph | todo | BE | |
 | M4 Sim, agents, API | todo | BE | |
