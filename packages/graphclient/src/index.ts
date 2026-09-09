@@ -49,3 +49,12 @@ export { openJobs, type OpenJobsOptions } from "./queries/openJobs.js";
 export { loanHistory, type LoanHistoryOptions } from "./queries/loanHistory.js";
 export { scoreboard } from "./queries/scoreboard.js";
 export { gdpSeries, type GdpInterval, type GdpSeriesOptions } from "./queries/gdpSeries.js";
+
+export {
+  fetchExternalSignals,
+  resetExternalSignalsForTests,
+  createInMemorySignalCache,
+  SIGNAL_SOURCES,
+  type FetchExternalSignalsOptions,
+  type SignalCache,
+} from "./externalSignals/fetchExternalSignals.js";
