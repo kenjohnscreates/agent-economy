@@ -9,10 +9,10 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
-| M0 Unblock + scaffold | in_progress | both | done: M0.1–M0.8 · **M0.4 botanica.eth REGISTERED** (owner `0xD428…6d2A`) · blocked: M0.9 (MCP AUTH_HEADER still placeholder) |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1 done** (#9 `f3052ac`, forge 73/73, paris, dry-run only) · **M1.3 done** (#8 `ad0c17b`) · M1.2 deploy gated (A — say `approve M1.2`) · `setup-wallets --yes` gated (B) |
-| M2 ENSv2 namespace | todo | BE | M0.4 done — M2.1 unblocked (broadcast still gate A) |
-| M3 Subgraph | in_progress | BE | **M3.1 done** (#12) · **M3.2 done** (#13 `afe81ff`, matchstick 3/3, `graph build` ok) · M3.3 waits on M1.2 treasury address (placeholder `0x000…0001`) |
+| M0 Unblock + scaffold | in_progress | both | done: M0.1–M0.8 · **M0.4 botanica.eth REGISTERED** · M0.9 in flight (MCP auth works) |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** (set `949545dc-…`, 9 SCA) · **M1.2 deployed** `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` · M1.4 fund spawned |
+| M2 ENSv2 namespace | in_progress | BE | M2.1 script in flight; broadcast pre-approved ("approve all") |
+| M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · M3.3 can use treasury `0xCE0e…FfC1` |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
@@ -117,4 +117,12 @@ In progress: —
 Blocked: M0.9 (MCP `AUTH_HEADER` still placeholder; `.env` GRAPH_API_KEY is SET — say `graph key set` after MCP reload); M1.3 wallets (B — `CIRCLE_ENTITY_SECRET` EMPTY + `approve M1.3 wallets`); M1.2 (A — after wallets)
 Risks changed: —
 Next up: M2.1 script/dry-run (broadcast gated); human Circle entity secret
+Checkpoint call: none
+
+## Wed 9 Sep 01:30 EDT
+Done: **approve all** — M1.3 wallets LIVE: set `949545dc-5e02-5050-8e2f-7e6bc12bfed3`, 9 SCA on ARC-TESTNET (ada treasurer `0x97847b3c015994784ae8cf776ef9a4d563618cf2`, mayor `0x52b9c05db4866da39567a4f9f06fac448ea30685`). **M1.2** TownTreasury [0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1](https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1) tx [0x8b37c596…](https://testnet.arcscan.app/tx/0x8b37c5961810869c38573a9e61f8787515c718c5050877d870c7868ad0e10644) · owner EOA `0xD428…6d2A` · treasurer ada · usdcDecimals=6 · 20 gwei · paris. `deployments/arc-testnet.json` + `roster.json` committed.
+In progress: M0.9 Signal C; M2.1 script; M1.4 fund
+Blocked: mayor needs Arc faucet USDC/gas at `0x52b9…0685` (https://faucet.circle.com) before fan-out if deployer isn't used as source
+Risks changed: —
+Next up: M1.4 fund; M2.1 PR then broadcast; M3.3 pin treasury address
 Checkpoint call: none

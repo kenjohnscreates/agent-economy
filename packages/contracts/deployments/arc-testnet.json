@@ -1,1 +1,7 @@
-{"chainId":5042002,"network":"arc-testnet","contracts":{}}
+{
+  "chainId": 5042002,
+  "contracts": {
+    "TownTreasury": "0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1"
+  },
+  "network": "arc-testnet"
+}

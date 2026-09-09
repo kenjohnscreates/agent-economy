@@ -1,6 +1,52 @@
 {
   "blockchain": "ARC-TESTNET",
   "accountType": "SCA",
-  "walletSetId": null,
-  "wallets": []
+  "walletSetId": "949545dc-5e02-5050-8e2f-7e6bc12bfed3",
+  "wallets": [
+    {
+      "name": "ada",
+      "walletId": "62b2a697-5103-56fa-8eba-5360055403db",
+      "address": "0x97847b3c015994784ae8cf776ef9a4d563618cf2"
+    },
+    {
+      "name": "bo",
+      "walletId": "2a7359cf-b397-5dc1-87a2-e7934df39eae",
+      "address": "0x337512e3f78e9ad91493a98143b511c46c3775f7"
+    },
+    {
+      "name": "cy",
+      "walletId": "d6b8a6a6-19af-5ce9-9477-de107ac333f5",
+      "address": "0xc0469ad2ee2acac0c9bd50e07481a5325f9c8950"
+    },
+    {
+      "name": "dee",
+      "walletId": "11a90083-0660-5cec-a5a0-5f053c64530e",
+      "address": "0x70b1300425c37af893ca4841e4183e7f0a1bdb89"
+    },
+    {
+      "name": "eli",
+      "walletId": "c0a3d7b6-224c-578f-8b76-c546d95d661d",
+      "address": "0x216ad8633cbcd6f63d6f79fcb5ae40bc5fe829dd"
+    },
+    {
+      "name": "fay",
+      "walletId": "e20e9888-11f4-5b3c-96a6-29380fb6ec62",
+      "address": "0xff7be88f27d518fdb80c8c7c9031894e21e37038"
+    },
+    {
+      "name": "gus",
+      "walletId": "6e6a5c0b-b628-548e-aad6-8a54fe67732e",
+      "address": "0x55911428be619c98220da9d6d9575d311d3082dc"
+    },
+    {
+      "name": "hal",
+      "walletId": "95dae8aa-8beb-5619-88c4-f5446fc57e10",
+      "address": "0x8214a5d688494e04c4a67c0b299706ec61dbc469"
+    },
+    {
+      "name": "mayor",
+      "walletId": "1e1c6202-efa8-5a2d-9959-2770121f029e",
+      "address": "0x52b9c05db4866da39567a4f9f06fac448ea30685"
+    }
+  ]
 }
