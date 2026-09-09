@@ -10,9 +10,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | in_progress | both | done: M0.1 M0.2 M0.3 M0.5 M0.8 M0.6 M0.7 · M0.4 script merged, tx gated (A) · blocked: M0.9 (Graph key) · town = botanica · human: fill `.env` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.3 done** (#8 `ad0c17b`, 34/34 tests, no live calls) · PR #9 M1.1 OPEN MERGEABLE, T1 review in flight · M1.2 deploy gated (A) · `setup-wallets --yes` gated (B) |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1 done** (#9 `f3052ac`, forge 73/73, paris, dry-run only) · **M1.3 done** (#8 `ad0c17b`) · M1.2 deploy gated (A — say `approve M1.2`) · `setup-wallets --yes` gated (B) |
 | M2 ENSv2 namespace | todo | BE | |
-| M3 Subgraph | todo | BE | |
+| M3 Subgraph | in_progress | BE | M3.1 schema spawned (unblocked by M1.1) |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10 `8443cde`, 7/7 tests) · M4.5 narrator spawned |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
@@ -77,4 +77,12 @@ In progress: PR #9 M1.1 T1 review; M4.5 narrator (T3) spawned
 Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); M1.2 (A, after #9)
 Risks changed: —
 Next up: merge #9 on APPROVE → spawn M3.1 schema; M4.5 review
+Checkpoint call: none
+
+## Wed 9 Sep 00:40 EDT
+Done: M1.1 — PR #9 squash-merged `f3052ac`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/9#pullrequestreview-5149818740). Evidence: `forge test` **73 passed** (2× unit incl. fuzz + 4 invariants 128k calls 0 reverts); `forge build --evm-version paris`; TownTreasury runtime 0 PUSH0; dry-run vs Arc RPC `usdcDecimals=6`, no `--broadcast`. Nits: header length; termTicks vs seconds; withdraw-only reentrancy test.
+In progress: M4.5 narrator; M3.1 subgraph schema spawned
+Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); **M1.2 first Arc deploy (A — say `approve M1.2`)**
+Risks changed: —
+Next up: human `approve M1.2` + `approve M1.3 wallets`; M4.5/M3.1 PRs
 Checkpoint call: none
