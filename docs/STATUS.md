@@ -12,7 +12,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M0 Unblock + scaffold | in_progress | both | done: M0.1 M0.2 M0.3 M0.5 M0.8 M0.6 M0.7 · M0.4 script merged, tx gated (A) · blocked: M0.9 (Graph key) · town = botanica · human: fill `.env` |
 | M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1 done** (#9 `f3052ac`, forge 73/73, paris, dry-run only) · **M1.3 done** (#8 `ad0c17b`) · M1.2 deploy gated (A — say `approve M1.2`) · `setup-wallets --yes` gated (B) |
 | M2 ENSv2 namespace | todo | BE | |
-| M3 Subgraph | in_progress | BE | M3.1 schema spawned (unblocked by M1.1) |
+| M3 Subgraph | in_progress | BE | **M3.1 done** (#12 `c016f83`, codegen ok, `arc-testnet`) · M3.2 mappings spawned |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10 `8443cde`, 7/7 tests) · M4.5 narrator spawned |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
@@ -85,4 +85,12 @@ In progress: M4.5 narrator; M3.1 subgraph schema spawned
 Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B — `approve M1.3 wallets`); **M1.2 first Arc deploy (A — say `approve M1.2`)**
 Risks changed: —
 Next up: human `approve M1.2` + `approve M1.3 wallets`; M4.5/M3.1 PRs
+Checkpoint call: none
+
+## Wed 9 Sep 00:50 EDT
+Done: M3.1 — PR #12 squash-merged `c016f83`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/12#pullrequestreview-5149879998). Evidence: `graph codegen` **Types generated successfully** (graph-cli 0.98.1); `network: arc-testnet`; TownTreasury placeholder `0x000…0001` + ERC-8183 `0x0747…4583`; no USDC Transfer. Nits: extra ERC-8183 events unwired (M3.2); `startBlock: 0`.
+In progress: PR #11 M4.5 T1 review; M3.2 mappings spawned
+Blocked: M0.4 (A); M0.9 (B); M1.3 wallets (B); M1.2 (A)
+Risks changed: —
+Next up: merge #11 on APPROVE; M3.2 PR; human gates
 Checkpoint call: none
