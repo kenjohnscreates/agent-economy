@@ -10,7 +10,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** · **M1.2** `0xCE0e…FfC1` · M1.4 mayor 19.5 USDC; Circle xfer hotfix #18 |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1–M1.4 LIVE** treasury `0xCE0e…FfC1` **3 USDC** · 8 agents **2 USDC** · mayor **0.5** · M1.5/M1.6 spawned |
 | M2 ENSv2 namespace | in_progress | BE | **M2.1 LIVE** registry `0xC4f5…40f9` resolver `0x800d…efc8` · **M2.2** #17 `8452193` · M2.3 spawned |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · M3.3 can use treasury `0xCE0e…FfC1` |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
@@ -149,4 +149,12 @@ In progress: M2.3 mint script; M1.4 Circle xfer #18; M2 registrar not yet on-cha
 Blocked: live `TownRegistrar` deploy + name mints (Sepolia writes — not in original approve-all list)
 Risks changed: —
 Next up: merge #18 → `fund --yes`; M2.3 PR; M3.3
+Checkpoint call: none
+
+## Wed 9 Sep 02:10 EDT
+Done: **M1.4 LIVE** — #16 `4557156` + Circle hotfixes #18 `1ff1479` (blockchain+tokenAddress) + #19 `aa1e0a0` (SCA `feeLevel: MEDIUM`). Native seed [0x133e2978…](https://testnet.arcscan.app/tx/0x133e2978bd76d1fb33b8bd5d97f55b7a08a3f55657e6df1318b8fff1afc08ecb) · fan-out 8 Circle transfers · ada approve [0x708df316…](https://testnet.arcscan.app/tx/0x708df3167b3a1fa451e8a18cc7f167547f3b2ec5f8890ea45e2f9e6292e2308c) · `fund(3e6)` [0x85030e4f…](https://testnet.arcscan.app/tx/0x85030e4f30e19a6d1aad3bb8c10f55e9121b34038f74b0d48b73cb2292160e9d). Balances: agents 2 USDC, mayor 0.5, treasury **3 USDC**. T3 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/19#pullrequestreview-5150402092) on #19.
+In progress: M1.5 job e2e; M1.6 treasury e2e; M3.3 Studio; M2.3 mint
+Blocked: —
+Risks changed: —
+Next up: M1.5/M1.6/M3.3 PRs; M2.3
 Checkpoint call: none
