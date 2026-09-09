@@ -13,6 +13,8 @@ import { parseCliOptions, parseSimConfig } from "./config.js";
 import { createExecuteAction } from "./execute.js";
 import { runLoop, runTicks, type TickDeps } from "./engine.js";
 import { createLedger } from "./ledger/index.js";
+import { createSdkLlmProvider } from "./llm-sdk.js";
+import { createQuerySubgraph } from "./query-subgraph.js";
 
 const arcTestnet = defineChain({
   id: ARC_TESTNET_CHAIN_ID,
@@ -22,21 +24,29 @@ const arcTestnet = defineChain({
 });
 
 function buildTickDeps(config: ReturnType<typeof parseSimConfig>): TickDeps {
-  if (!config.executeEnabled) return {};
+  const deps: TickDeps = {};
+  if (config.flags.llmAdvisor && config.llmProvider !== "off") {
+    deps.advisorProvider = createSdkLlmProvider(config.llmProvider);
+    try {
+      deps.querySubgraph = createQuerySubgraph();
+    } catch {
+      // SUBGRAPH_URL missing — tool omitted; advise still runs on WorldState signals.
+    }
+  }
+  if (!config.executeEnabled) return deps;
   const client = createCircleClient(process.env);
   const pub = createPublicClient({ chain: arcTestnet, transport: http() });
-  return {
-    executeAction: createExecuteAction({
-      client,
-      roster: readRoster(),
-      treasuryAddress: resolveTreasuryAddress(process.env),
-      tickMs: config.tickMs,
-      jobIdFromTxHash: async (txHash: string) => {
-        const receipt = await pub.getTransactionReceipt({ hash: txHash as Hex });
-        return jobIdFromLogs(receipt.logs).toString();
-      },
-    }),
-  };
+  deps.executeAction = createExecuteAction({
+    client,
+    roster: readRoster(),
+    treasuryAddress: resolveTreasuryAddress(process.env),
+    tickMs: config.tickMs,
+    jobIdFromTxHash: async (txHash: string) => {
+      const receipt = await pub.getTransactionReceipt({ hash: txHash as Hex });
+      return jobIdFromLogs(receipt.logs).toString();
+    },
+  });
+  return deps;
 }
 
 async function main(): Promise<void> {

@@ -14,8 +14,12 @@
   },
   "dependencies": {
     "@agent-town/circle": "workspace:*",
+    "@agent-town/graphclient": "workspace:*",
     "@agent-town/shared": "workspace:*",
+    "@ai-sdk/anthropic": "4.0.50",
+    "@ai-sdk/openai": "4.0.63",
     "@supabase/supabase-js": "^2.99.1",
+    "ai": "7.0.95",
     "viem": "2.56.3",
     "zod": "4.5.4"
   }

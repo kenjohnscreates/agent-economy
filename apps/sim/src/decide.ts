@@ -4,6 +4,7 @@
 // Flag to mayor = no approve_loan / deny_loan (loan stays pending). No new ActionKind.
 import {
   ActionKindSchema,
+  AdvisorDecisionSchema,
   AGENT_NAMES,
   BASE_RATE_SPREAD_BPS,
   CONSUMER_BUY_MULTIPLIER,
@@ -21,6 +22,7 @@ import {
   WORKER_DEPOSIT_PCT,
   computeTownRateBps,
   type ActionKind,
+  type AdvisorDecision,
   type AgentName,
   type RosterEntry,
   type StorylinePhase,
@@ -43,6 +45,14 @@ export const ProposedActionSchema = z.object({
   bps: z.int().nonnegative().optional(),
 });
 export type ProposedAction = z.infer<typeof ProposedActionSchema>;
+
+/** Rules-only loan verdict (PRD §5). `maxAmount` is the hard cap for the LLM advisor. */
+export const RulesLoanDecisionSchema = z.object({
+  decision: AdvisorDecisionSchema,
+  maxAmount: UsdcSchema,
+  reasoning: z.string().min(1),
+});
+export type RulesLoanDecision = z.infer<typeof RulesLoanDecisionSchema>;
 
 const IDLE: ProposedAction[] = [{ kind: "idle" }];
 
@@ -140,16 +150,51 @@ function decideWorker(agent: RosterEntry, world: WorldState): ProposedAction[] {
   return actions;
 }
 
-function maybeApprove(world: WorldState): ProposedAction | undefined {
-  const pending = world.loans
+/** Oldest pending roster loan, if any. */
+export function pendingRosterLoan(world: WorldState): WorldState["loans"][number] | undefined {
+  return world.loans
     .filter((l) => l.status === "pending" && isRosterAgent(l.borrower))
-    .sort((a, b) => a.id.localeCompare(b.id));
-  const loan = pending[0];
+    .sort((a, b) => a.id.localeCompare(b.id))[0];
+}
+
+function utilPct(bps: number): string {
+  return `${(bps / 100).toFixed(0)}%`;
+}
+
+/** PRD §5 treasurer loan rule: approve if score ≥ 60 and util < 80%; else flag. Never deny. */
+export function rulesLoanDecision(
+  world: WorldState,
+  loan: WorldState["loans"][number],
+): RulesLoanDecision {
+  const score = isRosterAgent(loan.borrower) ? (world.creditScores[loan.borrower] ?? 0) : 0;
+  const util = world.treasury.utilisationBps;
+  if (score < TREASURER_MIN_SCORE) {
+    return {
+      decision: "flag" satisfies AdvisorDecision,
+      maxAmount: "0",
+      reasoning: `Score ${score} < ${TREASURER_MIN_SCORE}; flag to mayor.`,
+    };
+  }
+  if (util >= TREASURER_MAX_UTILISATION_BPS) {
+    return {
+      decision: "flag",
+      maxAmount: "0",
+      reasoning: `Utilisation ${utilPct(util)} ≥ 80%; flag to mayor.`,
+    };
+  }
+  return {
+    decision: "approve",
+    maxAmount: loan.principalUsdc,
+    reasoning: `Score ${score} ≥ ${TREASURER_MIN_SCORE} and utilisation ${utilPct(util)} < 80%.`,
+  };
+}
+
+function maybeApprove(world: WorldState): ProposedAction | undefined {
+  const loan = pendingRosterLoan(world);
   if (!loan || !isRosterAgent(loan.borrower)) return undefined;
-  const score = world.creditScores[loan.borrower] ?? 0;
-  if (score < TREASURER_MIN_SCORE) return undefined;
-  if (world.treasury.utilisationBps >= TREASURER_MAX_UTILISATION_BPS) return undefined;
-  return { kind: "approve_loan", loanId: loan.id, amountUsdc: loan.principalUsdc };
+  const rules = rulesLoanDecision(world, loan);
+  if (rules.decision !== "approve") return undefined;
+  return { kind: "approve_loan", loanId: loan.id, amountUsdc: rules.maxAmount };
 }
 
 function maybeDefault(world: WorldState): ProposedAction | undefined {

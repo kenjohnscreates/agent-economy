@@ -13,12 +13,14 @@ const DEFAULT_TICK_MS = 15_000;
 const DEFAULT_MAX_TICKS = 50;
 
 const OnOffSchema = z.enum(["on", "off"]);
+const LlmProviderKindSchema = z.enum(["anthropic", "openai", "off"]);
 
 const EnvSchema = z.object({
   TICK_MS: z.coerce.number().int().positive().optional(),
   MAX_TICKS: z.coerce.number().int().positive().optional(),
   LLM_ADVISOR: OnOffSchema.optional(),
   LLM_NARRATOR: OnOffSchema.optional(),
+  LLM_PROVIDER: LlmProviderKindSchema.optional(),
   EXTERNAL_SIGNALS: OnOffSchema.optional(),
   STORYLINE: StorylineModeSchema.optional(),
   SUPABASE_URL: z.url().optional().or(z.literal("")),
@@ -33,6 +35,8 @@ export interface SimConfig {
   flags: FeatureFlags;
   /** Live Circle txs: ALLOW_BROADCAST=true AND (--yes | SIM_EXECUTE=on). Default off. */
   executeEnabled: boolean;
+  /** SDK backend; unused in CI tests (fake `{complete}` is injected). */
+  llmProvider: z.infer<typeof LlmProviderKindSchema>;
   supabaseUrl?: string;
   supabaseServiceKey?: string;
 }
@@ -73,6 +77,7 @@ export function parseSimConfig(
     maxTicks: env.MAX_TICKS ?? DEFAULT_MAX_TICKS,
     flags: parseFlags(env),
     executeEnabled: resolveExecuteEnabled(env, cli),
+    llmProvider: env.LLM_PROVIDER ?? "off",
     supabaseUrl,
     supabaseServiceKey,
   });
