@@ -12,10 +12,10 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
 | M1 Arc treasury + Circle wallets | done | BE | **M1.1–M1.6 LIVE** · job 185726 · loans 1 repaid / 2 defaulted · treasury `0xCE0e…FfC1` |
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
-| M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
-| M4 Sim, agents, API | in_progress | BE | **M4.1** #10 · **M4.5** #11 · **M4.6 LIVE** bo score 75 / fay 35 · 2nd-default revoke not broadcast (keeps 8 names) |
-| M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
-| M6 Integration + demo | todo | both | |
+| M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
+| M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
+| M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
+| M6 Integration + demo | in_progress | both | **M6.1** dry-run (no `--yes`) · live 12-tick gated |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -231,3 +231,91 @@ Blocked: M3.3 Studio deploy key (`studio deploy key set`)
 Risks changed: —
 Next up: Studio key → M3.4 (unblocks M4.9/M4.2)
 Checkpoint call: none
+
+## Wed 9 Sep 12:05 EDT — master handoff
+Reconciled: HEAD `7c7d916` on `main` == origin. 0 open PRs. 1 worktree (this). Leftover `/tmp/rv-pr25-review.md` cleaned. `.env` empty: `SUBGRAPH_URL`, `STUDIO_DEPLOY_KEY` (key absent), `SUPABASE_*`, LLM keys. Board matches live artifacts.
+In progress: —
+Blocked: **M3.3 Studio deploy** — human: create slug `agent-town` (Arc Testnet) at https://thegraph.com/studio/, put deploy key in local `.env` as `STUDIO_DEPLOY_KEY`, say `studio deploy key set`. Then: live `graph deploy` + write `SUBGRAPH_URL` locally → spawn M3.4 → M4.9 → M4.2. Do not wait on FE. Do not revoke roster ENS names.
+Risks changed: —
+Next up: `studio deploy key set`
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 12:20 EDT
+Done: **M3.3 LIVE** — `graph deploy agent-town --version-label 0.0.1`. Studio https://thegraph.com/studio/subgraph/agent-town . Queries URL written to local `.env` `SUBGRAPH_URL` only (not git): `https://api.studio.thegraph.com/query/1758998/agent-town/0.0.1`. Evidence: loan **#1 repaid** / **#2 defaulted**; agent `0x3375…775f7` `ensName=bo.botanica.eth`; ada `0x97847b3C…` present; `_meta.block` ~61260314. ERC-8183 is a shared contract — jobs from other users are also indexed (filter to roster in M3.4). Python-urllib gets Cloudflare 1010; curl/browser UA works.
+In progress: **M3.4** graphclient typed queries (T3) `card/m3.4-graphclient`
+Blocked: M4.9/M4.2 wait on M3.4. Do not revoke roster ENS names.
+Risks changed: —
+Next up: M3.4 PR → review → M4.9 → M4.2
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 12:38 EDT
+Done: **M3.4** — PR #27 squash-merged `c703a8a`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/27) after REQUEST_CHANGES on CI skip (`live.test.ts` threw at describe-load). CI green. Live: loan 1 repaid / 2 defaulted; `bo.botanica.eth`. **M3 board → done.**
+In progress: **M4.9** Signal C fetch+cache (T2) `card/m4.9-signal-c`
+Blocked: M4.2 waits on M4.9. Do not revoke roster ENS names.
+Risks changed: —
+Next up: M4.9 PR → M4.2 (T1)
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 12:50 EDT
+Done: **M4.9** — PR #28 squash-merged `7819181`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/28). Live gateway `usdcBorrowApyBps=429`, `dexVolume24hUsd` ~65.8M, stale fallback + `EXTERNAL_SIGNALS=off`. `/scoreboard` wiring is M4.7.
+In progress: **M4.2** role rules (T1) `card/m4.2-role-rules`
+Blocked: M4.3 waits on M4.2. Do not revoke roster ENS names.
+Risks changed: —
+Next up: M4.2 PR → M4.3
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 13:10 EDT
+Done: **M4.2** — PR #29 squash-merged `464ce08`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/29). decide() PRD §5; sim tests 42/42. Flag = pending.
+In progress: **M4.3** Circle exec adapters (T2) `card/m4.3-exec-adapters` — **dry-run only**; live USDC tick needs `approve M4.3`
+Blocked: live M4.3 tick (Gate A). Do not revoke roster ENS names.
+Risks changed: —
+Next up: M4.3 PR (mocked + dry-run) → `approve M4.3` for one live tick
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 13:35 EDT
+Done: **M4.3** — PR #30 squash-merged `52ae0bc`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/30) after lint + fund_escrow jobId threading. Dry-run default. Live tick **not** run.
+In progress: **M4.4** treasurer advisor (T1) `card/m4.4-advisor`
+Blocked: **live M4.3 tick** — say `approve M4.3`. Then: `ALLOW_BROADCAST=true SIM_EXECUTE=on pnpm --filter @agent-town/sim tick -- --once --yes`
+Risks changed: —
+Next up: M4.4 PR; `approve M4.3` for Arc USDC tick
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 13:50 EDT
+Done: **M4.4** — PR #31 squash-merged `2881f06`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/31). sim **77/77**. LLM_ADVISOR default off; timeout → rules; cap + flag-wins.
+In progress: —
+Blocked: **live M4.3 tick** — say `approve M4.3`. Then master runs `ALLOW_BROADCAST=true SIM_EXECUTE=on pnpm --filter @agent-town/sim tick -- --once --yes`. Do not revoke roster ENS names.
+Risks changed: —
+Next up: `approve M4.3` → one Arc tick; then M4.7 real API
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 13:40 EDT
+Done: **M4.3 LIVE** — Gate A `approve M4.3`. Tick 1 boom: **gus buy** [0xcaedb25f…](https://testnet.arcscan.app/tx/0xcaedb25ff8584590aa18878244ae3490006220f0e7bf492736f4f66875d3f755) · **hal buy** [0x14af335c…](https://testnet.arcscan.app/tx/0x14af335c26ac608fe73720b138e030976ad9f10a34bbad4f8f72b02a8b261d6d) (0.6676 USDC each → bo). Receipts `status=0x1` blocks `0x3a6d860` / `0x3a6d862`. CLI `tick` still defaults `emptyWorld` (idle) — live tick used injected ERC-20 balances + Signal C price. **Wire `getWorld` into cli.ts** so `--once --yes` works unattended.
+In progress: **M4.7** real API; **cli getWorld** (T3)
+Blocked: —
+Risks changed: —
+Next up: M4.7 PR; cli getWorld PR
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 13:55 EDT
+Done: **M4.3 LIVE** — gus buy [0xcaedb25f…](https://testnet.arcscan.app/tx/0xcaedb25ff8584590aa18878244ae3490006220f0e7bf492736f4f66875d3f755) · hal buy [0x14af335c…](https://testnet.arcscan.app/tx/0x14af335c26ac608fe73720b138e030976ad9f10a34bbad4f8f72b02a8b261d6d) · receipts `0x1`. **cli getWorld** #32 `2e9f6d5`. **M4.7** — PR #33 squash-merged `3e69114` (REQUEST_CHANGES then APPROVE). Real API GETs; mayor POSTs 501 unless `ALLOW_BROADCAST=true`.
+In progress: —
+Blocked: —
+Risks changed: —
+Next up: M4.8 storyline + `pnpm reset`
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 14:20 EDT
+Done: Gate A `approve`. **Mayor `setBaseRateBps(700)`** [0xa4bcd8dd…](https://testnet.arcscan.app/tx/0xa4bcd8dd1098d3a7393ffc9eff5183137ae48be920cd83311f9370a235854496). CLI `--once --yes` with getWorld: tick 1 boom, no extra buys (consumers below 2×price after prior 0.6676 USDC spends). **M4.8** — PR #34 squash-merged `d1b91a6` after REQUEST_CHANGES (mark_default once @ t7, bo repay t9, reset via sim).
+In progress: —
+Blocked: —
+Risks changed: —
+Next up: M6 integration; FE M5.8 can swap to `API_MODE=real`
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 14:25 EDT — master handoff
+Reconciled: HEAD `d1b91a6` on `main` == origin. 0 open PRs. 1 worktree (this). Dirty `docs/STATUS.md` (logs through 14:20) committed this session. No leftover `/tmp/wt-*` `/tmp/rv-pr*`. Board: M0–M4 done; M5 ready (FE); **M6.1** next.
+In progress: **M6.1** storyline dry-run (`STORYLINE=demo`, no `--yes`) vs fixtures / mock world
+Blocked: live 12-tick storyline (Gate A — do not run unless explicitly asked). Mayor fund / loan-decision still Gate A. Do not `revokeName` roster names.
+Risks changed: —
+Next up: M6.1 dry-run → M6.2 P0/P1 as bugs surface; M7 when integration is green. Checkpoint Thu 10 Sep 22:00.
+Checkpoint call: none (Thu 10 Sep 22:00)
