@@ -2,10 +2,35 @@
   "name": "@agent-town/web",
   "version": "0.0.0",
   "private": true,
-  "description": "Agent Town frontend — placeholder, owned by FE collaborator",
+  "description": "Agent Town frontend — Botanica desktop UI on the frozen @agent-town/shared contract",
   "scripts": {
-    "build": "echo \"apps/web owned by FE\"",
-    "lint": "echo \"apps/web owned by FE\"",
-    "test": "echo \"apps/web owned by FE\""
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint app components lib scripts",
+    "test": "vitest run",
+    "record": "tsx scripts/record.ts",
+    "sprites": "tsx scripts/gen-sprites.ts",
+    "sync-replay": "node -e \"const f=require('fs');if(f.existsSync('fixtures/replay.json'))f.copyFileSync('fixtures/replay.json','public/replay.json')\"",
+    "predev": "pnpm sync-replay",
+    "prebuild": "pnpm sync-replay"
+  },
+  "dependencies": {
+    "@agent-town/shared": "workspace:*",
+    "lucide-react": "1.43.0",
+    "motion": "13.2.0",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
   }
 }
