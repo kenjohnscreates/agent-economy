@@ -134,6 +134,7 @@ Do not cache `tokenId`s: they change after any role grant/revoke (mutable token 
 | `town.role` | `treasurer|merchant|worker|consumer` |
 | `town.credit-score` | `0–100` (treasurer‑only writer) |
 | `town.reviews` | JSON array of `{by, tick, score, note}` (treasurer‑only writer) |
+| `town.price` | merchant's current good price, 6‑dec USDC string (merchant‑only writer) |
 | `avatar` | sprite URL |
 
 Resolution in app: `UniversalResolverV2.resolve(dnsEncode(name), calls[])`. Reverse (primary name) for Arc addresses is optional stretch.
@@ -181,17 +182,17 @@ Input JSON: borrower name, credit score (ENS), balance history + defaults (subgr
 ### 6.3 API (`apps/api`) — contract frozen in M0
 | Method | Path | Returns |
 |---|---|---|
-| GET | `/state` | tick, storyline phase, flags |
-| GET | `/agents` | roster: ensName, role, arcAddress, balance, creditScore, position, lastDecision, narration |
-| GET | `/agents/:name` | detail + loans + jobs (subgraph) |
-| GET | `/scoreboard` | gdp, treasuryBalance, outstanding, defaultRate, baseRateBps, ticks |
-| GET | `/events` | SSE: `tick`, `tx`, `narration`, `loan_flagged`, `scoreboard` |
-| GET | `/loans?status=pending` | flagged loans for mayor |
-| POST | `/mayor/fund` | `{amount}` → tx hash |
-| POST | `/mayor/loan-decision` | `{loanId, approve}` → tx hash |
-| POST | `/mayor/rate` | `{bps}` → tx hash |
+| GET | `/state` | `tick, phase, flags{llmAdvisor,llmNarrator,externalSignals,storyline}, tickMs, maxTicks, startedAt` |
+| GET | `/agents` | `AgentSummary[]`: `name, ensName, role, arcAddress, balanceUsdc, creditScore, position{building,x,y}, lastDecision, narration, avatar` |
+| GET | `/agents/:name` | `AgentSummary` + `loans[], jobs[], reviews[], links{arcscan,ens}` (subgraph + ENS) |
+| GET | `/scoreboard` | `gdpUsdc, treasuryBalanceUsdc, outstandingUsdc, defaults, defaultRateBps, baseRateBps, ticks, jobsCompleted, loansOutstanding, gdpSeries[], signals{…,stale}, rate{market/spread/premium/town}` |
+| GET | `/events` | SSE: `tick`, `tx`, `narration`, `loan_flagged`, `scoreboard` (envelope `{event, data}`) |
+| GET | `/loans?status=pending` | `Loan[]` — flagged loans for mayor |
+| POST | `/mayor/fund` | `{amountUsdc}` → `{txHash, explorerUrl}` |
+| POST | `/mayor/loan-decision` | `{loanId, approve}` → `{txHash, explorerUrl}` |
+| POST | `/mayor/rate` | `{bps 100–2000}` → `{txHash, explorerUrl}` |
 
-All shapes in `packages/shared/api.ts` (zod). A mock server (`apps/api --mock`) serves fixtures so FE work never blocks on chain readiness.
+**Frozen in M0.6 (PR #5, `902dd74`).** All shapes in `packages/shared/src/api.ts` (zod 4); SSE payloads in `events.ts`; fixtures in `fixtures.ts`. USDC amounts are 6‑decimal integer **strings** (`"3000000"` = 3 USDC), never JS numbers; rates in bps. Default API port `3001`. A mock server (`apps/api --mock`) serves the fixtures so FE work never blocks on chain readiness. Changes after freeze need both humans' ack + mock update in the same PR (RUNBOOK §6).
 
 ### 6.4 Supabase tables
 `ticks(id, ts, phase)`, `actions(tick, agent, kind, tx, status)`, `narration(tick, agent, text)`, `cache_agents(name, json, ts)`.
