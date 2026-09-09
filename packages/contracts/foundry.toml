@@ -16,6 +16,7 @@ fs_permissions = [
     { access = "read-write", path = "./deployments" },
     { access = "read", path = "../ens/town.json" },
     { access = "read", path = "../ens/deployments.json" },
+    { access = "read", path = "../circle/roster.json" },
 ]
 
 # RPC URLs come from env vars only; never hardcode endpoints or keys here.

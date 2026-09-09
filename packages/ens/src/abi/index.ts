@@ -5,3 +5,7 @@ export { mockUsdcAbi } from "./mockUsdc.js";
 export { verifiableFactoryAbi } from "./verifiableFactory.js";
 export { userRegistryInitAbi } from "./userRegistry.js";
 export { permissionedResolverInitAbi } from "./permissionedResolver.js";
+export { townRegistryAbi } from "./townRegistry.js";
+export { townResolverAbi } from "./townResolver.js";
+export { townRegistrarAbi } from "./townRegistrar.js";
+export { universalResolverAbi, resolverProfileAbi } from "./universalResolver.js";

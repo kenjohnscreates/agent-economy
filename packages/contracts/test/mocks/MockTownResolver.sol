@@ -7,6 +7,7 @@ import {ITownResolver, ResolverRoles} from "../../src/ens/HackathonEns.sol";
 contract MockTownResolver is ITownResolver {
     mapping(uint256 => mapping(address => uint256)) internal _eac;
     mapping(bytes32 => mapping(bytes32 => string)) internal _text;
+    mapping(bytes32 => mapping(uint256 => bytes)) internal _addr;
 
     constructor(address admin) {
         _eac[0][admin] = type(uint256).max;
@@ -18,6 +19,14 @@ contract MockTownResolver is ITownResolver {
             revert EACUnauthorizedAccountRoles(resource, ResolverRoles.ROLE_SET_TEXT, msg.sender);
         }
         _text[keccak256(name)][keccak256(bytes(key))] = value;
+    }
+
+    function setAddress(bytes calldata name, uint256 coinType, bytes calldata addressBytes) external {
+        uint256 resource = uint256(keccak256(abi.encode(coinType)));
+        if (!_has(resource, msg.sender, ResolverRoles.ROLE_SET_ADDRESS)) {
+            revert EACUnauthorizedAccountRoles(resource, ResolverRoles.ROLE_SET_ADDRESS, msg.sender);
+        }
+        _addr[keccak256(name)][coinType] = addressBytes;
     }
 
     function grantSetterRoles(bytes calldata setter, address account) external {
@@ -55,6 +64,10 @@ contract MockTownResolver is ITownResolver {
 
     function text(bytes calldata name, string calldata key) external view returns (string memory) {
         return _text[keccak256(name)][keccak256(bytes(key))];
+    }
+
+    function addr(bytes calldata name, uint256 coinType) external view returns (bytes memory) {
+        return _addr[keccak256(name)][coinType];
     }
 
     function _has(uint256 resource, address account, uint256 roleBitmap) internal view returns (bool) {

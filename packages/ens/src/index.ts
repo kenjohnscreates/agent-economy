@@ -1,6 +1,6 @@
 // @agent-town/ens — ENSv2 client (resolve, setRecords, role checks) on Sepolia.
 // Addresses: deployments.ts (hackathon-frozen set only, R2). ABIs: src/abi/*.
-// Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1, no broadcast by default).
+// Scripts: register-town.ts (M0.4), deploy-town-subregistry.ts (M2.1), mint-agent-names.ts (M2.3).
 export const PACKAGE = "@agent-town/ens" as const;
 
 export {
@@ -23,6 +23,11 @@ export {
   verifiableFactoryAbi,
   userRegistryInitAbi,
   permissionedResolverInitAbi,
+  townRegistryAbi,
+  townResolverAbi,
+  townRegistrarAbi,
+  universalResolverAbi,
+  resolverProfileAbi,
 } from "./abi/index.js";
 export {
   ALL_ROLES,
@@ -46,3 +51,24 @@ export {
   type CommitPhase,
   type CommitWindow,
 } from "./commitment.js";
+export {
+  COIN_TYPE_ARC,
+  COIN_TYPE_ETH,
+  DEFAULT_APP_ORIGIN,
+  RegistrarRole,
+  REGISTRY_REGISTRAR_ROLES,
+  RESOLVER_REGISTRAR_ROLES,
+  agentContextMarkdown,
+  avatarUrl,
+  buildMintPlan,
+  dnsEncodeName,
+  dnsEncodeTownName,
+  encodeRegister,
+  encodeSetAddress,
+  encodeSetText,
+  registrarRoleOf,
+  rosterRoleOf,
+  type AgentMintPlan,
+  type MintPlan,
+  type RegistrarRoleId,
+} from "./records.js";
