@@ -13,7 +13,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M1 Arc treasury + Circle wallets | done | BE | **M1.1–M1.6 LIVE** · job 185726 · loans 1 repaid / 2 defaulted · treasury `0xCE0e…FfC1` |
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
-| M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
+| M4 Sim, agents, API | in_progress | BE | **M4.1** #10 · **M4.5** #11 · **M4.6 script** #26 `e0559d8` (dry-run) · live ENS writes need `approve M4.6` |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
 | M7 Review + docs | todo | reviewer | |
@@ -214,4 +214,12 @@ In progress: M4.6 ENS side-effects spawned
 Blocked: M3.3 Studio deploy key (`studio deploy key set`)
 Risks changed: —
 Next up: M4.6 PR; Studio key → M3.4
+Checkpoint call: none
+
+## Wed 9 Sep 11:20 EDT
+Done: **M4.6 script** — PR #26 squash-merged `e0559d8`. T2 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/26#pullrequestreview-5156211997). ENS 74/74 · sim 21/21. repay +5; 1st default score **35** + review; 2nd default `revokeName`. **No live Sepolia writes yet.**
+In progress: —
+Blocked: M3.3 Studio deploy key (`studio deploy key set`); M4.6 live ENS writes — say `approve M4.6`
+Risks changed: —
+Next up: `approve M4.6`; Studio key → M3.4 (unblocks M4.9/M4.2)
 Checkpoint call: none
