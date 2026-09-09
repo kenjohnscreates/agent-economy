@@ -9,9 +9,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 
 | Milestone | State | Owner | Notes |
 |---|---|---|---|
-| M0 Unblock + scaffold | in_progress | both | done: M0.1–M0.8 · **M0.4 botanica.eth REGISTERED** · M0.9 in flight (MCP auth works) |
-| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** (set `949545dc-…`, 9 SCA) · **M1.2 deployed** `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` · M1.4 fund spawned |
-| M2 ENSv2 namespace | in_progress | BE | M2.1 script in flight; broadcast pre-approved ("approve all") |
+| M0 Unblock + scaffold | done | both | M0.1–M0.9 · **M0.4 botanica.eth REGISTERED** · **M0.9** #14 `20c2a32` Aave V3 `JCNW…` + Uni V3 `5zvR82…` |
+| M1 Arc treasury + Circle wallets | in_progress | BE | **M1.1** #9 · **M1.3 wallets LIVE** (set `949545dc-…`, 9 SCA) · **M1.2 deployed** `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` · M1.4 fund: no PR yet |
+| M2 ENSv2 namespace | in_progress | BE | **M2.1** #15 OPEN; broadcast pre-approved after merge |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · M3.3 can use treasury `0xCE0e…FfC1` |
 | M4 Sim, agents, API | in_progress | BE | **M4.1 done** (#10) · **M4.5 done** (#11 `87f95b9`, 17/17 tests, LLM off default) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
@@ -125,4 +125,12 @@ In progress: M0.9 Signal C; M2.1 script; M1.4 fund
 Blocked: mayor needs Arc faucet USDC/gas at `0x52b9…0685` (https://faucet.circle.com) before fan-out if deployer isn't used as source
 Risks changed: —
 Next up: M1.4 fund; M2.1 PR then broadcast; M3.3 pin treasury address
+Checkpoint call: none
+
+## Wed 9 Sep 01:37 EDT
+Done: **M0.9** — PR #14 squash-merged `20c2a32`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/14#pullrequestreview-5150167938). Lending `JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk` (Aave V3 ETH, ~430 bps USDC variable borrow); DEX `5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV` (Uniswap V3). 30d MCP counts all 0 (analytics gap); ranked by query fees. Live queries confirmed. Local `.env` `EXT_*` set (not git). M0 board → **done**.
+In progress: M2.1 #15 T1 review; M1.4 fund (no PR — worktree gone)
+Blocked: —
+Risks changed: R17 pick complete; cache/stale still M4.9
+Next up: merge #15 → `--broadcast` M2.1; respawn M1.4 if needed; M3.3
 Checkpoint call: none
