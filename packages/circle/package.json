@@ -22,7 +22,8 @@
     "test": "vitest run",
     "lint": "eslint src scripts",
     "setup-wallets": "node --env-file-if-exists=../../.env --import tsx scripts/setup-wallets.ts",
-    "balances": "node --env-file-if-exists=../../.env --import tsx scripts/balances.ts"
+    "balances": "node --env-file-if-exists=../../.env --import tsx scripts/balances.ts",
+    "fund": "node --env-file-if-exists=../../.env --import tsx scripts/fund.ts"
   },
   "dependencies": {
     "@agent-town/shared": "workspace:*",
