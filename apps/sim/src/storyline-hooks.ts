@@ -108,9 +108,9 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
   let w = loadWorld(tick, {
     ...world,
     creditScores: {
+      ...world.creditScores,
       fay: tick >= 8 ? 35 : 70,
       bo: 78,
-      ...world.creditScores,
       ...(tick >= 9 && tick <= 10 ? { eli: 50 } : {}),
     },
     signals: {
@@ -129,19 +129,20 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
   if (phase === "boom" || tick <= 3) {
     const demoJob = {
       ...DEMO_JOB,
-      status: tick >= 2 ? "funded" : "open",
+      status: tick >= 3 ? "submitted" : tick >= 2 ? "funded" : "open",
     };
     w = loadWorld(tick, {
       ...w,
       balances: {
+        ...w.balances,
         gus: "5000000",
         hal: "5000000",
         bo: "500000",
         cy: "800000",
-        ...w.balances,
       },
-      inventory: { bo: 1, cy: 1, ...w.inventory },
+      inventory: { ...w.inventory, bo: 1, cy: 1 },
       jobs: [...w.jobs.filter((j) => j.id !== DEMO_JOB_ID), demoJob],
+      settledPayouts: tick >= 3 ? { ...w.settledPayouts, dee: DEMO_JOB.amountUsdc } : w.settledPayouts,
       assignments:
         tick >= 2
           ? [
