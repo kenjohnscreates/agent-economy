@@ -4,6 +4,7 @@
 // World via optional getWorld; default emptyWorld keeps decide idle (M4.1 tests).
 // After decide/actions, batches one narration bubble per roster agent (M4.5).
 // M4.3: optional executeAction maps ProposedAction → Circle tx (dry-run default).
+// M4.4: optional treasurer LLM advisor overlays loan actions when LLM_ADVISOR=on.
 // M4.6: skipped repay/mark_default never call applyEnsSideEffects (no chain writes).
 import {
   ROSTER,
@@ -15,6 +16,7 @@ import {
 } from "@agent-town/shared";
 import type { SimConfig } from "./config.js";
 import { decide } from "./decide.js";
+import { overlayTreasurerLoanAdvice, type QuerySubgraphFn } from "./advisor.js";
 import { EXECUTE_SKIP_KINDS, type ExecuteActionFn } from "./execute.js";
 import { emptyWorld, type WorldState } from "./world.js";
 import { maybeApplyEnsSideEffects, type EnsLoanOutcomeEvent } from "./ens-side-effects.js";
@@ -24,6 +26,10 @@ import { onTick } from "./storyline-hooks.js";
 
 export interface TickDeps {
   narratorProvider?: LlmProvider;
+  /** Treasurer loan advisor; tests inject a fake `{complete}`. */
+  advisorProvider?: LlmProvider;
+  /** Optional mocked (tests) or graphclient-backed subgraph history tool. */
+  querySubgraph?: QuerySubgraphFn;
   /** M4.3 injects Circle execution. Omitted or dry-run → ledger status skipped. */
   executeAction?: ExecuteActionFn;
   /** M4.6 injects `applyLoanOutcome`. Skipped/--once never write chain. */
@@ -76,8 +82,7 @@ async function persistAction(
   }
 
   await ledger.insertAction({ tick, agent, kind: action.kind, tx, status });
-  const jobId =
-    result.status === "complete" && "jobId" in result ? result.jobId : undefined;
+  const jobId = result.status === "complete" && "jobId" in result ? result.jobId : undefined;
   return { status, jobId };
 }
 
@@ -127,7 +132,17 @@ export async function runSingleTick(
   const lastKind = new Map<AgentName, ActionKind>();
   const world = deps.getWorld ? await deps.getWorld(nextTick) : emptyWorld(nextTick);
   for (const agent of ROSTER) {
-    const proposed = decide(agent, { tick: nextTick, phase, world });
+    let proposed = decide(agent, { tick: nextTick, phase, world });
+    if (agent.role === "treasurer") {
+      proposed = await overlayTreasurerLoanAdvice(
+        proposed,
+        world,
+        { llmAdvisor: config.flags.llmAdvisor },
+        deps.advisorProvider,
+        undefined,
+        deps.querySubgraph,
+      );
+    }
     let createdJobId: string | undefined;
     for (const action of proposed) {
       const execAction =

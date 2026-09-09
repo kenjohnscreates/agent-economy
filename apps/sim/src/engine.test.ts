@@ -11,7 +11,7 @@ import { parseSimConfig } from "./config.js";
 import { phaseForConfig, runSingleTick, runTicks } from "./engine.js";
 import { MemoryLedger } from "./ledger/index.js";
 import { staticNarration } from "./narrator.js";
-import { emptyWorld } from "./world.js";
+import { emptyWorld, loadWorld } from "./world.js";
 
 function testConfig(overrides: Record<string, string> = {}) {
   return parseSimConfig({
@@ -162,6 +162,61 @@ describe("parseSimConfig", () => {
     expect(config.flags.llmNarrator).toBe(false);
     expect(config.flags.externalSignals).toBe(true);
     expect(config.flags.storyline).toBe("demo");
+    expect(config.llmProvider).toBe("off");
+  });
+});
+
+describe("treasurer advisor (M4.4)", () => {
+  const pendingWorld = (tick: number) =>
+    loadWorld(tick, {
+      loans: [
+        {
+          id: "L-1",
+          borrower: "bo",
+          principalUsdc: "1200000",
+          status: "pending",
+          approvedAtTick: null,
+        },
+      ],
+      creditScores: { bo: 70 },
+      treasury: {
+        utilisationBps: 2000,
+        outstandingUsdc: "0",
+        baseRateBps: 610,
+        defaults: 0,
+      },
+    });
+
+  it("LLM_ADVISOR off does not call advisorProvider", async () => {
+    const complete = vi.fn(async () => "should not run");
+    const ledger = new MemoryLedger();
+    await runSingleTick(ledger, testConfig({ LLM_ADVISOR: "off" }), {
+      advisorProvider: { complete },
+      getWorld: pendingWorld,
+    });
+    expect(complete).not.toHaveBeenCalled();
+    const actions = await ledger.listActions();
+    expect(actions.some((a) => a.agent === "ada" && a.kind === "approve_loan")).toBe(true);
+  });
+
+  it("LLM_ADVISOR on + LLM flag vs rules approve records no approve_loan", async () => {
+    const complete = vi.fn(async () =>
+      JSON.stringify({
+        decision: "flag",
+        maxAmount: "1200000",
+        reasoning: "Send to mayor.",
+        confidence: 0.7,
+      }),
+    );
+    const ledger = new MemoryLedger();
+    await runSingleTick(ledger, testConfig({ LLM_ADVISOR: "on" }), {
+      advisorProvider: { complete },
+      getWorld: pendingWorld,
+    });
+    expect(complete).toHaveBeenCalledOnce();
+    const actions = await ledger.listActions();
+    expect(actions.some((a) => a.agent === "ada" && a.kind === "approve_loan")).toBe(false);
+    expect(actions.some((a) => a.agent === "ada" && a.kind === "deny_loan")).toBe(false);
   });
 });
 
