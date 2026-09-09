@@ -67,4 +67,69 @@ describe("demo storyline scheduler (M4.8)", () => {
     const t10 = patchDemoWorld(emptyWorld(10), 10, "hike");
     expect(t10.loans.some((l) => l.borrower === "bo" && l.status === "approved")).toBe(false);
   });
+
+  it("12-tick demo: boom worker beat, set_rate not spammed, hike flag loan", async () => {
+    const ledger = new MemoryLedger();
+    await runTicks(ledger, testConfig({ MAX_TICKS: "12" }), 12);
+    const actions = await ledger.listActions();
+
+    const boomWork = actions.filter(
+      (a) =>
+        a.tick >= 1 &&
+        a.tick <= 3 &&
+        (a.kind === "accept_job" || a.kind === "deliver") &&
+        (a.agent === "dee" || a.agent === "eli" || a.agent === "fay"),
+    );
+    expect(boomWork.length).toBeGreaterThan(0);
+    expect(boomWork.some((a) => a.agent === "dee")).toBe(true);
+
+    const setRates = actions.filter((a) => a.agent === "ada" && a.kind === "set_rate");
+    expect(setRates.some((a) => a.tick === 9)).toBe(true);
+    expect(setRates.filter((a) => a.tick >= 1 && a.tick <= 8)).toHaveLength(0);
+    expect(actions.some((a) => a.kind === "deny_loan")).toBe(false);
+    expect(actions.some((a) => a.tick === 9 && a.agent === "ada" && a.kind === "approve_loan")).toBe(
+      false,
+    );
+    expect(actions.some((a) => a.tick === 10 && a.agent === "ada" && a.kind === "approve_loan")).toBe(
+      false,
+    );
+  });
+
+  it("patchDemoWorld boom job J-demo lets dee accept or deliver", () => {
+    const t1 = patchDemoWorld(emptyWorld(1), 1, "boom");
+    expect(t1.jobs.find((j) => j.id === "J-demo")).toMatchObject({
+      client: "bo",
+      provider: "dee",
+      amountUsdc: "1200000",
+      status: "open",
+    });
+    const t2 = patchDemoWorld(emptyWorld(2), 2, "boom");
+    expect(t2.assignments).toContainEqual({ jobId: "J-demo", worker: "dee", acceptedAtTick: 1 });
+  });
+
+  it("patchDemoWorld aligns baseRateBps except hike tick 9 stays behind", () => {
+    const t1 = patchDemoWorld(emptyWorld(1), 1, "boom");
+    expect(t1.treasury.baseRateBps).toBe(610);
+    const t8 = patchDemoWorld(emptyWorld(8), 8, "default");
+    expect(t8.treasury.defaults).toBeGreaterThan(0);
+    expect(t8.treasury.baseRateBps).toBe(810);
+    const t9 = patchDemoWorld(emptyWorld(9), 9, "hike");
+    expect(t9.treasury.baseRateBps).toBe(610);
+    const t10 = patchDemoWorld(emptyWorld(10), 10, "hike");
+    expect(t10.treasury.baseRateBps).toBe(810);
+  });
+
+  it("patchDemoWorld t9–10 pending L-flag eli score 50 (mayor flag, no approve)", () => {
+    for (const tick of [9, 10] as const) {
+      const w = patchDemoWorld(emptyWorld(tick), tick, "hike");
+      const flagged = w.loans.find((l) => l.id === "L-flag");
+      expect(flagged).toMatchObject({
+        borrower: "eli",
+        principalUsdc: "1000000",
+        status: "pending",
+      });
+      expect(w.creditScores.eli).toBe(50);
+      expect(w.creditScores.eli! < 60).toBe(true);
+    }
+  });
 });

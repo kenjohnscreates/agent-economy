@@ -33,6 +33,24 @@ export interface OnTickResult {
 
 const DEMO_FAY_LOAN_ID = "L-2";
 const DEMO_BO_LOAN_ID = "L-1";
+const DEMO_FLAG_LOAN_ID = "L-flag";
+const DEMO_JOB_ID = "J-demo";
+
+const DEMO_JOB = {
+  id: DEMO_JOB_ID,
+  client: "bo",
+  provider: "dee",
+  amountUsdc: "1200000",
+  status: "open",
+} as const;
+
+const DEMO_FLAG_LOAN: WorldLoan = {
+  id: DEMO_FLAG_LOAN_ID,
+  borrower: "eli",
+  principalUsdc: "1000000",
+  status: "pending",
+  approvedAtTick: null,
+};
 
 const DEMO_FAY_APPROVED: WorldLoan = {
   id: DEMO_FAY_LOAN_ID,
@@ -67,6 +85,15 @@ function withoutApprovedBoLoan(loans: WorldLoan[]): WorldLoan[] {
   return loans.filter((l) => !(l.id === DEMO_BO_LOAN_ID && l.status === "approved"));
 }
 
+/** Match `maybeRate` so demo ticks skip set_rate unless the world rate is behind. */
+function alignedBaseRateBps(world: WorldState): number {
+  return computeTownRateBps({
+    marketApyBps: world.signals.usdcBorrowApyBps,
+    spreadBps: BASE_RATE_SPREAD_BPS,
+    defaultPremiumBps: world.treasury.defaults > 0 ? DEFAULT_PREMIUM_BPS : 0,
+  });
+}
+
 async function ledgerHasKindEver(
   ledger: Ledger,
   agent: AgentName,
@@ -84,6 +111,7 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
       fay: tick >= 8 ? 35 : 70,
       bo: 78,
       ...world.creditScores,
+      ...(tick >= 9 && tick <= 10 ? { eli: 50 } : {}),
     },
     signals: {
       ...world.signals,
@@ -99,6 +127,10 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
   w = loadWorld(tick, { ...w, loans: mergeLoan(w.loans, fayLoan) });
 
   if (phase === "boom" || tick <= 3) {
+    const demoJob = {
+      ...DEMO_JOB,
+      status: tick >= 2 ? "funded" : "open",
+    };
     w = loadWorld(tick, {
       ...w,
       balances: {
@@ -109,6 +141,14 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
         ...w.balances,
       },
       inventory: { bo: 1, cy: 1, ...w.inventory },
+      jobs: [...w.jobs.filter((j) => j.id !== DEMO_JOB_ID), demoJob],
+      assignments:
+        tick >= 2
+          ? [
+              ...w.assignments.filter((a) => a.jobId !== DEMO_JOB_ID),
+              { jobId: DEMO_JOB_ID, worker: "dee", acceptedAtTick: tick - 1 },
+            ]
+          : w.assignments.filter((a) => a.jobId !== DEMO_JOB_ID),
     });
   }
 
@@ -188,6 +228,24 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
       },
     });
   }
+
+  if (tick === 9 || tick === 10) {
+    w = loadWorld(tick, {
+      ...w,
+      creditScores: { ...w.creditScores, eli: 50 },
+      loans: mergeLoan(w.loans, DEMO_FLAG_LOAN),
+    });
+  }
+
+  const computedRate = alignedBaseRateBps(w);
+  w = loadWorld(tick, {
+    ...w,
+    treasury: {
+      ...w.treasury,
+      // Hike tick: keep world rate behind computed so maybeRate emits set_rate; then catch up.
+      baseRateBps: tick === 9 ? computedRate - DEFAULT_PREMIUM_BPS : computedRate,
+    },
+  });
 
   return w;
 }
