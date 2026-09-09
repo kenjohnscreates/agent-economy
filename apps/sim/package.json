@@ -16,6 +16,7 @@
     "@agent-town/circle": "workspace:*",
     "@agent-town/shared": "workspace:*",
     "@supabase/supabase-js": "^2.99.1",
+    "viem": "2.56.3",
     "zod": "4.5.4"
   }
 }
