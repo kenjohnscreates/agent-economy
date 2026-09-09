@@ -35,15 +35,33 @@ importers:
 
   apps/api:
     dependencies:
+      '@agent-town/circle':
+        specifier: workspace:*
+        version: link:../../packages/circle
+      '@agent-town/ens':
+        specifier: workspace:*
+        version: link:../../packages/ens
+      '@agent-town/graphclient':
+        specifier: workspace:*
+        version: link:../../packages/graphclient
       '@agent-town/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@hono/node-server':
         specifier: 2.1.1
         version: 2.1.1(hono@4.13.7)
+      '@supabase/supabase-js':
+        specifier: ^2.99.1
+        version: 2.116.0
+      graphql-request:
+        specifier: ^7.2.0
+        version: 7.4.0(graphql@16.11.0)
       hono:
         specifier: 4.13.7
         version: 4.13.7
+      viem:
+        specifier: ^2.47.2
+        version: 2.56.3(typescript@5.9.3)(zod@4.5.4)
     devDependencies:
       zod:
         specifier: 4.5.4

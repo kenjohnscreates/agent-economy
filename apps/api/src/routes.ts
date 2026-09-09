@@ -87,15 +87,17 @@ export function createApp(source: DataSource): Hono {
 
   app.post(API_ROUTES.mayorFund, async (c) => {
     const body = parseInput(MayorFundRequestSchema, await jsonBody(c));
-    return c.json(TxResponseSchema.parse(source.mayorFund(body)));
+    return c.json(TxResponseSchema.parse(await Promise.resolve(source.mayorFund(body))));
   });
   app.post(API_ROUTES.mayorLoanDecision, async (c) => {
     const body = parseInput(MayorLoanDecisionRequestSchema, await jsonBody(c));
-    return c.json(TxResponseSchema.parse(source.mayorLoanDecision(body)));
+    return c.json(
+      TxResponseSchema.parse(await Promise.resolve(source.mayorLoanDecision(body))),
+    );
   });
   app.post(API_ROUTES.mayorRate, async (c) => {
     const body = parseInput(MayorRateRequestSchema, await jsonBody(c));
-    return c.json(TxResponseSchema.parse(source.mayorRate(body)));
+    return c.json(TxResponseSchema.parse(await Promise.resolve(source.mayorRate(body))));
   });
 
   return app;
