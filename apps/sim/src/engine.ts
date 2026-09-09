@@ -3,6 +3,7 @@
 // Stops when tick >= MAX_TICKS. Actions are idempotent on (tick, agent, kind).
 // World via optional getWorld; default emptyWorld keeps decide idle (M4.1 tests).
 // After decide/actions, batches one narration bubble per roster agent (M4.5).
+// M4.3: optional executeAction maps ProposedAction → Circle tx (dry-run default).
 // M4.6: skipped repay/mark_default never call applyEnsSideEffects (no chain writes).
 import {
   ROSTER,
@@ -14,22 +15,68 @@ import {
 } from "@agent-town/shared";
 import type { SimConfig } from "./config.js";
 import { decide } from "./decide.js";
+import { EXECUTE_SKIP_KINDS, type ExecuteActionFn } from "./execute.js";
 import { emptyWorld, type WorldState } from "./world.js";
 import { maybeApplyEnsSideEffects, type EnsLoanOutcomeEvent } from "./ens-side-effects.js";
-import type { Ledger } from "./ledger/index.js";
+import type { ActionStatus, Ledger } from "./ledger/index.js";
 import { narrate, type LlmProvider } from "./narrator.js";
 import { onTick } from "./storyline-hooks.js";
 
 export interface TickDeps {
   narratorProvider?: LlmProvider;
-  /** M4.3 injects `applyLoanOutcome`. Skipped/--once never write chain. */
+  /** M4.3 injects Circle execution. Omitted or dry-run → ledger status skipped. */
+  executeAction?: ExecuteActionFn;
+  /** M4.6 injects `applyLoanOutcome`. Skipped/--once never write chain. */
   applyEnsSideEffects?: (event: EnsLoanOutcomeEvent) => Promise<void>;
   /** Optional world snapshot (subgraph + Signal C). Default empty → idle. */
   getWorld?: (tick: number) => WorldState | Promise<WorldState>;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+async function persistAction(
+  ledger: Ledger,
+  tick: number,
+  agent: AgentName,
+  action: ReturnType<typeof decide>[number],
+  config: SimConfig,
+  executeAction?: ExecuteActionFn,
+): Promise<ActionStatus> {
+  const existing = await ledger.findAction(tick, agent, action.kind);
+  if (existing?.status === "complete") return existing.status;
+  if (existing) return existing.status;
+
+  const skipExecute =
+    !executeAction || !config.executeEnabled || EXECUTE_SKIP_KINDS.has(action.kind);
+
+  if (skipExecute) {
+    await ledger.insertAction({
+      tick,
+      agent,
+      kind: action.kind,
+      tx: null,
+      status: "skipped",
+    });
+    return "skipped";
+  }
+
+  const result = await executeAction({ tick, agent, action });
+  const status = result.status;
+  const tx =
+    result.status === "complete"
+      ? result.txHash
+      : result.status === "failed"
+        ? (result.txHash ?? null)
+        : null;
+
+  if (result.status === "failed") {
+    console.error(`[sim] execute ${action.kind} (${agent} tick ${tick}): ${result.error}`);
+  } else if (result.status === "pending") {
+    console.warn(
+      `[sim] execute ${action.kind} (${agent} tick ${tick}) pending: ${result.error ?? result.txId}`,
+    );
+  }
+
+  await ledger.insertAction({ tick, agent, kind: action.kind, tx, status });
+  return status;
 }
 
 /** Demo uses the PRD §12 table; free-run holds a constant boom phase. */
@@ -80,14 +127,14 @@ export async function runSingleTick(
   for (const agent of ROSTER) {
     const proposed = decide(agent, { tick: nextTick, phase, world });
     for (const action of proposed) {
-      const status = "skipped" as const;
-      await ledger.insertAction({
-        tick: nextTick,
-        agent: agent.name,
-        kind: action.kind,
-        tx: null,
-        status,
-      });
+      const status = await persistAction(
+        ledger,
+        nextTick,
+        agent.name,
+        action,
+        config,
+        deps.executeAction,
+      );
       if (action.kind === "repay" || action.kind === "mark_default") {
         await maybeApplyEnsSideEffects(
           { agent: agent.name, kind: action.kind, tick: nextTick, status },
@@ -102,6 +149,10 @@ export async function runSingleTick(
   await onTick(nextTick, phase);
   console.log(`[sim] tick ${nextTick} phase=${phase}`);
   return nextTick;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /** Advance up to `count` ticks; stops early when MAX_TICKS is reached. */

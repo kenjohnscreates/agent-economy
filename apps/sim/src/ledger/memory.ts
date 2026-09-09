@@ -47,6 +47,14 @@ export class MemoryLedger implements Ledger {
     return true;
   }
 
+  async findAction(
+    tick: number,
+    agent: ActionRow["agent"],
+    kind: ActionRow["kind"],
+  ): Promise<ActionRow | undefined> {
+    return this.actions.find((a) => a.tick === tick && a.agent === agent && a.kind === kind);
+  }
+
   async insertNarration(row: NarrationRow): Promise<boolean> {
     const key = narrationKey(row);
     if (this.narrationKeys.has(key)) return false;

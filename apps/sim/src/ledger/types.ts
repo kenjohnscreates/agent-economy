@@ -34,6 +34,7 @@ export interface Ledger {
   insertTick(row: TickRow): Promise<void>;
   /** Returns false when (tick, agent, kind) already exists (idempotent skip). */
   insertAction(row: ActionRow): Promise<boolean>;
+  findAction(tick: number, agent: AgentName, kind: ActionKind): Promise<ActionRow | undefined>;
   /** Returns false when (tick, agent) already exists (idempotent skip). */
   insertNarration(row: NarrationRow): Promise<boolean>;
 }

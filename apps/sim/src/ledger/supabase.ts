@@ -83,6 +83,29 @@ export class SupabaseLedger implements Ledger {
     return true;
   }
 
+  async findAction(
+    tick: number,
+    agent: AgentName,
+    kind: ActionKind,
+  ): Promise<ActionRow | undefined> {
+    const { data, error } = await this.client
+      .from("actions")
+      .select("*")
+      .eq("tick", tick)
+      .eq("agent", agent)
+      .eq("kind", kind)
+      .maybeSingle();
+    if (error) throw new Error(`Supabase findAction: ${error.message}`);
+    if (!data) return undefined;
+    return {
+      tick: data.tick as number,
+      agent: data.agent as AgentName,
+      kind: data.kind as ActionKind,
+      tx: (data.tx as string | null) ?? null,
+      status: data.status as ActionRow["status"],
+    };
+  }
+
   async insertNarration(row: NarrationRow): Promise<boolean> {
     const { error } = await this.client.from("narration").insert({
       tick: row.tick,
