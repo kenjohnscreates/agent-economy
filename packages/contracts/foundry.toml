@@ -28,3 +28,7 @@ quote_style = "double"
 number_underscore = "thousands"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+# Invariant handlers are written to never revert; any revert is a real bug in handler or contract.
+[invariant]
+fail_on_revert = true
