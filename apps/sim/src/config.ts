@@ -23,12 +23,16 @@ const EnvSchema = z.object({
   STORYLINE: StorylineModeSchema.optional(),
   SUPABASE_URL: z.url().optional().or(z.literal("")),
   SUPABASE_SERVICE_KEY: z.string().optional(),
+  ALLOW_BROADCAST: z.string().optional(),
+  SIM_EXECUTE: OnOffSchema.optional(),
 });
 
 export interface SimConfig {
   tickMs: number;
   maxTicks: number;
   flags: FeatureFlags;
+  /** Live Circle txs: ALLOW_BROADCAST=true AND (--yes | SIM_EXECUTE=on). Default off. */
+  executeEnabled: boolean;
   supabaseUrl?: string;
   supabaseServiceKey?: string;
 }
@@ -56,7 +60,10 @@ function parseFlags(env: z.infer<typeof EnvSchema>): FeatureFlags {
   return FeatureFlagsSchema.parse(flags);
 }
 
-export function parseSimConfig(rawEnv: NodeJS.ProcessEnv = process.env): SimConfig {
+export function parseSimConfig(
+  rawEnv: NodeJS.ProcessEnv = process.env,
+  cli: CliOptions = { once: false, yes: false },
+): SimConfig {
   const env = EnvSchema.parse(rawEnv);
   const supabaseUrl = env.SUPABASE_URL?.trim() || undefined;
   const supabaseServiceKey = env.SUPABASE_SERVICE_KEY?.trim() || undefined;
@@ -65,6 +72,7 @@ export function parseSimConfig(rawEnv: NodeJS.ProcessEnv = process.env): SimConf
     tickMs: env.TICK_MS ?? DEFAULT_TICK_MS,
     maxTicks: env.MAX_TICKS ?? DEFAULT_MAX_TICKS,
     flags: parseFlags(env),
+    executeEnabled: resolveExecuteEnabled(env, cli),
     supabaseUrl,
     supabaseServiceKey,
   });
@@ -73,6 +81,18 @@ export function parseSimConfig(rawEnv: NodeJS.ProcessEnv = process.env): SimConf
 export interface CliOptions {
   once: boolean;
   ticks?: number;
+  /** With ALLOW_BROADCAST=true, enables Circle execution (Gate A: approve M4.3 first). */
+  yes: boolean;
+}
+
+/** Live tick gate — dry-run unless both ALLOW_BROADCAST and an explicit execute flag. */
+export function resolveExecuteEnabled(
+  env: Pick<z.infer<typeof EnvSchema>, "ALLOW_BROADCAST" | "SIM_EXECUTE">,
+  cli: CliOptions,
+): boolean {
+  if (env.ALLOW_BROADCAST !== "true") return false;
+  if (cli.yes) return true;
+  return env.SIM_EXECUTE === "on";
 }
 
 export function parseCliOptions(argv: readonly string[]): CliOptions {
@@ -85,5 +105,6 @@ export function parseCliOptions(argv: readonly string[]): CliOptions {
   if (once && ticks !== undefined) {
     throw new Error("Use either --once or --ticks, not both");
   }
-  return { once, ticks };
+  const yes = argv.includes("--yes");
+  return { once, ticks, yes };
 }
