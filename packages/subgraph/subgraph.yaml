@@ -1,0 +1,87 @@
+# Agent Town subgraph — Arc Testnet (RISKS R5: network id is `arc-testnet`).
+# TownTreasury address is a placeholder until M1.2 deploy. M3.3 / packages/contracts/deployments/arc-testnet.json replaces it. Do not invent a live address.
+specVersion: 1.2.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: TownTreasury
+    network: arc-testnet
+    source:
+      address: "0x0000000000000000000000000000000000000001"
+      abi: TownTreasury
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Agent
+        - Loan
+        - Payment
+        - TreasurySnapshot
+        - TownStat
+      abis:
+        - name: TownTreasury
+          file: ./abis/TownTreasury.json
+      eventHandlers:
+        - event: Deposited(indexed address,uint256)
+          handler: handleDeposited
+        - event: Withdrawn(indexed address,uint256)
+          handler: handleWithdrawn
+        - event: LoanRequested(indexed uint256,indexed address,uint256,uint32)
+          handler: handleLoanRequested
+        - event: LoanApproved(indexed uint256,indexed address,uint256,uint16,uint64)
+          handler: handleLoanApproved
+        - event: LoanDenied(indexed uint256,indexed address)
+          handler: handleLoanDenied
+        - event: Repaid(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleRepaid
+        - event: Defaulted(indexed uint256,indexed address,uint256)
+          handler: handleDefaulted
+        - event: BaseRateSet(uint16)
+          handler: handleBaseRateSet
+        - event: SpreadSet(uint16)
+          handler: handleSpreadSet
+        - event: MaxLoanSet(uint256)
+          handler: handleMaxLoanSet
+        - event: Funded(indexed address,uint256)
+          handler: handleFunded
+        - event: StipendPaid(indexed address,uint256)
+          handler: handleStipendPaid
+        - event: AgentRegistered(indexed address,string)
+          handler: handleAgentRegistered
+      file: ./src/treasury.ts
+  - kind: ethereum/contract
+    name: AgenticCommerce
+    network: arc-testnet
+    source:
+      address: "0x0747EEf0706327138c69792bF28Cd525089e4583"
+      abi: AgenticCommerce
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Agent
+        - Job
+        - Payment
+        - TownStat
+      abis:
+        - name: AgenticCommerce
+          file: ./abis/AgenticCommerce.json
+      eventHandlers:
+        - event: JobCreated(indexed uint256,indexed address,indexed address,address,uint256,address)
+          handler: handleJobCreated
+        - event: JobFunded(indexed uint256,indexed address,uint256)
+          handler: handleJobFunded
+        - event: JobSubmitted(indexed uint256,indexed address,bytes32)
+          handler: handleJobSubmitted
+        - event: JobCompleted(indexed uint256,indexed address,bytes32)
+          handler: handleJobCompleted
+        - event: JobRejected(indexed uint256,indexed address,bytes32)
+          handler: handleJobRejected
+        - event: JobExpired(indexed uint256)
+          handler: handleJobExpired
+      file: ./src/jobs.ts

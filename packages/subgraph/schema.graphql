@@ -1,0 +1,69 @@
+# Agent Town subgraph schema (ARCHITECTURE §5).
+# USDC amounts are 6-decimal base units (BigInt). Do not index raw ERC-20 Transfer (RISKS R4).
+# Loan.status: pending | approved | denied | repaid | defaulted
+# Job.status: open | funded | submitted | completed | rejected | expired
+# graph-cli 0.98 requires an explicit `immutable` arg on @entity; Agent/Loan/Job mutate.
+
+type Agent @entity(immutable: false) {
+  id: Bytes!
+  ensName: String
+  role: String
+  balanceDeposited: BigInt!
+  loansTaken: Int!
+  defaults: Int!
+  jobsCompleted: Int!
+  earned: BigInt!
+  spent: BigInt!
+}
+
+type Loan @entity(immutable: false) {
+  id: ID!
+  borrower: Agent!
+  principal: BigInt!
+  rateBps: Int!
+  status: String!
+  requestedAt: BigInt!
+  approvedAt: BigInt
+  repaid: BigInt!
+  defaultedAt: BigInt
+}
+
+type Job @entity(immutable: false) {
+  id: ID!
+  client: Agent!
+  provider: Agent!
+  amount: BigInt!
+  status: String!
+  createdAt: BigInt!
+  settledAt: BigInt
+}
+
+type Payment @entity(immutable: true) {
+  id: Bytes!
+  from: Agent!
+  to: Agent!
+  amount: BigInt!
+  kind: String!
+  tx: Bytes!
+  timestamp: BigInt!
+}
+
+type TreasurySnapshot @entity(immutable: true) {
+  id: Bytes!
+  balance: BigInt!
+  outstanding: BigInt!
+  baseRateBps: Int!
+  timestamp: BigInt!
+}
+
+type TownStat @entity(timeseries: true) {
+  id: Int8!
+  timestamp: Timestamp!
+  volume: BigInt!
+}
+
+type TownDaily @aggregation(intervals: ["hour", "day"], source: "TownStat") {
+  id: Int8!
+  timestamp: Timestamp!
+  gdp: BigInt! @aggregate(fn: "sum", arg: "volume")
+}
