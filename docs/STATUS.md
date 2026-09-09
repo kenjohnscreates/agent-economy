@@ -13,7 +13,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M1 Arc treasury + Circle wallets | done | BE | **M1.1–M1.6 LIVE** · job 185726 · loans 1 repaid / 2 defaulted · treasury `0xCE0e…FfC1` |
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | in_progress | BE | **M3.1/M3.2 done** · **M3.3 yaml pinned** #20 `73ac46d` treasury `0xCE0e…FfC1` startBlock 61140537 · Studio deploy blocked (need deploy key) |
-| M4 Sim, agents, API | in_progress | BE | **M4.1** #10 · **M4.5** #11 · **M4.6 script** #26 `e0559d8` (dry-run) · live ENS writes need `approve M4.6` |
+| M4 Sim, agents, API | in_progress | BE | **M4.1** #10 · **M4.5** #11 · **M4.6 LIVE** bo score 75 / fay 35 · 2nd-default revoke not broadcast (keeps 8 names) |
 | M5 Frontend | ready | FE | **mock server ready (M0.7 merged 23:30)** — start M5.1 |
 | M6 Integration + demo | todo | both | |
 | M7 Review + docs | todo | reviewer | |
@@ -222,4 +222,12 @@ In progress: —
 Blocked: M3.3 Studio deploy key (`studio deploy key set`); M4.6 live ENS writes — say `approve M4.6`
 Risks changed: —
 Next up: `approve M4.6`; Studio key → M3.4 (unblocks M4.9/M4.2)
+Checkpoint call: none
+
+## Wed 9 Sep 11:40 EDT
+Done: **M4.6 LIVE** (score + review). bo repay → `town.credit-score` **75** [0x7ce503e7…](https://sepolia.etherscan.io/tx/0x7ce503e7741022cbb45ce6ea1958ed492e735aed43d434ba956dda4893f679d4) · review [0xa404c6c1…](https://sepolia.etherscan.io/tx/0xa404c6c1fdb18dd0519f9d6e6e881bbdf058dc6f3794204649bae2394ec7c9c2). fay 1st default → score **35** [0xfd1782ad…](https://sepolia.etherscan.io/tx/0xfd1782adc413993619f4dbdedddc281076e2e406480f6d69dc7debb10f811e65) · review `defaulted on 1 USDC, tick 7` [0xa606e5c2…](https://sepolia.etherscan.io/tx/0xa606e5c22e0031318cf3fc17f37b411c79fc013828692aceb2fb1ac8a05cf685). `resolveAgent` confirmed. **Did not revoke** a roster name (2nd default would unregister fay; demo needs 8 names). Revoke path remains simulated in tests.
+In progress: —
+Blocked: M3.3 Studio deploy key (`studio deploy key set`)
+Risks changed: —
+Next up: Studio key → M3.4 (unblocks M4.9/M4.2)
 Checkpoint call: none
