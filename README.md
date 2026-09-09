@@ -39,6 +39,16 @@ pnpm -r test
 
 Copy `.env.example` → `.env` and fill in values (`.env.example` arrives in M0.1).
 
+Before a demo recording, reset the persisted tick log and start the scripted run:
+
+```bash
+pnpm reset              # clears Supabase ledger when creds are set; dry-run re-seed hints
+pnpm reset -- --yes     # same + prints `pnpm --filter @agent-town/circle fund --yes`
+TICK_MS=15000 STORYLINE=demo pnpm --filter @agent-town/sim tick
+```
+
+Storyline events are keyed by **tick number**, not wall-clock, so the PRD §12 script plays identically at any `TICK_MS`.
+
 ## Contributing
 
 Issues and pull requests are welcome. This is an open source hackathon project, so keep changes small and describe what they do.
