@@ -400,3 +400,12 @@ Blocked: `revokeName`; mayor approve **#5/#6** if wanted
 Risks changed: —
 Next up: Checkpoint Thu 22:00. Storyline still keys repay/default to L-1/L-2.
 Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 05:30 EDT (FE)
+Done: **M5.1** apps/web on the frozen contract (branch `card/M5.1-web-plumbing`): Next 16 shell in Botanica tokens, typed API client (every response zod-parsed), SSE client + reducer + `/agents` refetch per tick, replay client + `scripts/record.ts` (fixtures/replay.json committed), placeholder sprites generated from the brand construction spec. **M5.5** scoreboard + sparkline, **M5.6** feed with arcscan links, **M5.3** minimal agent card. `typecheck/lint/test/build` green; 8 web tests.
+In progress: **M5.2** map handed to Astra via `docs/ASTRA-MAP-BRIEF.md` (props contract frozen in `apps/web/components/MapSlot.tsx`).
+Blocked: —
+Risks changed: —
+Notes for BE: mock `scoreboard.ticks` lags `/state.tick` by the fixture offset (7); FE shows `/state.tick`. `links.ens` points at the v1 app; ENSv2 explorer is `https://explorer.ens.dev/`. Approved circuit-leaf mark needed at `apps/web/public/brand/mark.png`.
+Next up: M5.4 bank panel (rate breakdown tooltip + stale badge), M5.7 mayor panel, then M5.8 after M4.7.
+Checkpoint call: none
