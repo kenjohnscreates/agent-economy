@@ -8,7 +8,7 @@ import {
   readRoster,
   resolveTreasuryAddress,
 } from "@agent-town/circle";
-import { createPublicClient, defineChain, http, type Hex } from "viem";
+import { createPublicClient, defineChain, http, parseAbi, type Hex } from "viem";
 import { parseCliOptions, parseSimConfig } from "./config.js";
 import { createExecuteAction } from "./execute.js";
 import { runLoop, runTicks, type TickDeps } from "./engine.js";
@@ -39,14 +39,35 @@ function buildTickDeps(config: ReturnType<typeof parseSimConfig>): TickDeps {
   if (!config.executeEnabled) return deps;
   const client = createCircleClient(process.env);
   const pub = createPublicClient({ chain: arcTestnet, transport: http() });
+  const treasuryAddress = resolveTreasuryAddress(process.env);
+  const treasuryViewAbi = parseAbi([
+    "function activeLoanOf(address) view returns (uint256)",
+    "function loan(uint256 loanId) view returns ((address borrower, uint8 status, uint16 rateBps, uint32 termSeconds, uint64 requestedAt, uint64 approvedAt, uint64 lastAccrualAt, uint64 dueAt, uint256 principal, uint256 principalRemaining, uint256 interestOwed, uint256 interestPaid))",
+  ]);
   deps.executeAction = createExecuteAction({
     client,
     roster: readRoster(),
-    treasuryAddress: resolveTreasuryAddress(process.env),
+    treasuryAddress,
     tickMs: config.tickMs,
     jobIdFromTxHash: async (txHash: string) => {
       const receipt = await pub.getTransactionReceipt({ hash: txHash as Hex });
       return jobIdFromLogs(receipt.logs).toString();
+    },
+    activeLoanOf: async (agentAddress) =>
+      pub.readContract({
+        address: treasuryAddress,
+        abi: treasuryViewAbi,
+        functionName: "activeLoanOf",
+        args: [agentAddress],
+      }),
+    loanStatus: async (loanId) => {
+      const row = await pub.readContract({
+        address: treasuryAddress,
+        abi: treasuryViewAbi,
+        functionName: "loan",
+        args: [BigInt(loanId)],
+      });
+      return Number(row.status);
     },
   });
   return deps;

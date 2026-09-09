@@ -126,7 +126,7 @@ describe("executeProposedAction (mocked Circle)", () => {
       {
         tick: 3,
         agent: "ada",
-        action: { kind: "approve_loan", loanId: "L-2", amountUsdc: "1200000" },
+        action: { kind: "approve_loan", loanId: "2", amountUsdc: "1200000" },
       },
       deps(client),
     );
@@ -204,6 +204,44 @@ describe("executeProposedAction (mocked Circle)", () => {
     expect(setBudget?.[0]?.abiParameters?.[0]).toBe("42");
     const fundCall = calls.find((c) => c[0]?.abiFunctionSignature === "fund(uint256,bytes)");
     expect(fundCall?.[0]?.abiParameters?.[0]).toBe("42");
+  });
+
+  it("fixture loanId L-1 / L-2 → skipped, zero Circle calls", async () => {
+    const client = mockClient();
+    const kinds = ["approve_loan", "deny_loan", "repay", "mark_default"] as const;
+    for (const kind of kinds) {
+      const result = await executeProposedAction(
+        {
+          tick: 1,
+          agent: "ada",
+          action: { kind, loanId: kind === "repay" ? "L-1" : "L-2", amountUsdc: "1200000" },
+        },
+        deps(client),
+      );
+      expect(result).toEqual({ status: "skipped" });
+    }
+    expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
+    expect(client.createTransaction).not.toHaveBeenCalled();
+  });
+
+  it("request_loan skipped when borrower already has an activeLoanOf slot", async () => {
+    const client = mockClient();
+    const result = await executeProposedAction(
+      { tick: 2, agent: "bo", action: { kind: "request_loan", amountUsdc: "1200000" } },
+      { ...deps(client), activeLoanOf: async () => 7n },
+    );
+    expect(result).toEqual({ status: "skipped" });
+    expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
+  });
+
+  it("approve_loan skipped when on-chain status is not Pending", async () => {
+    const client = mockClient();
+    const result = await executeProposedAction(
+      { tick: 2, agent: "ada", action: { kind: "approve_loan", loanId: "5", amountUsdc: "1200000" } },
+      { ...deps(client), loanStatus: async () => 4 },
+    );
+    expect(result).toEqual({ status: "skipped" });
+    expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
   });
 
   it("fixture jobId J-demo → skipped, zero Circle calls", async () => {

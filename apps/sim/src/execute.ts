@@ -62,9 +62,16 @@ export interface CircleExecuteDeps {
   uuid?: () => string;
   /** Decode on-chain jobId from a createJob receipt (live + mocked tests). */
   jobIdFromTxHash?: (txHash: string) => Promise<string>;
+  /** On-chain `activeLoanOf(agent)` — skip `request_loan` when the borrower already has a slot. */
+  activeLoanOf?: (agentAddress: Address) => Promise<bigint>;
+  /** On-chain Loan.status (0 None … 5 Defaulted). */
+  loanStatus?: (loanId: string) => Promise<number>;
 }
 
 const SKIP_KINDS = new Set<ProposedAction["kind"]>(["idle", "set_credit_score", "append_review"]);
+
+const LOAN_PENDING = 1;
+const LOAN_ACTIVE = 2;
 
 const TREASURY_EXTRA_FNS = {
   withdraw: "withdraw(uint256)",
@@ -78,11 +85,12 @@ function requireAmount(action: ProposedAction, label: string): string {
   return action.amountUsdc;
 }
 
-function parseLoanId(raw: string | undefined, label: string): string {
+/** Pure numeric on-chain id, or null for fixtures like `L-1` / `L-2` (skip, do not fail). */
+function parseLoanId(raw: string | undefined, label: string): string | null {
   if (!raw) throw new Error(`${label}: loanId required`);
-  const digits = raw.match(/\d+/)?.[0];
-  if (!digits) throw new Error(`${label}: invalid loanId ${raw}`);
-  return digits;
+  const trimmed = raw.trim();
+  if (/^\d+$/.test(trimmed)) return trimmed;
+  return null;
 }
 
 /** Numeric on-chain id, or null for fixture ids like `J-demo` (skip, do not fail). */
@@ -227,6 +235,10 @@ export async function executeProposedAction(
 
       case "request_loan": {
         const amount = requireAmount(action, "request_loan");
+        if (deps.activeLoanOf) {
+          const existing = await deps.activeLoanOf(agentWallet.address as Address);
+          if (existing !== 0n) return { status: "skipped" };
+        }
         const term = loanTermSeconds(tickMs);
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,
@@ -240,6 +252,10 @@ export async function executeProposedAction(
 
       case "approve_loan": {
         const loanId = parseLoanId(action.loanId, "approve_loan");
+        if (!loanId) return { status: "skipped" };
+        if (deps.loanStatus && (await deps.loanStatus(loanId)) !== LOAN_PENDING) {
+          return { status: "skipped" };
+        }
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,
           contractAddress: treasury,
@@ -252,6 +268,10 @@ export async function executeProposedAction(
 
       case "deny_loan": {
         const loanId = parseLoanId(action.loanId, "deny_loan");
+        if (!loanId) return { status: "skipped" };
+        if (deps.loanStatus && (await deps.loanStatus(loanId)) !== LOAN_PENDING) {
+          return { status: "skipped" };
+        }
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,
           contractAddress: treasury,
@@ -264,6 +284,10 @@ export async function executeProposedAction(
 
       case "repay": {
         const loanId = parseLoanId(action.loanId, "repay");
+        if (!loanId) return { status: "skipped" };
+        if (deps.loanStatus && (await deps.loanStatus(loanId)) !== LOAN_ACTIVE) {
+          return { status: "skipped" };
+        }
         const amount = requireAmount(action, "repay");
         await approveUsdc(deps, agentWallet.walletId, treasury, amount, "repay");
         const done = await submitContract(deps, {
@@ -278,6 +302,10 @@ export async function executeProposedAction(
 
       case "mark_default": {
         const loanId = parseLoanId(action.loanId, "mark_default");
+        if (!loanId) return { status: "skipped" };
+        if (deps.loanStatus && (await deps.loanStatus(loanId)) !== LOAN_ACTIVE) {
+          return { status: "skipped" };
+        }
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,
           contractAddress: treasury,
