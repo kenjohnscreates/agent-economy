@@ -236,6 +236,25 @@ describe("getWorld injection (M4.2)", () => {
   });
 });
 
+describe("action logs (M6.2b)", () => {
+  it("logs one line per non-idle persist; idle stays quiet", async () => {
+    const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const ledger = new MemoryLedger();
+    await runTicks(ledger, testConfig({ MAX_TICKS: "1" }), 1);
+    const lines = spy.mock.calls.map((c) => String(c[0] ?? ""));
+    spy.mockRestore();
+
+    const actionLines = lines.filter((l) => /^\[sim\] tick \d+ [a-z]+ [a-z_]+ [a-z]+$/.test(l));
+    expect(actionLines.length).toBeGreaterThan(0);
+    expect(actionLines.every((l) => !l.includes(" idle "))).toBe(true);
+
+    const persisted = (await ledger.listActions()).filter((a) => a.kind !== "idle");
+    for (const a of persisted) {
+      expect(actionLines).toContain(`[sim] tick ${a.tick} ${a.agent} ${a.kind} ${a.status}`);
+    }
+  });
+});
+
 describe("ENS side-effects hook (M4.6)", () => {
   it("--once / skipped actions do not invoke applyEnsSideEffects", async () => {
     const applyEnsSideEffects = vi.fn(async () => {

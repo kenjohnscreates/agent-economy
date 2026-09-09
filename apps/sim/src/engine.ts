@@ -38,6 +38,16 @@ export interface TickDeps {
   getWorld?: (tick: number) => WorldState | Promise<WorldState>;
 }
 
+function logPersistedAction(
+  tick: number,
+  agent: AgentName,
+  kind: ActionKind,
+  status: ActionStatus,
+): void {
+  if (kind === "idle") return;
+  console.log(`[sim] tick ${tick} ${agent} ${kind} ${status}`);
+}
+
 async function persistAction(
   ledger: Ledger,
   tick: number,
@@ -61,6 +71,7 @@ async function persistAction(
       tx: null,
       status: "skipped",
     });
+    logPersistedAction(tick, agent, action.kind, "skipped");
     return { status: "skipped" };
   }
 
@@ -82,6 +93,7 @@ async function persistAction(
   }
 
   await ledger.insertAction({ tick, agent, kind: action.kind, tx, status });
+  logPersistedAction(tick, agent, action.kind, status);
   const jobId = result.status === "complete" && "jobId" in result ? result.jobId : undefined;
   return { status, jobId };
 }
