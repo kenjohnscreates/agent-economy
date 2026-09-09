@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
-| M6 Integration + demo | in_progress | both | **M6.1** dry-run (no `--yes`) · live 12-tick gated |
+| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · M6.2 P0/P1 #35–#37 · live 12-tick gated · M6.3 footage later |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -332,4 +332,21 @@ In progress: **M6.2a** T1 `card/m6.2a-job-lifecycle` (accept funded + complete_j
 Blocked: live 12-tick (Gate A). SUPABASE_* empty — reset/API ledger stay in-memory (human env, not a card).
 Risks changed: —
 Next up: review+merge M6.2 PRs; re-run dry-run; do not wait on FE.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 14:45 EDT
+Done: **M6.2a** #35 `a950554` T1 APPROVE. **M6.2b** #36 `9cce2dd` T1 APPROVE. sim **96/96**. CLI dry-run `--ticks 12` no `--yes`: dee **accept_job** t1 / **deliver** t2–3; t4 bo request_loan; t7 mark_default; t9 set_rate+repay; eli/fay no longer steal J-demo.
+P1 remaining: `patchDemoWorld` spreads `...w.balances` **after** demo gus/hal 5 USDC → live poor wallets overwrite boom buys (CLI had **zero buys**). J-demo never `submitted` → no `complete_job`.
+In progress: **M6.2c** T3 overlay-wins + submitted job
+Blocked: live 12-tick (Gate A). Do not wait on FE.
+Risks changed: —
+Next up: merge M6.2c → re-run dry-run; mayor fund/loan-decision still gated
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 14:50 EDT
+Done: **M6.2c** #37 `6da64f5` T1 APPROVE. CLI dry-run `--ticks 12` no `--yes` now plays PRD §12 beats: t1 gus/hal **buy** + dee **accept_job**; t2–3 dee **deliver**; t3 bo **complete_job** + dee **deposit**; t4 bo **request_loan**; t7 ada **mark_default**; t9 ada **set_rate** + bo **repay**. All `skipped` (dry-run). origin/main `6da64f5`. 0 open PRs. 1 worktree (this).
+In progress: —
+Blocked: live 12-tick / `pnpm reset --yes` wallet re-seed / mayor fund+loan-decision (Gate A). Do not `revokeName`. SUPABASE_* empty (in-memory ledger).
+Risks changed: —
+Next up: Checkpoint Thu 10 Sep 22:00. M7 README when you want docs parallel. Say `approve` for live 12-tick (drains USDC — do not run unless asked). FE M5.8 independent.
 Checkpoint call: none (Thu 10 Sep 22:00)
