@@ -85,11 +85,11 @@ function parseLoanId(raw: string | undefined, label: string): string {
   return digits;
 }
 
-function parseJobId(raw: string | undefined, label: string): string {
+/** Numeric on-chain id, or null for fixture ids like `J-demo` (skip, do not fail). */
+function parseJobId(raw: string | undefined, label: string): string | null {
   if (!raw) throw new Error(`${label}: jobId required`);
   const digits = raw.match(/\d+/)?.[0];
-  if (!digits) throw new Error(`${label}: invalid jobId ${raw}`);
-  return digits;
+  return digits ?? null;
 }
 
 function loanTermSeconds(tickMs: number): number {
@@ -344,8 +344,9 @@ export async function executeProposedAction(
 
       case "fund_escrow": {
         if (!action.jobId) return { status: "skipped" };
-        const amount = requireAmount(action, "fund_escrow");
         const jobId = parseJobId(action.jobId, "fund_escrow");
+        if (!jobId) return { status: "skipped" };
+        const amount = requireAmount(action, "fund_escrow");
         const merchant = agentWallet;
         const worker = walletForAgent(roster, DEFAULT_WORKER_NAME);
         const abi = loadAgenticAbi();
@@ -375,6 +376,7 @@ export async function executeProposedAction(
 
       case "accept_job": {
         const jobId = parseJobId(action.jobId, "accept_job");
+        if (!jobId) return { status: "skipped" };
         const abi = loadAgenticAbi();
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,
@@ -388,6 +390,7 @@ export async function executeProposedAction(
 
       case "deliver": {
         const jobId = parseJobId(action.jobId, "deliver");
+        if (!jobId) return { status: "skipped" };
         const abi = loadAgenticAbi();
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,
@@ -401,6 +404,7 @@ export async function executeProposedAction(
 
       case "complete_job": {
         const jobId = parseJobId(action.jobId, "complete_job");
+        if (!jobId) return { status: "skipped" };
         const abi = loadAgenticAbi();
         const done = await submitContract(deps, {
           walletId: agentWallet.walletId,

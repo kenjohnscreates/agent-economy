@@ -206,6 +206,40 @@ describe("executeProposedAction (mocked Circle)", () => {
     expect(fundCall?.[0]?.abiParameters?.[0]).toBe("42");
   });
 
+  it("fixture jobId J-demo → skipped, zero Circle calls", async () => {
+    const client = mockClient();
+    const kinds = ["accept_job", "deliver", "complete_job", "fund_escrow"] as const;
+    for (const kind of kinds) {
+      const result = await executeProposedAction(
+        {
+          tick: 1,
+          agent: "dee",
+          action: { kind, jobId: "J-demo", amountUsdc: "1200000" },
+        },
+        deps(client),
+      );
+      expect(result).toEqual({ status: "skipped" });
+    }
+    expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
+    expect(client.createTransaction).not.toHaveBeenCalled();
+  });
+
+  it("numeric jobId still executes (mocked client)", async () => {
+    const client = mockClient();
+    const result = await executeProposedAction(
+      { tick: 1, agent: "dee", action: { kind: "accept_job", jobId: "185764" } },
+      deps(client),
+    );
+    expect(result).toEqual({ status: "complete", txHash: "0xabc", txId: "tx-exec" });
+    expect(client.createContractExecutionTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        walletId: "w-dee",
+        contractAddress: jobs,
+        abiParameters: ["185764", testRoster.wallets.find((w) => w.name === "dee")!.address],
+      }),
+    );
+  });
+
   it("fund_escrow without jobId → skipped (no throw)", async () => {
     const client = mockClient();
     const result = await executeProposedAction(
