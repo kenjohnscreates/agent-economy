@@ -14,8 +14,8 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | ready | FE | mock ready (M0.7) · M5.8 can swap `API_MODE=real` independently — do not wait |
-| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×2 · **#3/#4 repaid** · **#5/#6 pending** · M6.2 #35–#38 |
+| M5 Frontend | in_progress | FE | **M5.1** #39 on main · M5.2 map / M5.4 bank / M5.7 mayor / M5.8 real still open · mock first |
+| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
 | M7 Review + docs | todo | reviewer | |
 | M8 Video + submission | todo | both | |
 
@@ -409,3 +409,23 @@ Risks changed: —
 Notes for BE: mock `scoreboard.ticks` lags `/state.tick` by the fixture offset (7); FE shows `/state.tick`. `links.ens` points at the v1 app; ENSv2 explorer is `https://explorer.ens.dev/`. Approved circuit-leaf mark needed at `apps/web/public/brand/mark.png`.
 Next up: M5.4 bank panel (rate breakdown tooltip + stale badge), M5.7 mayor panel, then M5.8 after M4.7.
 Checkpoint call: none
+
+## Wed 9 Sep 17:45 EDT
+Done: Denied **#5/#6** [0xcf81d98d…](https://testnet.arcscan.app/tx/0xcf81d98d5efaba4005094aeb41548f39dc5d0c8b4e9ac6eed892341a75f147c2) / [0x55ff12b0…](https://testnet.arcscan.app/tx/0x55ff12b02040365361f4ca29103aff51ee34b0fc0c54a73915380b706efde6f3). Deployer native→gus 1.19 [0xd827fe66…](https://testnet.arcscan.app/tx/0xd827fe6646f93b44305f37a040c2f71ed3c6a9bb4dd2ef0fedd1d2508db582c0) · hal 1.69 [0xf27aa822…](https://testnet.arcscan.app/tx/0xf27aa822e177f51098354a52bd6d0415d5cf0166b4eb429a7374113c0c40b973). `fund()` 5.2 USDC [0xa6b1f2a0…](https://testnet.arcscan.app/tx/0xa6b1f2a05c7de274ff4c0f5389d8087f6037a09a7a3f6a036b10d1e950439fcc) → free 5.5 USDC.
+**LIVE `--ticks 12 --yes`** 12/12, **0 failed** (local execute skip, later #40). Complete: gus/hal **buy** t1–3+t7; bo/cy **post_job** t1–4; t1 **request_loan** → **#7 bo / #8 cy Pending**; dee **deposit** t3; ada **pay_stipend** t3+t6+t9+t12; ada **set_rate** t9. Skipped: J-demo; request_loan t2–4; repay L-1; mark_default L-2. stats: loanCount 8, outstanding 0, defaults 1, rate 839, deposits 0.92, free 1.5 USDC.
+Did not revoke names. Did **not** approve #7/#8.
+In progress: —
+Blocked: `revokeName`
+Risks changed: fixture loan/job ids still do not land repay/default/job-settle on chain
+Next up: Checkpoint Thu 22:00
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 19:00 EDT
+Done: **M6.2e** #40 squash-merged `7220a16` T1 APPROVE — skip fixture `L-*` loan ids; skip `request_loan` when `activeLoanOf != 0`; skip approve/repay/default unless Pending/Active. sim tests 102/102.
+Done: **M5.1** #39 squash-merged `535e455` T1 APPROVE after rebase onto main (STATUS keep-both). `apps/web` on main; mock `:3001` + web `:3000`. Rebased lockfile CI green.
+Did not approve #7/#8. Did not edit `apps/web` beyond merge. Stretch B/D not started.
+In progress: FE **M5.4** bank (branch `card/M5.4-bank-panel` on origin) · **M5.7 mayor is the PRD §8 demo gate** — do next if bank is not already in flight · M5.2 map after those · M5.8 `API_MODE=real` last
+Blocked: `revokeName`
+Risks changed: —
+Next up: Dan: finish M5.4 if in flight, then **M5.7 mayor**, then M5.2 map. Mock stays source of truth until M5.8. Checkpoint Thu 22:00.
+Checkpoint call: none (Thu 10 Sep 22:00)
