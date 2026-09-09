@@ -113,3 +113,40 @@ pnpm --filter @agent-town/ens typecheck
 ```
 
 Writes in unit tests are mocked / `eth_call` only — this package does not `--broadcast` from CI. `unregister(uint256)` selector `0xa02b161e` is pinned against UserRegistryImpl `0x47b4…2546`. Treasurer has `ROLE_UNREGISTER` on treasurer-minted names (`TREASURER_NAME_ROLES`); worker names are non-transferable — revoke is treasurer/registrar-side.
+
+## ENS side-effects after repay / default (M4.6)
+
+Treasurer-only writes (`ENS_TREASURER_PRIVATE_KEY`, never a worker wallet). `getState` is re-read inside the M2.5 client before every write; **tokenIds are never stored**. Default is simulate. `--broadcast` requires `ALLOW_BROADCAST=true` (orchestrator after merge — do not send live Sepolia txs from the PR).
+
+| Event | ENS writes |
+| --- | --- |
+| **repay** | `town.credit-score` = clamp((current ?? **70**) + **5**, 0, 100); `appendReview` `{by:"ada", tick, score, note}` ≤200 chars (`repaid <amount> USDC, tick <n>`) |
+| **1st default** | score **35** (PRD §12); review `defaulted on <amount> USDC, tick <n>` |
+| **2nd default** (same name) | `revokeName` only (unregister live tokenId). Count defaults from existing `town.reviews` and/or `priorDefaults` |
+
+Idempotent on ledger key `{agent}:{kind}:loan:{id}|tick:{tick}` — if a matching review is already on the name, no write. M4.3 Circle / sim should `import { applyLoanOutcome } from "@agent-town/ens"` after a real repay/`mark_default` (skipped/`--once` must not broadcast).
+
+Live Arc (M1.6 `treasury-e2e`): merchant **bo** repaid loan #1 then defaulted loan #2 (0.2 USDC). PRD §12 demo worker is **fay**.
+
+```bash
+pnpm --filter @agent-town/ens ens-side-effects -- --dry-run \
+  --agent fay --kind default --tick 7 --amount 1
+# 2nd default (revoke):
+pnpm --filter @agent-town/ens ens-side-effects -- --dry-run \
+  --agent fay --kind default --tick 11 --amount 1 --prior-defaults 1
+# after review (orchestrator only):
+ALLOW_BROADCAST=true pnpm --filter @agent-town/ens ens-side-effects -- --broadcast \
+  --agent fay --kind default --tick 7 --amount 1
+```
+
+```ts
+import { applyLoanOutcome, planLoanOutcome } from "@agent-town/ens";
+
+const plan = planLoanOutcome({ agent: "fay", kind: "default", tick: 7, amountUsdc: "1" });
+// { action: "first-default", newScore: 35, review: { by: "ada", tick: 7, score: 35, note: "defaulted on 1 USDC, tick 7" }, revoke: false }
+
+await applyLoanOutcome(
+  { agent: "bo", kind: "repay", tick: 5, amountUsdc: "0.3", loanId: 1 },
+  { publicClient, walletClient, account: treasurer },
+); // simulate unless {broadcast:true} + ALLOW_BROADCAST=true
+```
