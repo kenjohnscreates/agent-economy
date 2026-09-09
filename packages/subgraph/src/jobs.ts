@@ -1,6 +1,6 @@
-// ERC-8183 AgenticCommerce job handlers. Business logic lands in M3.2.
-// Inputs: job lifecycle events (create/fund/submit/complete/reject/expire).
-// Outputs: Agent, Job, Payment, TownStat (empty until M3.2). Do not index ERC-20 Transfer.
+// ERC-8183 AgenticCommerce job handlers. Lifecycle: open→funded→submitted→completed|rejected|expired.
+// Inputs: job events (create/fund/submit/complete/reject/expire). Amount from create is absent; set on fund.
+// Outputs: Agent, Job, Payment (job_pay), TownStat volume. Do not index ERC-20 Transfer.
 
 import {
   JobCompleted,
@@ -10,15 +10,81 @@ import {
   JobRejected,
   JobSubmitted,
 } from "../generated/AgenticCommerce/AgenticCommerce";
+import { Job } from "../generated/schema";
+import { emitTownStat, getOrCreateAgent, recordPayment, ZERO } from "./helpers";
 
-export function handleJobCreated(_event: JobCreated): void {}
+/** New job: client/provider from event; amount 0 until JobFunded. */
+export function handleJobCreated(event: JobCreated): void {
+  getOrCreateAgent(event.params.client);
+  getOrCreateAgent(event.params.provider);
+  let job = new Job(event.params.jobId.toString());
+  job.client = event.params.client;
+  job.provider = event.params.provider;
+  job.amount = ZERO;
+  job.status = "open";
+  job.createdAt = event.block.timestamp;
+  job.save();
+}
 
-export function handleJobFunded(_event: JobFunded): void {}
+/** Escrow funded: status funded, amount from event. */
+export function handleJobFunded(event: JobFunded): void {
+  let job = Job.load(event.params.jobId.toString());
+  if (job == null) {
+    return;
+  }
+  job.amount = event.params.amount;
+  job.status = "funded";
+  job.save();
+}
 
-export function handleJobSubmitted(_event: JobSubmitted): void {}
+/** Provider submitted deliverable. */
+export function handleJobSubmitted(event: JobSubmitted): void {
+  let job = Job.load(event.params.jobId.toString());
+  if (job == null) {
+    return;
+  }
+  job.status = "submitted";
+  job.save();
+}
 
-export function handleJobCompleted(_event: JobCompleted): void {}
+/** Settlement: GDP volume, job_pay Payment, provider earned / client spent. */
+export function handleJobCompleted(event: JobCompleted): void {
+  let job = Job.load(event.params.jobId.toString());
+  if (job == null) {
+    return;
+  }
+  job.status = "completed";
+  job.settledAt = event.block.timestamp;
+  job.save();
+  let provider = getOrCreateAgent(job.provider);
+  provider.jobsCompleted = provider.jobsCompleted + 1;
+  provider.earned = provider.earned.plus(job.amount);
+  provider.save();
+  let client = getOrCreateAgent(job.client);
+  client.spent = client.spent.plus(job.amount);
+  client.save();
+  recordPayment(event, job.client, job.provider, job.amount, "job_pay");
+  emitTownStat(event, job.amount);
+}
 
-export function handleJobRejected(_event: JobRejected): void {}
+/** Evaluator rejected; terminal. */
+export function handleJobRejected(event: JobRejected): void {
+  let job = Job.load(event.params.jobId.toString());
+  if (job == null) {
+    return;
+  }
+  job.status = "rejected";
+  job.settledAt = event.block.timestamp;
+  job.save();
+}
 
-export function handleJobExpired(_event: JobExpired): void {}
+/** Job expired; terminal. */
+export function handleJobExpired(event: JobExpired): void {
+  let job = Job.load(event.params.jobId.toString());
+  if (job == null) {
+    return;
+  }
+  job.status = "expired";
+  job.settledAt = event.block.timestamp;
+  job.save();
+}

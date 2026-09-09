@@ -67,3 +67,11 @@ type TownDaily @aggregation(intervals: ["hour", "day"], source: "TownStat") {
   timestamp: Timestamp!
   gdp: BigInt! @aggregate(fn: "sum", arg: "volume")
 }
+
+# Running treasury totals for snapshots (M3.2). Not in ARCHITECTURE §5; allowed add.
+type TreasuryState @entity(immutable: false) {
+  id: ID!
+  balance: BigInt!
+  outstanding: BigInt!
+  baseRateBps: Int!
+}
