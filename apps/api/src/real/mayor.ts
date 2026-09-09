@@ -65,7 +65,6 @@ async function submitAndWait(
     abiParameters: Array<string | number | boolean>;
   },
 ): Promise<TxResponse> {
-  const treasury = deps.treasuryAddress ?? resolveTreasuryAddress();
   const { txId } = await executeContract(deps.circle, {
     walletId: input.walletId,
     contractAddress: input.contractAddress,
