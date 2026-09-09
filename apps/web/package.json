@@ -1,0 +1,11 @@
+{
+  "name": "@agent-town/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Town frontend — placeholder, owned by FE collaborator",
+  "scripts": {
+    "build": "echo \"apps/web owned by FE\"",
+    "lint": "echo \"apps/web owned by FE\"",
+    "test": "echo \"apps/web owned by FE\""
+  }
+}

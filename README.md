@@ -27,12 +27,17 @@ Early hackathon build. Architecture, contracts, and modules are being defined. E
 
 ## Getting started
 
-Setup instructions will land once the stack is in place.
+Requires Node 22 (`.nvmrc`) and pnpm 10 (`corepack enable` or `npm i -g pnpm`).
 
 ```bash
 git clone https://github.com/kenjohnscreates/agent-economy.git
 cd agent-economy
+pnpm install
+pnpm -r build
+pnpm -r test
 ```
+
+Copy `.env.example` → `.env` and fill in values (`.env.example` arrives in M0.1).
 
 ## Contributing
 
