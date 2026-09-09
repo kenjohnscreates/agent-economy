@@ -8,3 +8,4 @@ export * from "./amounts.js";
 export * from "./roster.js";
 export * from "./wallets.js";
 export * from "./execute.js";
+export * from "./fund.js";

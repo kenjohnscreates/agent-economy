@@ -7,7 +7,7 @@ Circle Developer-Controlled **SCA** wallets on `ARC-TESTNET` — 8 agents + `may
 1. [console.circle.com](https://console.circle.com) → Keys → Standard API key (Testnet) → `.env` `CIRCLE_API_KEY`.
 2. Entity secret: `npx -p @circle-fin/developer-controlled-wallets node -e "require('@circle-fin/developer-controlled-wallets').generateEntitySecret()"` → `.env` `CIRCLE_ENTITY_SECRET`; **register** it in Console (Wallets → Configurator → Entity Secret; keep the recovery file offline). [Docs](https://developers.circle.com/wallets/dev-controlled/register-entity-secret).
 3. `pnpm --filter @agent-town/circle setup-wallets --dry-run` → review plan → `… setup-wallets --yes`. Copy the printed `CIRCLE_WALLET_SET_ID` into `.env`; commit `roster.json`.
-4. Fund `mayor` at [faucet.circle.com](https://faucet.circle.com) (ARC-TESTNET), then `pnpm --filter @agent-town/circle balances`.
+4. Fund wallets (M1.4): `pnpm --filter @agent-town/circle fund` (dry-run plan) → `… fund --yes`. Tries Circle faucet drip to `mayor`, else deployer EOA native-sends (18-dec) then Circle `transferUsdc` fan-out (6-dec) to 8 agents; treasurer `fund()` (or deployer `fund()` if Circle has no gas). Idempotent. Then `pnpm --filter @agent-town/circle balances`. Manual faucet: [faucet.circle.com](https://faucet.circle.com) (ARC-TESTNET).
 
 **API** (all take an injected `CircleClient`; amounts are 6-dec USDC base-unit strings)
 `createCircleClient(env)` · `ensureWalletSet(client, name, {walletSetId})` · `ensureRosterWallets(client, walletSetId, roster)` · `executeContract(client, {walletId, contractAddress, abiFunctionSignature, abiParameters, fee?})` · `transferUsdc(client, {walletId, to, amountUsdc})` · `waitComplete(client, txId, {timeoutMs, pollMs})` → tx or throws `CircleTxFailed`/`CircleTxTimeout` · `getTxHash` · `readRoster`/`walletFor` · `toUsdcDecimalString("3000000") → "3"`.
@@ -19,3 +19,4 @@ Circle Developer-Controlled **SCA** wallets on `ARC-TESTNET` — 8 agents + `may
 - Arc drops txs with `maxFeePerGas < 20 gwei`; `absoluteFee()` clamps. Default fee is `feeLevel: MEDIUM`.
 - SCA `txHash` appears only from `CONFIRMED`; poll with `waitComplete`, don't assume it at `SENT`.
 - Re-running `setup-wallets --yes` is idempotent (roster.json → `listWallets(refId)` → create only missing).
+- Re-running `fund --yes` is idempotent (skip wallets/treasury already at target). `--dry-run` is the default; refuses to broadcast without `--yes`.
