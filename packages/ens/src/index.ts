@@ -21,4 +21,11 @@ export {
   rentPriceOracleAbi,
   mockUsdcAbi,
 } from "./abi/index.js";
-export { makeCommitment, ZERO_BYTES32, type CommitmentParams } from "./commitment.js";
+export {
+  commitWindow,
+  makeCommitment,
+  ZERO_BYTES32,
+  type CommitmentParams,
+  type CommitPhase,
+  type CommitWindow,
+} from "./commitment.js";

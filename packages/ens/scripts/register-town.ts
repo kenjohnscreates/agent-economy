@@ -38,7 +38,12 @@ import {
   mockUsdcAbi,
   rentPriceOracleAbi,
 } from "../src/abi/index.js";
-import { makeCommitment, ZERO_BYTES32, type CommitmentParams } from "../src/commitment.js";
+import {
+  commitWindow,
+  makeCommitment,
+  ZERO_BYTES32,
+  type CommitmentParams,
+} from "../src/commitment.js";
 import { SEPOLIA_CHAIN_ID, addresses } from "../src/deployments.js";
 
 // ---------------------------------------------------------------------------
@@ -61,6 +66,10 @@ const REGISTRAR_COMMITMENT_SLOT = 2n;
 const ERC20_BALANCES_SLOT = 0n;
 const ERC20_ALLOWANCES_SLOT = 1n;
 
+const FAUCET_URL = "https://sepoliafaucet.com";
+// Gas budget used for the ETH guard in --register (mint ≈60k + approve ≈50k + register ≈250k).
+const REGISTER_GAS_BUDGET = 400_000n;
+
 interface CommitFile {
   chainId: number;
   registrar: Address;
@@ -72,8 +81,11 @@ interface CommitFile {
   duration: string;
   referrer: Hex;
   commitment: Hex;
-  commitTxHash?: Hex;
+  /** null = persisted before broadcast (secret safe even if the process dies mid-tx). */
+  commitTxHash: Hex | null;
   committedAt?: number;
+  /** Set when a null-hash file was reconciled against commitmentAt() on-chain. */
+  recoveredFromChain?: true;
   registerTxHash?: Hex;
 }
 
@@ -185,19 +197,21 @@ async function main(): Promise<void> {
 
   // ---- name status ----
   const labelhash = BigInt(keccak256(toHex(label)));
-  const [available, state, subregistry, resolver] = await Promise.all([
+  const [available, state, currentOwner, subregistry, resolver] = await Promise.all([
     publicClient.readContract({ ...registrar, functionName: "isAvailable", args: [label] }),
     publicClient.readContract({ ...registry, functionName: "getState", args: [labelhash] }),
+    publicClient.readContract({ ...registry, functionName: "getOwner", args: [labelhash] }),
     publicClient.readContract({ ...registry, functionName: "getSubregistry", args: [label] }),
     publicClient.readContract({ ...registry, functionName: "getResolver", args: [label] }),
   ]);
   const statusName = ["AVAILABLE", "RESERVED", "REGISTERED"][state.status] ?? `?${state.status}`;
+  const alreadyOwned = state.status === 2 && currentOwner.toLowerCase() === signer.toLowerCase();
   console.log(`\n-- name`);
   console.log(`label              ${label}  →  ${label}.eth`);
   console.log(`labelhash          0x${labelhash.toString(16).padStart(64, "0")}`);
   console.log(`isAvailable        ${available}`);
   console.log(
-    `registry status    ${statusName}  expiry=${state.expiry}  latestOwner=${state.latestOwner}`,
+    `registry status    ${statusName}  expiry=${state.expiry}  owner=${currentOwner}  latestOwner=${state.latestOwner}`,
   );
   if (state.status === 2) console.log(`tokenId (live, NOT persisted — R3)  ${state.tokenId}`);
   console.log(`subregistry        ${subregistry}`);
@@ -303,15 +317,18 @@ async function main(): Promise<void> {
     functionName: "commitmentAt",
     args: [commitment],
   });
-  const commitValidFrom = t0 + minAge;
-  const commitValidTo = t0 + maxAge;
-  const commitOnchain = t0 > 0n;
-  const commitAged = commitOnchain && now >= commitValidFrom && now < commitValidTo;
-  const commitUnexpired = commitOnchain && now < commitValidTo;
+  const {
+    validFrom: commitValidFrom,
+    validTo: commitValidTo,
+    onchain: commitOnchain,
+    aged: commitAged,
+    unexpired: commitUnexpired,
+  } = commitWindow(t0, minAge, maxAge, now);
+  const commitPending = reusable && existing.commitTxHash === null; // persisted, tx not confirmed
 
   console.log(`\n-- commitment`);
   console.log(
-    `.town-commit.json  ${existing ? (reusable ? "found, params match → reusing secret" : "found but params differ → ignored") : "none"}`,
+    `.town-commit.json  ${existing ? (reusable ? `found, params match → reusing secret${commitPending ? " (commit tx NOT confirmed in file)" : ""}` : "found but params differ → ignored") : "none"}`,
   );
   console.log(
     `secret             ${reusable ? "(from file)" : "(fresh random — only persisted by --commit)"}`,
@@ -481,8 +498,64 @@ async function main(): Promise<void> {
   if (!account) fail("signer required");
   const walletClient = createWalletClient({ account, chain: sepolia, transport: http(rpcUrl) });
 
+  // ---- guard A: already owned → nothing to do (before any commitment logic) ----
+  if (alreadyOwned) {
+    console.log(
+      `\n✓ ${label}.eth already owned by signer ${signer}; tokenId ${state.tokenId} (not persisted — R3). Nothing to broadcast.`,
+    );
+    return;
+  }
+
+  // ---- guard B: gas money (R13) — never reach writeContract with an empty treasurer ----
+  if (ethBalance === 0n) {
+    fail(
+      `treasurer ${signer} has 0 Sepolia ETH — fund it before broadcasting (≈0.01 ETH is plenty): ${FAUCET_URL}`,
+    );
+  }
+  {
+    let gasBudget = REGISTER_GAS_BUDGET;
+    if (mode === "--commit") {
+      try {
+        gasBudget = await publicClient.estimateContractGas({
+          ...registrar,
+          functionName: "commit",
+          args: [commitment],
+          account,
+        });
+      } catch {
+        gasBudget = 100_000n; // commit already on-chain (would revert) → generic budget
+      }
+    }
+    const fees = await publicClient.estimateFeesPerGas().catch(() => undefined);
+    const maxFee = fees?.maxFeePerGas ?? fees?.gasPrice;
+    if (maxFee !== undefined) {
+      const needed = gasBudget * maxFee;
+      console.log(
+        `\ngas check          budget ${gasBudget} gas × maxFee ${maxFee} wei = ${formatEther(needed)} ETH  (have ${formatEther(ethBalance)})`,
+      );
+      if (ethBalance < needed) {
+        fail(
+          `treasurer ${signer} has ${formatEther(ethBalance)} ETH but ~${formatEther(needed)} ETH is needed for gas — top up: ${FAUCET_URL}`,
+        );
+      }
+    }
+  }
+
   if (mode === "--commit") {
     if (!available) fail(`${label}.eth is not available (status ${statusName})`);
+    const fileBase: CommitFile = {
+      chainId,
+      registrar: registrar.address,
+      label,
+      owner: signer,
+      secret: params.secret,
+      subregistry: params.subregistry,
+      resolver: params.resolver,
+      duration: ONE_YEAR.toString(),
+      referrer: params.referrer,
+      commitment,
+      commitTxHash: null,
+    };
     if (commitUnexpired) {
       console.log(
         `\n✓ valid unexpired commitment already on-chain (commitmentAt=${t0}); skipping commit.`,
@@ -491,9 +564,31 @@ async function main(): Promise<void> {
         fail(
           "…but .town-commit.json is missing/mismatched — the secret is unrecoverable; wait for expiry or restore the file",
         );
+      if (commitPending) {
+        // File was written pre-broadcast and the tx did land → reconcile from chain.
+        writeCommitFile({
+          ...existing,
+          committedAt: Number(t0),
+          recoveredFromChain: true,
+        });
+        console.log(
+          `reconciled         ${COMMIT_FILE} (committedAt=${t0} from commitmentAt; tx hash unknown)`,
+        );
+      }
       return;
     }
-    console.log(`\n-- broadcasting commit(${commitment})`);
+    if (commitPending) {
+      console.log(
+        `\nprevious commit for this secret never landed → re-broadcasting with the SAME secret`,
+      );
+    }
+    // Persist the secret BEFORE broadcasting: if we die between send and receipt, the
+    // commitment is on-chain and the next --commit reconciles instead of wasting it.
+    writeCommitFile(fileBase);
+    console.log(
+      `\nsaved              ${COMMIT_FILE} (secret persisted; commitTxHash=null until mined)`,
+    );
+    console.log(`-- broadcasting commit(${commitment})`);
     await publicClient.simulateContract({
       ...registrar,
       functionName: "commit",
@@ -509,20 +604,7 @@ async function main(): Promise<void> {
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status !== "success") fail(`commit tx reverted: ${hash}`);
     const mined = await publicClient.getBlock({ blockNumber: receipt.blockNumber });
-    writeCommitFile({
-      chainId,
-      registrar: registrar.address,
-      label,
-      owner: signer,
-      secret: params.secret,
-      subregistry: params.subregistry,
-      resolver: params.resolver,
-      duration: ONE_YEAR.toString(),
-      referrer: params.referrer,
-      commitment,
-      commitTxHash: hash,
-      committedAt: Number(mined.timestamp),
-    });
+    writeCommitFile({ ...fileBase, commitTxHash: hash, committedAt: Number(mined.timestamp) });
     console.log(`mined              block ${receipt.blockNumber} @ ${mined.timestamp}`);
     console.log(`saved              ${COMMIT_FILE} (gitignored; keep until --register succeeds)`);
     console.log(`\nNext: wait ≥${minAge}s (before ${maxAge}s), then run --register.`);
@@ -533,8 +615,14 @@ async function main(): Promise<void> {
   // --register: TX 2 (+ mint/approve if needed)
   // -------------------------------------------------------------------------
   if (mode === "--register") {
+    // (alreadyOwned handled above, before any commitment check)
     if (!reusable) fail("no matching .town-commit.json — run --commit first");
-    if (!commitOnchain) fail("commitment not on-chain — run --commit first");
+    if (!commitOnchain)
+      fail(
+        commitPending
+          ? "commit tx from the saved file never landed — run --commit again (re-uses the same secret)"
+          : "commitment not on-chain — run --commit first",
+      );
     if (now >= commitValidTo) fail("commitment expired — run --commit again (new secret)");
     if (!available) fail(`${label}.eth is not available (status ${statusName})`);
 
