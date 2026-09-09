@@ -19,12 +19,21 @@ export interface ActionRow {
   status: ActionStatus;
 }
 
+export interface NarrationRow {
+  tick: number;
+  agent: AgentName;
+  text: string;
+}
+
 export interface Ledger {
   /** Highest tick id, or 0 when the ledger is empty. */
   getCurrentTick(): Promise<number>;
   listTicks(): Promise<TickRow[]>;
   listActions(): Promise<ActionRow[]>;
+  listNarration(): Promise<NarrationRow[]>;
   insertTick(row: TickRow): Promise<void>;
   /** Returns false when (tick, agent, kind) already exists (idempotent skip). */
   insertAction(row: ActionRow): Promise<boolean>;
+  /** Returns false when (tick, agent) already exists (idempotent skip). */
+  insertNarration(row: NarrationRow): Promise<boolean>;
 }

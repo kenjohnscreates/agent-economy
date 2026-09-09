@@ -4,7 +4,7 @@ import { MemoryLedger } from "./memory.js";
 import { SupabaseLedger } from "./supabase.js";
 import type { Ledger } from "./types.js";
 
-export type { ActionRow, ActionStatus, Ledger, TickRow } from "./types.js";
+export type { ActionRow, ActionStatus, Ledger, NarrationRow, TickRow } from "./types.js";
 export { MemoryLedger } from "./memory.js";
 export { SupabaseLedger } from "./supabase.js";
 

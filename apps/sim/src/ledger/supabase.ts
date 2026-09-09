@@ -1,9 +1,9 @@
-// Supabase ledger adapter — persists ticks and actions to Postgres (§6.4).
+// Supabase ledger adapter — persists ticks, actions, narration to Postgres (§6.4).
 // Only loaded when SUPABASE_URL and SUPABASE_SERVICE_KEY are configured; tests
 // use MemoryLedger so this module never hits the network in CI.
 import type { AgentName, ActionKind } from "@agent-town/shared";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { ActionRow, Ledger, TickRow } from "./types.js";
+import type { ActionRow, Ledger, NarrationRow, TickRow } from "./types.js";
 
 export class SupabaseLedger implements Ledger {
   private readonly client: SupabaseClient;
@@ -47,6 +47,20 @@ export class SupabaseLedger implements Ledger {
     }));
   }
 
+  async listNarration(): Promise<NarrationRow[]> {
+    const { data, error } = await this.client
+      .from("narration")
+      .select("*")
+      .order("tick")
+      .order("agent");
+    if (error) throw new Error(`Supabase listNarration: ${error.message}`);
+    return (data ?? []).map((row) => ({
+      tick: row.tick as number,
+      agent: row.agent as AgentName,
+      text: row.text as string,
+    }));
+  }
+
   async insertTick(row: TickRow): Promise<void> {
     const { error } = await this.client.from("ticks").insert({
       id: row.id,
@@ -66,6 +80,17 @@ export class SupabaseLedger implements Ledger {
     });
     if (error?.code === "23505") return false;
     if (error) throw new Error(`Supabase insertAction: ${error.message}`);
+    return true;
+  }
+
+  async insertNarration(row: NarrationRow): Promise<boolean> {
+    const { error } = await this.client.from("narration").insert({
+      tick: row.tick,
+      agent: row.agent,
+      text: row.text,
+    });
+    if (error?.code === "23505") return false;
+    if (error) throw new Error(`Supabase insertNarration: ${error.message}`);
     return true;
   }
 }
