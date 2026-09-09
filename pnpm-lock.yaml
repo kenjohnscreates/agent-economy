@@ -49,6 +49,8 @@ importers:
 
   packages/circle: {}
 
+  packages/contracts: {}
+
   packages/ens: {}
 
   packages/graphclient: {}
