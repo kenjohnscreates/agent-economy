@@ -1,6 +1,8 @@
 "use client";
-// App shell (M5.1): Forest surface, world window on the left, panels on the right.
-// Runs live against the API by default; the replay toggle loads fixtures/replay.json.
+// App shell (M5.1, M5.8): Forest surface, world window on the left, panels on the right.
+// Runs live against the API by default (mock or real, same contract); the replay toggle
+// loads fixtures/replay.json. While the live snapshot cannot load, a connection card
+// explains why and keeps retrying; the header shows the API mode and feature flags.
 import { useEffect, useMemo, useState } from "react";
 import { ROSTER } from "@agent-town/shared";
 import { useTown, type TownSource } from "@/lib/useTown";
@@ -46,7 +48,7 @@ export function Shell() {
     return replay ? { mode: "replay", file: replay } : null;
   }, [mode, replay]);
 
-  const { state, controls, error, speed, paused } = useTown(source);
+  const { state, controls, error, info, health, speed, paused } = useTown(source);
   const agents = state.order.map((n) => state.agents[n]!).filter(Boolean);
 
   return (
@@ -56,6 +58,40 @@ export function Shell() {
         <span className="label">
           {TOWN_NAME}.eth · tick {state.tick} · {state.phase}
         </span>
+        {mode === "live" ? (
+          <span className="hchips" aria-label="API status">
+            {health ? (
+              <span
+                className="hchip"
+                data-mode={health.mode}
+                title="Which data source the API is serving"
+              >
+                api · {health.mode}
+              </span>
+            ) : null}
+            {info ? (
+              <>
+                <span
+                  className="hchip"
+                  data-on={info.flags.llmAdvisor}
+                  title="Treasurer advisor: LLM with rules fallback, or rules only"
+                >
+                  advisor · {info.flags.llmAdvisor ? "llm" : "rules"}
+                </span>
+                <span
+                  className="hchip"
+                  data-on={info.flags.externalSignals}
+                  title="Signal C: real market rates from The Graph"
+                >
+                  signals · {info.flags.externalSignals ? "live" : "off"}
+                </span>
+                <span className="hchip" title="Seconds per tick">
+                  {Math.round(info.tickMs / 1000)}s tick
+                </span>
+              </>
+            ) : null}
+          </span>
+        ) : null}
         <span className="spacer" />
         <Controls
           mode={mode}
@@ -66,6 +102,7 @@ export function Shell() {
           onPause={controls.pause}
           onResume={controls.resume}
           onSpeed={controls.setSpeed}
+          onReconnect={controls.reconnect}
         />
       </header>
 
@@ -90,13 +127,34 @@ export function Shell() {
           </div>
 
           {error ? (
-            <div className="card">
-              <div className="h3">Cannot reach the town API</div>
-              <p className="small" style={{ color: "var(--text-muted)" }}>
-                {error}. Start it with{" "}
-                <code className="mono">pnpm --filter @agent-town/api dev:mock</code> on{" "}
-                <code className="mono">{API_URL}</code>, or switch to replay.
+            <div className="card connect" data-phase={error.phase} role="status">
+              <div className="card-title">
+                <span className="h3">
+                  {error.phase === "warming"
+                    ? "Town API is warming up"
+                    : error.phase === "unreachable"
+                      ? "Cannot reach the town API"
+                      : "Town API error"}
+                </span>
+                <span className="label">
+                  attempt {error.attempt} · {API_URL}
+                </span>
+              </div>
+              <p className="small" style={{ color: "var(--text-muted)", margin: 0 }}>
+                {error.text}
               </p>
+              {error.phase === "unreachable" ? (
+                <pre>{`pnpm --filter @agent-town/api dev:mock          # mock, no chain
+API_MODE=real pnpm --filter @agent-town/api dev  # real: subgraph + ENS + Arc`}</pre>
+              ) : null}
+              <div className="actions">
+                <button className="btn primary" onClick={controls.reconnect}>
+                  retry now
+                </button>
+                <button className="btn" onClick={() => setMode("replay")}>
+                  switch to replay
+                </button>
+              </div>
             </div>
           ) : null}
 

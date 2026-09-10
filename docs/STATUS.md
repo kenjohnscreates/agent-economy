@@ -474,6 +474,14 @@ Risks changed: —
 Next up: Dan M5.2. Checkpoint Thu 22:00. No live 12-tick unless asked.
 Checkpoint call: none (Thu 10 Sep 22:00)
 
+## Thu 10 Sep 00:15 EDT (FE)
+Done: **M5.8** on `card/M5.8-real-api` off main `4191950` (after M5.7 #47): the UI is unchanged between mock and real, only `NEXT_PUBLIC_API_URL` matters. `useTown` now loads the snapshot with backoff (1s, 2s, 4s, then 8s) while the API is unreachable or the real source answers `501 NOT_IMPLEMENTED` during warm-up, opens the stream only after the snapshot lands, fetches `/state` and `/health`, and exposes `reconnect()`. Shell: connection card (warming / unreachable / error) with retry and switch-to-replay, header chips for `api · mock|real`, advisor and Signal C flags and tick length, reconnect button beside the stream badge on `reconnecting` or `error`. Agent card: arcscan wallet link (shared `ARC_EXPLORER_URL`) and an ENS explorer link driven by `NEXT_PUBLIC_ENS_EXPLORER_URL` (template with `{name}`; defaults to the explorer root because its per-name route is not verified), `<town>` placeholder shown as the configured town. `lib/connect.ts` and `lib/links.ts` unit-tested (28 web tests). Headless: 501 warm-up retried and recovered with no reload, stream drop shows the reconnect button, unreachable card leads to replay, zero console errors. README real-mode section and card table updated.
+In progress: M5.2 map (Astra, Codex) off main.
+Blocked: —
+Risks changed: —
+Next up: this PR whenever Kenny wants it (M5.2 can land first, no shared files); M5.2 PR from Astra; real-mode smoke with Kenny's `.env` (not possible from this session).
+Checkpoint call: none
+
 ## Thu 10 Sep 10:05 EDT
 Done: `docs/MASTER-HANDOFF.md` for a fresh Master session. Dan opened **#48 M5.8** (CI green) while M5.2 map still has no PR — next Master T1-reviews #48; map still wanted for video.
 In progress: FE **M5.2 map** · **#48 M5.8** open

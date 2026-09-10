@@ -5,7 +5,12 @@
 // mode never POSTs. Nothing here invents a tx: a 501 from real mode is shown as an error.
 import { useEffect, useState, type FormEvent } from "react";
 import { Check, Coins, Percent, X } from "lucide-react";
-import { BASE_RATE_MAX_BPS, BASE_RATE_MIN_BPS, type Loan, type ScoreboardResponse } from "@agent-town/shared";
+import {
+  BASE_RATE_MAX_BPS,
+  BASE_RATE_MIN_BPS,
+  type Loan,
+  type ScoreboardResponse,
+} from "@agent-town/shared";
 import { api } from "@/lib/api";
 import { formatBps, formatUsdc } from "@/lib/usdc";
 import { RATE_STEP_BPS, errorToast, fundBody, snapBps, txToast } from "@/lib/mayor";
@@ -36,9 +41,17 @@ export function MayorPanel({
     if (!touched && seed != null) setBps(snapBps(seed));
   }, [seed, touched]);
 
-  async function run(key: string, kind: string, call: () => Promise<{ txHash: string; explorerUrl: string }>) {
+  async function run(
+    key: string,
+    kind: string,
+    call: () => Promise<{ txHash: string; explorerUrl: string }>,
+  ) {
     if (readOnly) {
-      push({ tone: "error", title: "Replay is read-only", detail: "Switch to live to send mayor transactions." });
+      push({
+        tone: "error",
+        title: "Replay is read-only",
+        detail: "Switch to live to send mayor transactions.",
+      });
       return false;
     }
     setBusy(key);
@@ -160,7 +173,12 @@ export function MayorPanel({
         </ul>
       )}
 
-      <form className="field" onSubmit={onRate} aria-label="Set base rate" style={{ marginTop: 14 }}>
+      <form
+        className="field"
+        onSubmit={onRate}
+        aria-label="Set base rate"
+        style={{ marginTop: 14 }}
+      >
         <label className="label" htmlFor="mayor-rate">
           Base rate · <span className="mono">{formatBps(bps)}</span>
           {seed != null && snapBps(seed) !== bps ? ` (now ${formatBps(seed)})` : ""}

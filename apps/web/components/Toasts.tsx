@@ -24,11 +24,22 @@ export function useToasts() {
   return { toasts, push, dismiss };
 }
 
-export function Toasts({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+export function Toasts({
+  toasts,
+  onDismiss,
+}: {
+  toasts: Toast[];
+  onDismiss: (id: number) => void;
+}) {
   return (
     <div className="toasts" aria-live="polite" aria-relevant="additions">
       {toasts.map((t) => (
-        <div key={t.id} className="toast" data-tone={t.tone} role={t.tone === "error" ? "alert" : "status"}>
+        <div
+          key={t.id}
+          className="toast"
+          data-tone={t.tone}
+          role={t.tone === "error" ? "alert" : "status"}
+        >
           <div className="toast-body">
             <div className="toast-title">{t.title}</div>
             {t.detail ? <div className="toast-detail">{t.detail}</div> : null}
@@ -38,7 +49,12 @@ export function Toasts({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id:
               </a>
             ) : null}
           </div>
-          <button type="button" className="toast-close" aria-label="Dismiss" onClick={() => onDismiss(t.id)}>
+          <button
+            type="button"
+            className="toast-close"
+            aria-label="Dismiss"
+            onClick={() => onDismiss(t.id)}
+          >
             <X size={14} aria-hidden="true" />
           </button>
         </div>

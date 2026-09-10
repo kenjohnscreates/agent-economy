@@ -1,10 +1,13 @@
 "use client";
-// useTown: the one hook the UI calls. Loads the snapshot, attaches the stream
+// useTown: the one hook the UI calls. Loads the snapshot (retrying with backoff while
+// the API is unreachable or its real source is still warming), attaches the stream
 // (live SSE or recorded replay) to the reducer, refetches /agents and /loans on every
 // tick in live mode (positions, balances and the loan book only live there), and
-// exposes controls.
+// exposes controls including reconnect.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { api } from "./api";
+import type { StateResponse } from "@agent-town/shared";
+import { api, type HealthResponse } from "./api";
+import { backoffMs, describeConnect, type ConnectPhase } from "./connect";
 import { openReplay, type ReplayControls, type ReplayFile } from "./replay";
 import { openTownStream, type StreamHandle } from "./sse";
 import { initialState, reduce, type TownAction, type TownState } from "./store";
@@ -18,19 +21,35 @@ export interface TownControls {
   seekTick(tick: number): void;
   /** Refetch `/loans` now (live only), e.g. after a mayor decision, so the queue updates before the next tick. */
   refreshLoans(): void;
+  /** Tear the live connection down and start over: snapshot, then stream. */
+  reconnect(): void;
+}
+
+export interface ConnectError {
+  phase: ConnectPhase;
+  text: string;
+  attempt: number;
 }
 
 export function useTown(source: TownSource | null): {
   state: TownState;
   controls: TownControls;
-  error: string | null;
+  /** Null while connected. While the snapshot keeps failing, what is wrong and how many tries so far. */
+  error: ConnectError | null;
+  /** `/state` from the API (flags, tickMs), once loaded. */
+  info: StateResponse | null;
+  /** `/health` from the API (mode), once loaded. Not part of the frozen contract; may stay null. */
+  health: HealthResponse | null;
   speed: number;
   paused: boolean;
 } {
   const [state, dispatch] = useReducer(reduce, undefined, initialState);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ConnectError | null>(null);
+  const [info, setInfo] = useState<StateResponse | null>(null);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
   const [speed, setSpeedState] = useState(1);
   const [paused, setPaused] = useState(false);
+  const [generation, setGeneration] = useState(0);
   const replayRef = useRef<ReplayControls | null>(null);
   const liveRef = useRef<StreamHandle | null>(null);
   const pausedRef = useRef(false);
@@ -38,6 +57,7 @@ export function useTown(source: TownSource | null): {
   useEffect(() => {
     if (!source) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     setError(null);
     dispatch({ event: "status", data: "connecting" });
 
@@ -57,21 +77,36 @@ export function useTown(source: TownSource | null): {
     }
 
     const base = source.apiUrl;
-    (async () => {
+    const apiUrl = api.baseUrl(base);
+
+    // Optional, non-contract: tells the header whether this is the mock or the real source.
+    api
+      .health(base)
+      .then((h) => {
+        if (!cancelled) setHealth(h);
+      })
+      .catch(() => undefined);
+
+    const snapshot = async (attempt: number): Promise<void> => {
       try {
-        const [agents, scoreboard, loans] = await Promise.all([
+        const [agents, scoreboard, loans, st] = await Promise.all([
           api.agents(base),
           api.scoreboard(base),
           api.loans(undefined, base),
+          api.state(base),
         ]);
         if (cancelled) return;
         dispatch({ event: "agents", data: agents });
         dispatch({ event: "scoreboard", data: scoreboard });
         dispatch({ event: "loans", data: loans });
+        setInfo(st);
+        setError(null);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (cancelled) return;
+        setError({ ...describeConnect(e, apiUrl), attempt });
+        timer = setTimeout(() => void snapshot(attempt + 1), backoffMs(attempt));
+        return;
       }
-      if (cancelled) return;
       liveRef.current = openTownStream(
         api.eventsUrl(base),
         (e) => {
@@ -91,15 +126,18 @@ export function useTown(source: TownSource | null): {
         },
         (s) => guarded({ event: "status", data: s }),
       );
-    })();
+    };
+    void snapshot(1);
 
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
       liveRef.current?.close();
       liveRef.current = null;
     };
     // `speed` is applied through controls, not by reconnecting, so it is not a dependency.
-  }, [source]);
+    // `generation` is bumped by reconnect() to rerun this effect on purpose.
+  }, [source, generation]);
 
   const pause = useCallback(() => {
     pausedRef.current = true;
@@ -123,11 +161,14 @@ export function useTown(source: TownSource | null): {
       .then((l) => dispatch({ event: "loans", data: l }))
       .catch(() => undefined);
   }, [source]);
+  const reconnect = useCallback(() => setGeneration((g) => g + 1), []);
 
   return {
     state,
-    controls: { pause, resume, setSpeed, seekTick, refreshLoans },
+    controls: { pause, resume, setSpeed, seekTick, refreshLoans, reconnect },
     error,
+    info,
+    health,
     speed,
     paused,
   };

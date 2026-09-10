@@ -1,5 +1,5 @@
 "use client";
-import { Pause, Play, Radio, Film } from "lucide-react";
+import { Pause, Play, Radio, Film, RefreshCw } from "lucide-react";
 import type { StreamStatus } from "@/lib/store";
 
 const SPEEDS = [0.5, 1, 2, 4, 8];
@@ -13,14 +13,20 @@ export function Controls(props: {
   onPause: () => void;
   onResume: () => void;
   onSpeed: (x: number) => void;
+  onReconnect: () => void;
 }) {
-  const { mode, onMode, status, paused, speed, onPause, onResume, onSpeed } = props;
+  const { mode, onMode, status, paused, speed, onPause, onResume, onSpeed, onReconnect } = props;
   return (
     <div className="controls" role="group" aria-label="Stream controls">
       <span className="badge" data-status={status}>
         <span className="dot" />
         {status}
       </span>
+      {mode === "live" && (status === "error" || status === "reconnecting") ? (
+        <button className="btn" onClick={onReconnect} aria-label="Reconnect to the town API">
+          <RefreshCw size={12} aria-hidden="true" /> reconnect
+        </button>
+      ) : null}
       <button className="btn" aria-pressed={mode === "live"} onClick={() => onMode("live")}>
         <Radio size={12} aria-hidden="true" /> live
       </button>
