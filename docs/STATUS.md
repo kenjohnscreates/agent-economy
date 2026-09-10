@@ -446,5 +446,5 @@ M5.7 mayor brief posted on #42 (PRD §8 click). Did not approve #7/#8. Did not e
 In progress: FE **M5.7 mayor** · M5.2 map after that · M5.8 last · M7.1 reviewer pass
 Blocked: `revokeName`
 Risks changed: Foundry nightly/stable install via foundryup is down (attestation CDN); CI no longer uses that action
-Next up: Dan **M5.7**. Checkpoint Thu 22:00. No live 12-tick unless asked. Do not start stretch B/D.
+Next up: Dan **M5.7** — brief `docs/M5.7-MAYOR-BRIEF.md`. Checkpoint Thu 22:00. No live 12-tick unless asked. Do not start stretch B/D.
 Checkpoint call: none (Thu 10 Sep 22:00)
