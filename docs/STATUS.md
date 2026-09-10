@@ -521,3 +521,11 @@ Blocked: `revokeName`
 Risks changed: —
 Next up: Dan M5.2 — `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`. Checkpoint Thu 22:00. No live 12-tick unless asked.
 Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 14:43 EDT
+Done: Check-in. `main` `1523f61` == origin. **0 open PRs.** No `card/M5.2-town-map`. Dan last FE: #48 (merged 11:04). M7.1c #49 + M8.2a #50 already on main. Did not edit `apps/web`. Did not approve #7/#8. Did not re-deploy. Stretch B/D not started.
+In progress: FE **M5.2 map** — still no PR
+Blocked: `revokeName` · map for video
+Risks changed: map is the remaining demo-visual risk at tonight’s 22:00 checkpoint. Scope-cut ladder not applied (mayor click + mock storyline already work).
+Next up: Dan M5.2. Checkpoint Thu 22:00. No live 12-tick unless asked.
+Checkpoint call: none yet (due 22:00)
