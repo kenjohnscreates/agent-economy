@@ -14,10 +14,10 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 `3154be0` · **M5.2 map** still no PR · mock default |
+| M5 Frontend | done | FE | **M5.1** #39 · **M5.2** #51 `9721597` · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 · mock default |
 | M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | **M8.2a** #50 outline on main · record still todo |
+| M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero (#51) · record still todo |
 
 ## Log
 
@@ -529,3 +529,11 @@ Blocked: `revokeName` · map for video
 Risks changed: map is the remaining demo-visual risk at tonight’s 22:00 checkpoint. Scope-cut ladder not applied (mayor click + mock storyline already work).
 Next up: Dan M5.2. Checkpoint Thu 22:00. No live 12-tick unless asked.
 Checkpoint call: none yet (due 22:00)
+
+## Thu 10 Sep 15:04 EDT
+Done: **M5.2** #51 squash-merged `9721597` T1 APPROVE. CI green. PixiJS map; `MapSlotProps`/`ZONES`/`zonePoint` unchanged; only extra dep `pixi.js@8`. Shared/api/sim/`store.ts` untouched. Did not edit `apps/web` beyond merge. Did not approve #7/#8. Did not re-deploy. Stretch B/D not started. **M5 board → done.** Video hero is now the map (`/map-demo` + live shell).
+In progress: M8 record (Sun) · M6 still in_progress (fixture ids vs live)
+Blocked: `revokeName`
+Risks changed: map demo-risk closed. Remaining: live §12 beats still skip `L-1`/`J-demo`; video not recorded.
+Next up: Checkpoint Thu 22:00. No live 12-tick unless asked. Film against mock; map is hero.
+Checkpoint call: none (Thu 10 Sep 22:00)

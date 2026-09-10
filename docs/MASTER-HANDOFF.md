@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **1523f61** (Thu 10 Sep ~14:43 EDT check-in) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
+main == origin/main at **9721597** (Thu 10 Sep ~15:04 EDT, M5.2 #51) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT.** Then Sat 12 Sep 12:00.
@@ -29,12 +29,9 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 ## Team
 - Human (operator) owns BE/onchain.
 - Dan (`don-radman`) owns FE in `apps/web`.
-- Intended FE order was M5.7 mayor (done) → **M5.2 map** → **M5.8 real last**. Dan skipped ahead; **M5.8 #48 `3154be0` is on main**. No `card/M5.2-town-map` on origin yet. Still want the **map for the video**. `API_MODE=mock` in `.env` even after M5.8 (real is opt-in).
-- FE run: `pnpm --filter @agent-town/api dev:mock` (:3001) + `pnpm --filter @agent-town/web dev` (:3000). Replay toggle if testnet is down.
-- Dan one-liners already used:
-  - M5.7: `Read docs/M5.7-MAYOR-BRIEF.md` (done, #47).
-  - M5.8: done, #48.
-  - M5.2 (nudge): `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`.
+- Intended FE order was M5.7 mayor → M5.2 map → M5.8 real. Dan skipped ahead then delivered map: **M5.8 #48** + **M5.2 #51 `9721597`** both on main. **M5 done.** `API_MODE=mock` in `.env` (real is opt-in).
+- FE run: `pnpm --filter @agent-town/api dev:mock` (:3001) + `pnpm --filter @agent-town/web dev` (:3000). `/map-demo` is fixture-only. Replay toggle if testnet is down.
+- Dan one-liners already used: M5.7 #47, M5.8 #48, M5.2 #51. No further FE cards.
 
 ## Live artifacts (do not redo deploys)
 - TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` Arc 5042002
@@ -60,12 +57,12 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 stats last read (Wed 9 ~17:45): loanCount 8, outstanding 0, defaults 1, baseRateBps 839, deposits ~0.92, free ~1.5 USDC.
 Pending occupies `activeLoanOf` — bo/cy cannot `request_loan` again until deny/approve+repay.
 
-## Board (as of 3154be0)
+## Board (as of 9721597)
 - M0–M4 done (code + live evidence).
-- M5 in_progress: M5.1 #39, M5.4 #42, M5.7 #47, **M5.8 #48 `3154be0`** on main. Open: **M5.2 map** (no PR). Mock default.
+- **M5 done:** M5.1 #39 · M5.2 #51 `9721597` · M5.4 #42 · M5.7 #47 · M5.8 #48. Mock default.
 - M6 in_progress: dry-run green; three live 12-ticks; latest 12/12 with 0 failed txs after M6.2e #40.
 - M7 in_progress: M7.1 #45 · M7.1b #46 · M7.2 #41 · M7.3 #43 · **M7.1c #49 `56d9b91`**. Remaining P2 skipped on purpose (function splits, CORS, codegen).
-- M8 in_progress: **M8.2a #50** outline on main; record/upload still todo. Stretch B/D not started.
+- M8 in_progress: **M8.2a #50** outline on main; map is now the video hero; record/upload still todo. Stretch B/D not started.
 
 ## Why a “full” PRD §12 12-tick still isn’t true
 Storyline still injects fixture ids (`L-1`, `L-2`, `J-demo`, `L-flag`). #40 skips them so live ticks don’t revert; repay/default/job-settle still do not land on the real book. Overlay hides pending bo loans at t4; ada runs before merchants so same-tick auto-approve never happens. On-chain grace is seconds (term + 120s), not ticks — a 3-min run cannot `markDefault` a new loan.
@@ -89,9 +86,9 @@ True story beats need a later card: live execute uses subgraph/on-chain ids for 
 - Approve **#7/#8** (left pending on purpose)
 
 ## Next up (orchestrator)
-1. **M5.2 map** — wait/nudge Dan; brief `docs/ASTRA-MAP-BRIEF.md`. Review/merge when PR opens. Do not edit `apps/web`.
+1. Checkpoint **Thu 22:00**: truth in STATUS. Scope-cut ladder not needed (M5 complete; mayor click + map + mock §12 work).
 2. Optional BE: live storyline ids (not L-1/J-demo) only if human wants another live 12-tick to look like §12.
-3. Checkpoint **Thu 22:00**: truth in STATUS; apply scope-cut ladder if behind (MILESTONES). Map is the remaining FE demo-risk; M8 record still todo.
-4. Do not start stretch B/D. Do not re-review merged #48/#49/#50.
+3. M8 record still todo (film mock; map is hero). Do not start stretch B/D.
+4. Do not re-review merged #48/#49/#50/#51. Do not edit `apps/web` except merging Dan PRs (none open).
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.

@@ -116,7 +116,7 @@ pnpm --filter @agent-town/web dev         # :3000
 
 Real is opt-in (`API_MODE=real`). Mayor POSTs return **501** without `ALLOW_BROADCAST=true`. Do not enable broadcast for this recording.
 
-**Hero / map.** M5.2 overworld still has **no PR** — `MapSlot` is the SVG placeholder (`data-map-placeholder`). If the map has not landed by record time: hero = bank panel + mayor panel + agent cards + feed, not the overworld. If M5.2 has merged by then, use the map as hero ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees)).
+**Hero / map.** M5.2 #51 is on main. Use the PixiJS overworld as hero ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees)): agents on islands, coins on monetary txs, Bank pulse on loan/rate. Fixture-only `/map-demo` if you want pause/speed. Live shell: mock `:3001` + web `:3000`.
 
 **Mayor click (PRD §8).** Works on mock (M5.7 #47): Approve a flagged loan → toast + feed. Do **not** approve on-chain loans **#7/#8** unless the human says so. Mock toast hashes are fixture, not live arcscan proofs.
 
