@@ -14,9 +14,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | in_progress | FE | **M5.1** #39 on main · M5.2 map / M5.4 bank / M5.7 mayor / M5.8 real still open · mock first |
+| M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 on main · open: **M5.7 mayor** (briefed on #42) · M5.2 map · M5.8 real last · mock first |
 | M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
-| M7 Review + docs | todo | reviewer | |
+| M7 Review + docs | in_progress | reviewer | **M7.2** #41 README+diagram · **M7.3** #43 SUBMISSION.md on main · M7.1 reviewer pass still open |
 | M8 Video + submission | todo | both | |
 
 ## Log
@@ -437,4 +437,14 @@ In progress: FE **M5.4** bank (branch `card/M5.4-bank-panel` on origin) · **M5.
 Blocked: `revokeName`
 Risks changed: —
 Next up: Dan: finish M5.4 if in flight, then **M5.7 mayor**, then M5.2 map. Mock stays source of truth until M5.8. Checkpoint Thu 22:00.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 21:35 EDT
+Done: **M5.4** #42 squash-merged `1a3c23a` T1 APPROVE — cherry-pick of Dan `717804c` onto main (STATUS keep-both). Web tests **18/18**, typecheck/lint green. Bank panel + rate tooltip + STALE badge + full loan book.
+Done: **M7.2** #41 `c6d47ad` README + `docs/architecture.png`. **M7.3** #43 `f8790d6` `docs/SUBMISSION.md`. **CI** #44 `a78847f` — Foundry via GitHub tarball `v1.8.1` (foundryup attestation API 502/500).
+M5.7 mayor brief posted on #42 (PRD §8 click). Did not approve #7/#8. Did not edit `apps/web` beyond merge. Stretch B/D not started.
+In progress: FE **M5.7 mayor** · M5.2 map after that · M5.8 last · M7.1 reviewer pass
+Blocked: `revokeName`
+Risks changed: Foundry nightly/stable install via foundryup is down (attestation CDN); CI no longer uses that action
+Next up: Dan **M5.7**. Checkpoint Thu 22:00. No live 12-tick unless asked. Do not start stretch B/D.
 Checkpoint call: none (Thu 10 Sep 22:00)
