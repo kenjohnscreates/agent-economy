@@ -41,7 +41,7 @@ Handoff between humans: either human can pick any card; the brief + exit criteri
 
 - [ ] Exit criteria in brief are met with evidence (test output, tx hash, screenshot).
 - [ ] No secrets, private keys, entity secrets, or API keys in diff; `.env.example` updated if new var.
-- [ ] Solidity: checks‑effects‑interactions, `SafeERC20`/return checks, access control on every state‑changing fn, events for every state change, 18‑decimal USDC assumptions explicit, no `address(0)` transfers.
+- [ ] Solidity: checks‑effects‑interactions, `SafeERC20`/return checks, access control on every state‑changing fn, events for every state change, 6‑decimal ERC‑20 USDC / 18‑decimal native gas assumptions explicit, no `address(0)` transfers.
 - [ ] ENS: tokenIds never cached; role checks tested negatively; hackathon deployment addresses only.
 - [ ] Circle: transactions polled to terminal state; failures surfaced, not swallowed.
 - [ ] Graph: no mocked/static data on any production path; queries typed.

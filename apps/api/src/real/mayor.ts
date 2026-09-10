@@ -1,4 +1,7 @@
-// Mayor POST handlers — Circle SCA txs, gated by ALLOW_BROADCAST (default dry-run).
+// Mayor POST handlers — Circle SCA txs for fund, loan decision, and rate.
+// Gated by ALLOW_BROADCAST (default dry-run; requireBroadcast throws 501).
+// Inputs: MayorDeps (circle, wallet ids, treasury, broadcast flag) + typed POST bodies.
+// Outputs: TxResponse { txHash, explorerUrl } after waitComplete.
 import { randomUUID } from "node:crypto";
 import {
   ARC_EXPLORER_URL,
