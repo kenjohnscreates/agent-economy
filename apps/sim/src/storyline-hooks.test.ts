@@ -5,7 +5,7 @@ import { parseSimConfig } from "./config.js";
 import { decide } from "./decide.js";
 import { runTicks } from "./engine.js";
 import { MemoryLedger } from "./ledger/index.js";
-import { patchDemoWorld } from "./storyline-hooks.js";
+import { onTick, patchDemoWorld } from "./storyline-hooks.js";
 import { emptyWorld, loadWorld } from "./world.js";
 
 const bo = rosterEntry("bo");
@@ -150,5 +150,90 @@ describe("demo storyline scheduler (M4.8)", () => {
       expect(w.creditScores.eli).toBe(50);
       expect(w.creditScores.eli! < 60).toBe(true);
     }
+  });
+});
+
+const FIXTURE_IDS = new Set(["L-1", "L-2", "L-flag", "J-demo"]);
+
+function liveLoansWorld(tick: number) {
+  return loadWorld(tick, {
+    loans: [
+      { id: "8", borrower: "cy", principalUsdc: "1000000", status: "approved", approvedAtTick: 1 },
+      { id: "7", borrower: "bo", principalUsdc: "3000000", status: "approved", approvedAtTick: 4 },
+    ],
+  });
+}
+
+function actionIds(forced: { action: { loanId?: string; jobId?: string } }[]): string[] {
+  return forced.flatMap(({ action }) => [action.loanId, action.jobId].filter((id): id is string => !!id));
+}
+
+describe("live storyline ids (M6.3)", () => {
+  it("executeEnabled finalize never emits L-1 / L-2 / L-flag / J-demo", async () => {
+    const ledger = new MemoryLedger();
+    const world = liveLoansWorld(7);
+    for (const tick of [1, 4, 7, 9, 10]) {
+      const phase = tick === 7 ? "default" : tick >= 9 ? "hike" : "boom";
+      const { forcedActions } = await onTick(tick, phase, {
+        mode: "demo",
+        stage: "finalize",
+        world: tick === 9 ? liveLoansWorld(9) : world,
+        ledger,
+        executeEnabled: true,
+      });
+      expect(actionIds(forcedActions).some((id) => FIXTURE_IDS.has(id))).toBe(false);
+    }
+  });
+
+  it("live t7 mark_default uses cy numeric loan; t9 repay uses bo numeric loan", async () => {
+    const ledger = new MemoryLedger();
+    const t7 = await onTick(7, "default", {
+      mode: "demo",
+      stage: "finalize",
+      world: liveLoansWorld(7),
+      ledger,
+      executeEnabled: true,
+    });
+    expect(t7.forcedActions).toContainEqual({
+      agent: "ada",
+      action: { kind: "mark_default", loanId: "8", amountUsdc: "1000000" },
+    });
+
+    const t9 = await onTick(9, "hike", {
+      mode: "demo",
+      stage: "finalize",
+      world: liveLoansWorld(9),
+      ledger,
+      executeEnabled: true,
+    });
+    expect(t9.forcedActions).toContainEqual({
+      agent: "bo",
+      action: { kind: "repay", loanId: "7", amountUsdc: "3000000" },
+    });
+  });
+
+  it("live prepare does not add J-demo / L-flag to world.jobs / world.loans", async () => {
+    const ledger = new MemoryLedger();
+    const boom = await onTick(1, "boom", {
+      mode: "demo",
+      stage: "prepare",
+      world: emptyWorld(1),
+      ledger,
+      executeEnabled: true,
+    });
+    expect(boom.world.jobs.some((j) => j.id === "J-demo")).toBe(false);
+    expect(boom.world.loans.some((l) => FIXTURE_IDS.has(l.id))).toBe(false);
+
+    const hike = await onTick(9, "hike", {
+      mode: "demo",
+      stage: "prepare",
+      world: emptyWorld(9),
+      ledger,
+      executeEnabled: true,
+    });
+    expect(hike.world.jobs.some((j) => j.id === "J-demo")).toBe(false);
+    expect(hike.world.loans.some((l) => l.id === "L-flag" || l.id === "L-1" || l.id === "L-2")).toBe(
+      false,
+    );
   });
 });
