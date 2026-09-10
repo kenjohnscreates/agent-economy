@@ -2,9 +2,7 @@
 // Sync getters read a cache refreshed on an interval; SSE emits scoreboard snapshots.
 import {
   ARC_EXPLORER_URL,
-  DEFAULT_PREMIUM_BPS,
   ROSTER,
-  computeTownRateBps,
   ensNameFor,
   phaseForTick,
   type AgentDetailResponse,
@@ -39,6 +37,7 @@ import { createBalanceReader, type BalanceReader } from "./balances.js";
 import { parseRealEnv, type RealEnv } from "./env.js";
 import { createLedgerReader, type LedgerReader, type TickAnchor } from "./ledger.js";
 import { mapGdpSeriesPoints, mapJob, mapLoan } from "./map.js";
+import { buildRateBreakdown } from "./rate.js";
 import { diffSseEvents, emptySseCursor, type SseCursor } from "./sse.js";
 import {
   defaultMayorWalletIds,
@@ -221,21 +220,12 @@ export class RealSource implements DataSource {
         : Number((outstanding * 10_000n) / (treasury + outstanding));
 
     const everApproved = loans.filter((l) => l.status !== "pending" && l.status !== "denied");
-    const defaultPremiumBps = sb.defaults > 0 ? DEFAULT_PREMIUM_BPS : 0;
-    const marketApyBps = signals.usdcBorrowApyBps;
-    const spreadBps = Math.max(0, sb.baseRateBps - marketApyBps);
-    const rate = {
-      marketApyBps,
-      spreadBps,
-      defaultPremiumBps,
+    const rate = buildRateBreakdown({
+      marketApyBps: signals.usdcBorrowApyBps,
+      onChainBaseRateBps: sb.baseRateBps,
+      defaults: sb.defaults,
       utilisationBps,
-      baseRateBps: sb.baseRateBps,
-      townRateBps: computeTownRateBps({
-        marketApyBps,
-        spreadBps,
-        defaultPremiumBps,
-      }),
-    };
+    });
 
     const scoreboard: ScoreboardResponse = {
       gdpUsdc,

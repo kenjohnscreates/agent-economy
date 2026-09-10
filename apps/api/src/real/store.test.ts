@@ -189,6 +189,10 @@ describe("RealSource GET contract", () => {
     const body = ScoreboardResponseSchema.parse(await (await app.request(API_ROUTES.scoreboard)).json());
     expect(body.signals.usdcBorrowApyBps).toBe(410);
     expect(body.defaults).toBe(1);
+    expect(body.rate.spreadBps).toBe(200);
+    expect(body.rate.defaultPremiumBps).toBe(200);
+    expect(body.rate.baseRateBps).toBe(600);
+    expect(body.rate.townRateBps).toBe(810);
   });
 
   it("filters /loans?status=pending", async () => {
