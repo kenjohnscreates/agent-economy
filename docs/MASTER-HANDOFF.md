@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **4191950** (Thu 10 Sep ~00:00 EDT) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
+main == origin/main at **3154be0** (Thu 10 Sep ~11:04 EDT, M5.8 #48) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT.** Then Sat 12 Sep 12:00.
@@ -29,12 +29,12 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 ## Team
 - Human (operator) owns BE/onchain.
 - Dan (`don-radman`) owns FE in `apps/web`.
-- Intended FE order was M5.7 mayor (done) → **M5.2 map** → **M5.8 real last**. Dan skipped ahead: **#48 M5.8 is OPEN** (CI green as of 10:05 Thu). No `card/M5.2-town-map` on origin yet. Dan’s #48 body: merge order vs map does not matter (no shared files). Still want the **map for the video**. Mock remains default until M5.8 merges; even then `API_MODE=mock` in `.env`.
+- Intended FE order was M5.7 mayor (done) → **M5.2 map** → **M5.8 real last**. Dan skipped ahead; **M5.8 #48 `3154be0` is on main**. No `card/M5.2-town-map` on origin yet. Still want the **map for the video**. `API_MODE=mock` in `.env` even after M5.8 (real is opt-in).
 - FE run: `pnpm --filter @agent-town/api dev:mock` (:3001) + `pnpm --filter @agent-town/web dev` (:3000). Replay toggle if testnet is down.
 - Dan one-liners already used:
   - M5.7: `Read docs/M5.7-MAYOR-BRIEF.md` (done, #47).
-  - M5.2: `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`.
-  - After map: M5.8 polish/real behind env, no `ALLOW_BROADCAST`, no approve #7/#8.
+  - M5.8: done, #48.
+  - M5.2 (nudge): `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`.
 
 ## Live artifacts (do not redo deploys)
 - TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` Arc 5042002
@@ -60,11 +60,11 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 stats last read (Wed 9 ~17:45): loanCount 8, outstanding 0, defaults 1, baseRateBps 839, deposits ~0.92, free ~1.5 USDC.
 Pending occupies `activeLoanOf` — bo/cy cannot `request_loan` again until deny/approve+repay.
 
-## Board (as of 4191950)
+## Board (as of 3154be0)
 - M0–M4 done (code + live evidence).
-- M5 in_progress: M5.1 #39, M5.4 #42, **M5.7 #47 `2728989`** on main. Open: **M5.2 map** (no PR), **M5.8 #48 OPEN**.
+- M5 in_progress: M5.1 #39, M5.4 #42, M5.7 #47, **M5.8 #48 `3154be0`** on main. Open: **M5.2 map** (no PR). Mock default.
 - M6 in_progress: dry-run green; three live 12-ticks; latest 12/12 with 0 failed txs after M6.2e #40.
-- M7 in_progress: M7.1 #45 findings `docs/M7.1-REVIEW.md`; M7.1b #46 real rate stack (no double-count premium); M7.2 README + `docs/architecture.png`; M7.3 `docs/SUBMISSION.md`. P2 nits leftover.
+- M7 in_progress: M7.1 #45 findings `docs/M7.1-REVIEW.md`; M7.1b #46 real rate stack (no double-count premium); M7.2 README + `docs/architecture.png`; M7.3 `docs/SUBMISSION.md`. **M7.1c P2 nits** in flight (`docs/M7.1c-P2-BRIEF.md`).
 - M8 todo (video + form). Stretch B/D not started.
 
 ## Why a “full” PRD §12 12-tick still isn’t true
@@ -89,10 +89,10 @@ True story beats need a later card: live execute uses subgraph/on-chain ids for 
 - Approve **#7/#8** (left pending on purpose)
 
 ## Next up (orchestrator)
-1. **Review #48 M5.8** T1 vs brief: mock stays default; 501 warming ≠ fake txs; no `ALLOW_BROADCAST`; no approve #7/#8; frozen shared; MapSlot props untouched. Rebase if dirty. Squash-merge on APPROVE **or** wait for M5.2 first — human preference was map then M5.8; Dan claims no file overlap. At Thu 22:00 if map is missing, landing #48 is still progress (PRD §8 click already works on mock).
-2. **M5.2 map** — wait/nudge Dan; brief `docs/ASTRA-MAP-BRIEF.md`. Review/merge when PR opens. Do not edit `apps/web`.
+1. **M5.2 map** — wait/nudge Dan; brief `docs/ASTRA-MAP-BRIEF.md`. Review/merge when PR opens. Do not edit `apps/web`.
+2. **M7.1c P2 nits** — review/merge when PR opens (`docs/M7.1c-P2-BRIEF.md`). BE only.
 3. Optional BE: live storyline ids (not L-1/J-demo) only if human wants another live 12-tick to look like §12.
 4. Checkpoint **Thu 22:00**: truth in STATUS; apply scope-cut ladder if behind (MILESTONES). Map is the remaining FE demo-risk; M8 video still todo.
-5. Do not idle: if no FE motion, P2 nits from `docs/M7.1-REVIEW.md` (BE only) or M8.2 video outline tightening — not stretch B/D.
+5. After M7.1c: M8.2 video outline tightening in `docs/SUBMISSION.md` vs PRD §10 (honest: mock default, map placeholder until M5.2, mayor click works, live ticks skip fixture ids). Not stretch B/D.
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.

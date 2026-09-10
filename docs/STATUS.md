@@ -14,9 +14,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 · **M5.7** #47 on main · **#48 M5.8 OPEN** · **M5.2 map** still no PR · mock default |
+| M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 `3154be0` · **M5.2 map** still no PR · mock default |
 | M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
-| M7 Review + docs | in_progress | reviewer | **M7.1** #45 findings · **M7.1b** #46 rate stack · **M7.2** #41 · **M7.3** #43 · P2 nits leftover |
+| M7 Review + docs | in_progress | reviewer | **M7.1** #45 findings · **M7.1b** #46 rate stack · **M7.2** #41 · **M7.3** #43 · **M7.1c** P2 nits in flight |
 | M8 Video + submission | todo | both | |
 
 ## Log
@@ -496,4 +496,12 @@ In progress: FE **M5.2 map** · **#48 M5.8** open
 Blocked: `revokeName`
 Risks changed: —
 Next up: new session — review #48; wait/nudge M5.2. Checkpoint Thu 22:00.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 11:04 EDT
+Done: **M5.8** #48 squash-merged `3154be0` T1 APPROVE. Rebased onto `6134e89` (STATUS keep-both). Mock stays default (`API_MODE=mock`). GET 501 = warming/retry, not fake txs. Mayor 501 toast unchanged. `packages/shared` + `MapSlot` props untouched. Did not edit `apps/web` beyond merge. Did not approve #7/#8. Did not set `ALLOW_BROADCAST`. Stretch B/D not started.
+In progress: FE **M5.2 map** (`docs/ASTRA-MAP-BRIEF.md`) · **M7.1c** P2 nits BE (`docs/M7.1c-P2-BRIEF.md`)
+Blocked: `revokeName`
+Risks changed: —
+Next up: Dan M5.2 — `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`. Checkpoint Thu 22:00. No live 12-tick unless asked.
 Checkpoint call: none (Thu 10 Sep 22:00)
