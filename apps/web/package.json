@@ -12,6 +12,7 @@
     "test": "vitest run",
     "record": "tsx scripts/record.ts",
     "sprites": "tsx scripts/gen-sprites.ts",
+    "tiles": "tsx scripts/gen-tiles.ts",
     "sync-replay": "node -e \"const f=require('fs');if(f.existsSync('fixtures/replay.json'))f.copyFileSync('fixtures/replay.json','public/replay.json')\"",
     "predev": "pnpm sync-replay",
     "prebuild": "pnpm sync-replay"
@@ -21,6 +22,7 @@
     "lucide-react": "1.43.0",
     "motion": "13.2.0",
     "next": "16.3.4",
+    "pixi.js": "^8.20.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "4.5.4"
