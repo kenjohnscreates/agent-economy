@@ -66,12 +66,14 @@ export function makePath(points: Point[]): Path {
 }
 
 export function route(from: Building, start: Point, to: Building, end: Point): Path {
-  if (from === to) return makePath([{ ...start }, { ...end }]);
-  let best = makePath([{ ...start }, { ...end }]);
+  const startPoint = { x: start.x, y: start.y },
+    endPoint = { x: end.x, y: end.y };
+  if (from === to) return makePath([startPoint, endPoint]);
+  let best = makePath([startPoint, endPoint]);
   let distance = Infinity;
   const visit = (zone: Building, points: Point[], seen: Building[]) => {
     if (zone === to) {
-      const candidate = makePath([...points, { ...end }]);
+      const candidate = makePath([...points, endPoint]);
       if (candidate.total < distance) {
         best = candidate;
         distance = candidate.total;
@@ -85,7 +87,7 @@ export function route(from: Building, start: Point, to: Building, end: Point): P
       visit(next, [...points, ...steps], [...seen, next]);
     }
   };
-  visit(from, [{ ...start }], [from]);
+  visit(from, [startPoint], [from]);
   return best;
 }
 

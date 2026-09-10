@@ -3,8 +3,101 @@
 import { describe, expect, it } from "vitest";
 import { route, samplePath, BRIDGES } from "../components/map/paths";
 import { CoinPool } from "../components/map/coins";
+import { AgentMotion } from "../components/map/agents";
+import { FIXTURES, type AgentSummary } from "@agent-town/shared";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
+
+describe("generated sprite sheets", () => {
+  it("gives all eight agents distinct art and thirteen named 48px frames", () => {
+    const hashes = new Set<string>();
+    for (const name of ["ada", "bo", "cy", "dee", "eli", "fay", "gus", "hal"]) {
+      const png = readFileSync(resolve("public/sprites", `${name}.png`));
+      hashes.add(createHash("sha256").update(png).digest("hex"));
+      expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([624, 48]);
+      const sheet = JSON.parse(readFileSync(resolve("public/sprites", `${name}.json`), "utf8"));
+      expect(Object.keys(sheet.frames)).toHaveLength(13);
+      expect(sheet.frames.emote_1).toEqual({ x: 576, y: 0, w: 48, h: 48 });
+    }
+    expect(hashes.size).toBe(8);
+  });
+});
+
+describe("agent state transitions", () => {
+  const data = (): AgentSummary => ({
+    ...FIXTURES.agents[0]!,
+    position: { building: "bank", x: 0.5, y: 0.5 },
+    narration: null,
+  });
+  it("walks the bridge route and reaches the authoritative target in 750ms", () => {
+    const start = data(),
+      target = { x: 100, y: 220 };
+    const motion = new AgentMotion(start, { x: 320, y: 84 });
+    motion.set({ ...start, position: { building: "market", x: 0.4, y: 0.5 } }, target, false);
+    motion.update(300, 8, false);
+    expect(motion.progress).toBe(300);
+    expect(motion.path.points).toContainEqual(BRIDGES[0]!.points[1]);
+    motion.update(450, 8, false);
+    expect({ x: motion.x, y: motion.y }).toEqual(target);
+  });
+  it("snaps immediately if reduced motion is enabled during a walk", () => {
+    const start = data(),
+      target = { x: 100, y: 220 };
+    const moving = { ...start, position: { building: "market" as const, x: 0.4, y: 0.5 } };
+    const motion = new AgentMotion(start, { x: 320, y: 84 });
+    motion.set(moving, target, false);
+    motion.update(100, 8, false);
+    motion.set(moving, target, true);
+    motion.update(0, 8, true);
+    expect({ x: motion.x, y: motion.y, frame: motion.frame }).toEqual({
+      ...target,
+      frame: "idle_0",
+    });
+  });
+  it("expires narration without restarting it on unrelated prop updates", () => {
+    const start = data(),
+      motion = new AgentMotion(start, { x: 320, y: 84 });
+    const talking = { ...start, narration: "The books balance." };
+    motion.set(talking, { x: 320, y: 84 }, false);
+    motion.update(2000, 8, false);
+    motion.set({ ...talking }, { x: 320, y: 84 }, false);
+    expect(motion.speechUntil).toBe(3000);
+    motion.update(1000, 8, false);
+    expect(motion.elapsed < motion.speechUntil).toBe(false);
+  });
+  it("holds default eyes for two ticks, including in reduced motion", () => {
+    const motion = new AgentMotion(data(), { x: 320, y: 84 });
+    motion.defaultUntilTick = 9;
+    motion.update(0, 7, true);
+    expect(motion.frame).toBe("emote_1");
+    motion.update(0, 8, true);
+    expect(motion.frame).toBe("emote_1");
+    motion.update(0, 9, true);
+    expect(motion.frame).toBe("idle_0");
+  });
+  it("exposes the remaining bridge route for transactions during a crossing", () => {
+    const start = data(),
+      motion = new AgentMotion(start, { x: 320, y: 84 });
+    motion.set(
+      { ...start, position: { building: "market", x: 0.4, y: 0.5 } },
+      { x: 100, y: 220 },
+      false,
+    );
+    motion.update(100, 8, false);
+    const tail = motion.approach();
+    expect(tail[0]).toEqual({ x: motion.x, y: motion.y });
+    expect(tail.at(-1)).toEqual({ x: 100, y: 220 });
+    expect(tail).toContainEqual({ x: 215, y: 144 });
+  });
+});
 
 describe("bridge routing", () => {
+  it("copies only coordinates, without retaining a controller's previous paths", () => {
+    const start = { x: 320, y: 84, previousPath: { retained: true } };
+    const p = route("bank", start, "market", { x: 100, y: 220 });
+    expect(p.points[0]).toEqual({ x: 320, y: 84 });
+  });
   it("keeps exact endpoints and crosses the bank/market bridge", () => {
     const a = { x: 310, y: 90 },
       b = { x: 100, y: 220 };
