@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **3154be0** (Thu 10 Sep ~11:04 EDT, M5.8 #48) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
+main == origin/main at **56d9b91** (Thu 10 Sep ~11:12 EDT, M7.1c #49) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT.** Then Sat 12 Sep 12:00.
@@ -64,8 +64,8 @@ Pending occupies `activeLoanOf` — bo/cy cannot `request_loan` again until deny
 - M0–M4 done (code + live evidence).
 - M5 in_progress: M5.1 #39, M5.4 #42, M5.7 #47, **M5.8 #48 `3154be0`** on main. Open: **M5.2 map** (no PR). Mock default.
 - M6 in_progress: dry-run green; three live 12-ticks; latest 12/12 with 0 failed txs after M6.2e #40.
-- M7 in_progress: M7.1 #45 findings `docs/M7.1-REVIEW.md`; M7.1b #46 real rate stack (no double-count premium); M7.2 README + `docs/architecture.png`; M7.3 `docs/SUBMISSION.md`. **M7.1c P2 nits** in flight (`docs/M7.1c-P2-BRIEF.md`).
-- M8 todo (video + form). Stretch B/D not started.
+- M7 in_progress: M7.1 #45 · M7.1b #46 · M7.2 #41 · M7.3 #43 · **M7.1c #49 `56d9b91`**. Remaining P2 skipped on purpose (function splits, CORS, codegen).
+- M8 todo (video + form). **M8.2a** outline tightening in flight. Stretch B/D not started.
 
 ## Why a “full” PRD §12 12-tick still isn’t true
 Storyline still injects fixture ids (`L-1`, `L-2`, `J-demo`, `L-flag`). #40 skips them so live ticks don’t revert; repay/default/job-settle still do not land on the real book. Overlay hides pending bo loans at t4; ada runs before merchants so same-tick auto-approve never happens. On-chain grace is seconds (term + 120s), not ticks — a 3-min run cannot `markDefault` a new loan.
@@ -90,9 +90,9 @@ True story beats need a later card: live execute uses subgraph/on-chain ids for 
 
 ## Next up (orchestrator)
 1. **M5.2 map** — wait/nudge Dan; brief `docs/ASTRA-MAP-BRIEF.md`. Review/merge when PR opens. Do not edit `apps/web`.
-2. **M7.1c P2 nits** — review/merge when PR opens (`docs/M7.1c-P2-BRIEF.md`). BE only.
+2. **M8.2a** — review/merge video outline PR (`docs/M8.2a-VIDEO-BRIEF.md`).
 3. Optional BE: live storyline ids (not L-1/J-demo) only if human wants another live 12-tick to look like §12.
 4. Checkpoint **Thu 22:00**: truth in STATUS; apply scope-cut ladder if behind (MILESTONES). Map is the remaining FE demo-risk; M8 video still todo.
-5. After M7.1c: M8.2 video outline tightening in `docs/SUBMISSION.md` vs PRD §10 (honest: mock default, map placeholder until M5.2, mayor click works, live ticks skip fixture ids). Not stretch B/D.
+5. Do not start stretch B/D.
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.

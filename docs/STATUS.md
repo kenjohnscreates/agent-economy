@@ -16,7 +16,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 `3154be0` · **M5.2 map** still no PR · mock default |
 | M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
-| M7 Review + docs | in_progress | reviewer | **M7.1** #45 findings · **M7.1b** #46 rate stack · **M7.2** #41 · **M7.3** #43 · **M7.1c** P2 nits in flight |
+| M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
 | M8 Video + submission | todo | both | |
 
 ## Log
@@ -504,4 +504,12 @@ In progress: FE **M5.2 map** (`docs/ASTRA-MAP-BRIEF.md`) · **M7.1c** P2 nits BE
 Blocked: `revokeName`
 Risks changed: —
 Next up: Dan M5.2 — `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`. Checkpoint Thu 22:00. No live 12-tick unless asked.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 11:12 EDT
+Done: **M7.1c** #49 squash-merged `56d9b91` T1 `VERDICT: APPROVE` (self-opened — comment, not GitHub approve). CI green. F-P2-01 runbook 6-dec USDC · F-P2-02 deleted `notImplementedSource` · F-P2-04 mayor header. Skipped F-P2-03/05/06/07/08. Did not edit `apps/web`. Did not approve #7/#8. Stretch B/D not started.
+In progress: FE **M5.2 map** · **M8.2a** video outline (`docs/M8.2a-VIDEO-BRIEF.md`)
+Blocked: `revokeName`
+Risks changed: —
+Next up: Dan M5.2. Checkpoint Thu 22:00. No live 12-tick unless asked.
 Checkpoint call: none (Thu 10 Sep 22:00)
