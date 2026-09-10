@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **9721597** (Thu 10 Sep ~15:04 EDT, M5.2 #51) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
+main == origin/main at **4b24b6f** (Thu 10 Sep ~15:35 EDT, M6.3 #52 + live 12-tick) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT.** Then Sat 12 Sep 12:00.
@@ -42,7 +42,7 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 - Circle set `949545dc-5e02-5050-8e2f-7e6bc12bfed3`. Treasurer ada SCA `0x97847b3C…`. Mayor `0x52B9c05D…`. Owner/deployer EOA `0xD4282940…`
 - Subgraph Studio `agent-town` 0.0.1. Query URL only in local `.env`. Public: `packages/ens/town.json`, `packages/contracts/deployments/arc-testnet.json`, `packages/circle/roster.json`
 
-## Loan book (do not approve #7/#8 unless human says so)
+## Loan book (updated Thu 10 15:35 after live 12-tick)
 | ID | Status | Who | Amount |
 |---|---|---|---|
 | 1 | Repaid | bo | 0.3 |
@@ -51,26 +51,28 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 | 4 | Repaid | cy | 1.2 |
 | 5 | Denied | bo | 1.2 |
 | 6 | Denied | cy | 1.2 |
-| 7 | Pending | bo | 1.2 |
-| 8 | Pending | cy | 1.2 |
+| 7 | Repaid | bo | 1.2 |
+| 8 | Repaid | cy | 1.2 |
 
-stats last read (Wed 9 ~17:45): loanCount 8, outstanding 0, defaults 1, baseRateBps 839, deposits ~0.92, free ~1.5 USDC.
-Pending occupies `activeLoanOf` — bo/cy cannot `request_loan` again until deny/approve+repay.
+stats last read (Thu 10 15:35): loanCount 8, outstanding 0, defaults 1, baseRateBps 839, deposits 0.92, free ~5.5 USDC.
+#7/#8 repaid this session — bo/cy `activeLoanOf` clear.
 
-## Board (as of 9721597)
+## Board (as of 4b24b6f)
 - M0–M4 done (code + live evidence).
 - **M5 done:** M5.1 #39 · M5.2 #51 `9721597` · M5.4 #42 · M5.7 #47 · M5.8 #48. Mock default.
-- M6 in_progress: dry-run green; three live 12-ticks; latest 12/12 with 0 failed txs after M6.2e #40.
+- M6 in_progress: dry-run green; four live 12-ticks; **#7/#8 repaid on-chain** (M6.3). Live mark_default still unmet (rules repaid before t7). dee accept_job still reverts on shared ERC-8183.
 - M7 in_progress: M7.1 #45 · M7.1b #46 · M7.2 #41 · M7.3 #43 · **M7.1c #49 `56d9b91`**. Remaining P2 skipped on purpose (function splits, CORS, codegen).
 - M8 in_progress: **M8.2a #50** outline on main; map is now the video hero; record/upload still todo. Stretch B/D not started.
 
 ## Why a “full” PRD §12 12-tick still isn’t true
-Storyline still injects fixture ids (`L-1`, `L-2`, `J-demo`, `L-flag`). #40 skips them so live ticks don’t revert; repay/default/job-settle still do not land on the real book. Overlay hides pending bo loans at t4; ada runs before merchants so same-tick auto-approve never happens. On-chain grace is seconds (term + 120s), not ticks — a 3-min run cannot `markDefault` a new loan.
-
-True story beats need a later card: live execute uses subgraph/on-chain ids for jobs/loans, and/or ada approves pending roster loans once indexed. **Only if human wants another live run.**
+M6.3 stopped emitting fixture ids on live execute. **Repay now lands** (#7 bo / #8 cy this run). Remaining gaps:
+- Rules repay Active loans as soon as merchants can pay, so **t7 mark_default has nothing left** unless we hold repay until after default.
+- On-chain grace is seconds (term 60s + 120s), not ticks — cannot `markDefault` a loan approved in the same 3-min run.
+- dee `accept_job` reverts on the shared ERC-8183 (foreign or unfunded job ids).
+- Do **not** `markDefault` bo (already defaulted #2 → 2nd default would `revokeName`).
 
 ## Gotchas
-- Faucet was 403. Deployer had ~17 USDC after last top-up; last `fund()` spent ~5.2.
+- Faucet was 403. Deployer ~49 USDC after Thu 10 check. Last `fund()` this session **8 USDC**.
 - `payStipend` spends treasury `freeLiquidity` (balance − totalDeposits), not ada’s wallet.
 - `pnpm --filter @agent-town/circle exec` does not resolve `../../.env` — use absolute `.env` path from `packages/circle`.
 - After deleting `/tmp/wt-*`, retarget `packages/shared/node_modules/zod` to pnpm zod if tests fail to resolve shared.
@@ -83,12 +85,12 @@ True story beats need a later card: live execute uses subgraph/on-chain ids for 
 ## Human gates still
 - `revokeName` roster names
 - Mayor fund / loan-decision / `--yes` / `--broadcast`
-- Approve **#7/#8** (left pending on purpose)
+- Approve **#7/#8** — done this session (now Repaid)
 
 ## Next up (orchestrator)
-1. Checkpoint **Thu 22:00**: truth in STATUS. Scope-cut ladder not needed (M5 complete; mayor click + map + mock §12 work).
-2. Optional BE: live storyline ids (not L-1/J-demo) only if human wants another live 12-tick to look like §12.
+1. Checkpoint **Thu 22:00**: truth in STATUS. Scope-cut not needed.
+2. Optional: hold live merchant repay until after t7 + new non-bo loan past grace so `markDefault` lands. Job accept on shared ERC-8183 still reverts.
 3. M8 record still todo (film mock; map is hero). Do not start stretch B/D.
-4. Do not re-review merged #48/#49/#50/#51. Do not edit `apps/web` except merging Dan PRs (none open).
+4. Do not `revokeName`. Do not default bo (already has #2).
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.
