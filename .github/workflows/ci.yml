@@ -27,12 +27,14 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
+      # Direct tarball: foundryup attestation downloads are 502/500 as of 9 Sep 2026.
+      - name: Install Foundry
+        run: |
+          curl -fsSL "https://github.com/foundry-rs/foundry/releases/download/v1.8.1/foundry_v1.8.1_linux_amd64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin
+          forge --version
 
       - run: pnpm install --frozen-lockfile
-      - run: forge --version
       - run: pnpm -r --if-present build
       - run: pnpm -r --if-present test
       - run: pnpm -r --if-present lint
