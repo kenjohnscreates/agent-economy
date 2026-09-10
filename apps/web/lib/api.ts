@@ -21,8 +21,16 @@ import {
   type StateResponse,
   type TxResponse,
 } from "@agent-town/shared";
-import type { z } from "zod";
+import { z } from "zod";
 import { API_URL } from "./config";
+
+/** `GET /health` is served by the API but is not in the frozen contract; parsed loosely. */
+export const HealthResponseSchema = z.object({
+  ok: z.boolean(),
+  mode: z.string(),
+  tick: z.number().nullable().optional(),
+});
+export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 
 export class ApiRequestError extends Error {
   constructor(
@@ -87,4 +95,7 @@ export const api = {
   mayorRate: (body: MayorRateRequest): Promise<TxResponse> =>
     request(API_ROUTES.mayorRate, TxResponseSchema, { method: "POST", body: JSON.stringify(body) }),
   eventsUrl: (base: string = API_URL): string => `${base}${API_ROUTES.events}`,
+  baseUrl: (base: string = API_URL): string => base,
+  health: (base?: string): Promise<HealthResponse> =>
+    request("/health", HealthResponseSchema, undefined, base),
 };

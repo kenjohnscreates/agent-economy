@@ -231,8 +231,38 @@ input {
     background var(--dur) var(--ease);
 }
 .agent:hover,
-.agent[aria-pressed="true"] {
+.agent[data-selected="true"] {
   border-color: var(--accent);
+}
+.agent-select {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.agent-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.agent-links {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.agent-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+.agent-links a:hover {
+  color: var(--accent);
 }
 .agent img {
   width: 48px;
@@ -643,4 +673,55 @@ input {
 }
 .toast-close:hover {
   color: var(--text);
+}
+
+/* header chips and connection card (M5.8) */
+.hchips {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.hchip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.hchip[data-on="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.hchip[data-mode="real"] {
+  color: var(--info);
+  border-color: var(--info);
+}
+.connect {
+  border-left: 3px solid var(--sand);
+}
+.connect[data-phase="warming"] {
+  border-left-color: var(--info);
+}
+.connect[data-phase="failed"] {
+  border-left-color: var(--danger);
+}
+.connect pre {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: var(--radius-control);
+  font-family: var(--font-label);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: pre-wrap;
+  color: var(--text-muted);
+}
+.connect .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
 }
