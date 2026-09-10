@@ -16,7 +16,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 on main · open: **M5.7 mayor** (briefed on #42) · M5.2 map · M5.8 real last · mock first |
 | M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
-| M7 Review + docs | in_progress | reviewer | **M7.2** #41 README+diagram · **M7.3** #43 SUBMISSION.md on main · M7.1 reviewer pass still open |
+| M7 Review + docs | in_progress | reviewer | **M7.1** #45 findings · **M7.1b** #46 rate stack · **M7.2** #41 · **M7.3** #43 · P2 nits leftover |
 | M8 Video + submission | todo | both | |
 
 ## Log
@@ -447,4 +447,13 @@ In progress: FE **M5.7 mayor** · M5.2 map after that · M5.8 last · M7.1 revie
 Blocked: `revokeName`
 Risks changed: Foundry nightly/stable install via foundryup is down (attestation CDN); CI no longer uses that action
 Next up: Dan **M5.7** — brief `docs/M5.7-MAYOR-BRIEF.md`. Checkpoint Thu 22:00. No live 12-tick unless asked. Do not start stretch B/D.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 22:00 EDT
+Done: **M7.1** #45 `090a7e8` T1 APPROVE — P0=0, secrets scan clean. **M7.1b** #46 `cad946c` T1 APPROVE — real scoreboard no longer double-counts default premium (spread = 200 bps).
+Did not approve #7/#8. Did not edit `apps/web`. Stretch B/D not started.
+In progress: FE **M5.7 mayor** (brief `docs/M5.7-MAYOR-BRIEF.md`)
+Blocked: `revokeName`
+Risks changed: —
+Next up: Dan M5.7. Optional BE: live storyline ids (only if we want another 12-tick to look like §12). Checkpoint Thu 22:00.
 Checkpoint call: none (Thu 10 Sep 22:00)
