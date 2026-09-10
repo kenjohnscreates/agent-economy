@@ -24,6 +24,8 @@ export interface OnTickContext {
   stage: "prepare" | "finalize";
   world: WorldState;
   ledger: Ledger;
+  /** Live Circle execute — skip fixture loan/job overlays and ids. Default dry-run. */
+  executeEnabled: boolean;
 }
 
 export interface OnTickResult {
@@ -85,6 +87,28 @@ function withoutApprovedBoLoan(loans: WorldLoan[]): WorldLoan[] {
   return loans.filter((l) => !(l.id === DEMO_BO_LOAN_ID && l.status === "approved"));
 }
 
+/** On-chain ids are pure digits; fixtures like `L-1` / `J-demo` are not. */
+function isNumericId(id: string): boolean {
+  return /^\d+$/.test(id);
+}
+
+function isActiveLoan(loan: WorldLoan): boolean {
+  return loan.status === "approved";
+}
+
+/** Live t7: first Active numeric loan whose borrower is not bo; prefer cy. */
+function liveMarkDefaultTarget(world: WorldState): WorldLoan | undefined {
+  const candidates = world.loans.filter(
+    (l) => isNumericId(l.id) && isActiveLoan(l) && l.borrower !== "bo",
+  );
+  return candidates.find((l) => l.borrower === "cy") ?? candidates[0];
+}
+
+/** Live t9: bo's Active numeric loan. */
+function liveBoRepayTarget(world: WorldState): WorldLoan | undefined {
+  return world.loans.find((l) => isNumericId(l.id) && isActiveLoan(l) && l.borrower === "bo");
+}
+
 /** Match `maybeRate` so demo ticks skip set_rate unless the world rate is behind. */
 function alignedBaseRateBps(world: WorldState): number {
   return computeTownRateBps({
@@ -104,7 +128,12 @@ async function ledgerHasKindEver(
 }
 
 /** Demo world overlays so PRD §12 plays from fixtures without live subgraph state. */
-export function patchDemoWorld(world: WorldState, tick: number, phase: StorylinePhase): WorldState {
+export function patchDemoWorld(
+  world: WorldState,
+  tick: number,
+  phase: StorylinePhase,
+  executeEnabled = false,
+): WorldState {
   let w = loadWorld(tick, {
     ...world,
     creditScores: {
@@ -123,14 +152,12 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
     restockCostUsdc: world.restockCostUsdc === "0" ? "1000000" : world.restockCostUsdc,
   });
 
-  const fayLoan = tick >= 8 ? DEMO_FAY_DEFAULTED : DEMO_FAY_APPROVED;
-  w = loadWorld(tick, { ...w, loans: mergeLoan(w.loans, fayLoan) });
+  if (!executeEnabled) {
+    const fayLoan = tick >= 8 ? DEMO_FAY_DEFAULTED : DEMO_FAY_APPROVED;
+    w = loadWorld(tick, { ...w, loans: mergeLoan(w.loans, fayLoan) });
+  }
 
   if (phase === "boom" || tick <= 3) {
-    const demoJob = {
-      ...DEMO_JOB,
-      status: tick >= 3 ? "submitted" : tick >= 2 ? "funded" : "open",
-    };
     w = loadWorld(tick, {
       ...w,
       balances: {
@@ -141,16 +168,25 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
         cy: "800000",
       },
       inventory: { ...w.inventory, bo: 1, cy: 1 },
-      jobs: [...w.jobs.filter((j) => j.id !== DEMO_JOB_ID), demoJob],
-      settledPayouts: tick >= 3 ? { ...w.settledPayouts, dee: DEMO_JOB.amountUsdc } : w.settledPayouts,
-      assignments:
-        tick >= 2
-          ? [
-              ...w.assignments.filter((a) => a.jobId !== DEMO_JOB_ID),
-              { jobId: DEMO_JOB_ID, worker: "dee", acceptedAtTick: tick - 1 },
-            ]
-          : w.assignments.filter((a) => a.jobId !== DEMO_JOB_ID),
     });
+    if (!executeEnabled) {
+      const demoJob = {
+        ...DEMO_JOB,
+        status: tick >= 3 ? "submitted" : tick >= 2 ? "funded" : "open",
+      };
+      w = loadWorld(tick, {
+        ...w,
+        jobs: [...w.jobs.filter((j) => j.id !== DEMO_JOB_ID), demoJob],
+        settledPayouts: tick >= 3 ? { ...w.settledPayouts, dee: DEMO_JOB.amountUsdc } : w.settledPayouts,
+        assignments:
+          tick >= 2
+            ? [
+                ...w.assignments.filter((a) => a.jobId !== DEMO_JOB_ID),
+                { jobId: DEMO_JOB_ID, worker: "dee", acceptedAtTick: tick - 1 },
+              ]
+            : w.assignments.filter((a) => a.jobId !== DEMO_JOB_ID),
+      });
+    }
   }
 
   if (tick === 4) {
@@ -158,14 +194,16 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
       ...w,
       inventory: { ...w.inventory, bo: 1 },
       balances: { ...w.balances, bo: "100000" },
-      loans: w.loans.filter((l) => !(l.borrower === "bo" && l.status === "pending")),
+      loans: executeEnabled
+        ? w.loans
+        : w.loans.filter((l) => !(l.borrower === "bo" && l.status === "pending")),
     });
   }
 
   if (tick >= 5 && tick <= 8) {
     w = loadWorld(tick, {
       ...w,
-      loans: mergeLoan(w.loans, DEMO_BO_LOAN),
+      loans: executeEnabled ? w.loans : mergeLoan(w.loans, DEMO_BO_LOAN),
       treasury: {
         ...w.treasury,
         utilisationBps: 2200,
@@ -178,7 +216,7 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
   if (tick === 9) {
     w = loadWorld(tick, {
       ...w,
-      loans: mergeLoan(w.loans, DEMO_BO_LOAN),
+      loans: executeEnabled ? w.loans : mergeLoan(w.loans, DEMO_BO_LOAN),
       balances: { ...w.balances, bo: "5000000" },
       treasury: {
         ...w.treasury,
@@ -219,7 +257,7 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
   if (tick >= 10) {
     w = loadWorld(tick, {
       ...w,
-      loans: withoutApprovedBoLoan(w.loans),
+      loans: executeEnabled ? w.loans : withoutApprovedBoLoan(w.loans),
       balances: { ...w.balances, bo: "5000000" },
       treasury: {
         ...w.treasury,
@@ -234,7 +272,7 @@ export function patchDemoWorld(world: WorldState, tick: number, phase: Storyline
     w = loadWorld(tick, {
       ...w,
       creditScores: { ...w.creditScores, eli: 50 },
-      loans: mergeLoan(w.loans, DEMO_FLAG_LOAN),
+      loans: executeEnabled ? w.loans : mergeLoan(w.loans, DEMO_FLAG_LOAN),
     });
   }
 
@@ -265,6 +303,7 @@ async function demoForcedActions(
   phase: StorylinePhase,
   world: WorldState,
   ledger: Ledger,
+  executeEnabled = false,
 ): Promise<StorylineForcedAction[]> {
   const forced: StorylineForcedAction[] = [];
 
@@ -280,14 +319,24 @@ async function demoForcedActions(
 
   if (tick === 7 && phase === "default") {
     if (!(await ledgerHasKindEver(ledger, "ada", "mark_default"))) {
-      forced.push({
-        agent: "ada",
-        action: {
-          kind: "mark_default",
-          loanId: DEMO_FAY_LOAN_ID,
-          amountUsdc: DEMO_FAY_APPROVED.principalUsdc,
-        },
-      });
+      if (executeEnabled) {
+        const loan = liveMarkDefaultTarget(world);
+        if (loan) {
+          forced.push({
+            agent: "ada",
+            action: { kind: "mark_default", loanId: loan.id, amountUsdc: loan.principalUsdc },
+          });
+        }
+      } else {
+        forced.push({
+          agent: "ada",
+          action: {
+            kind: "mark_default",
+            loanId: DEMO_FAY_LOAN_ID,
+            amountUsdc: DEMO_FAY_APPROVED.principalUsdc,
+          },
+        });
+      }
     }
   }
 
@@ -304,14 +353,24 @@ async function demoForcedActions(
 
   if (tick === 9) {
     if (!(await ledgerHasKindEver(ledger, "bo", "repay"))) {
-      forced.push({
-        agent: "bo",
-        action: {
-          kind: "repay",
-          loanId: DEMO_BO_LOAN_ID,
-          amountUsdc: DEMO_BO_LOAN.principalUsdc,
-        },
-      });
+      if (executeEnabled) {
+        const loan = liveBoRepayTarget(world);
+        if (loan) {
+          forced.push({
+            agent: "bo",
+            action: { kind: "repay", loanId: loan.id, amountUsdc: loan.principalUsdc },
+          });
+        }
+      } else {
+        forced.push({
+          agent: "bo",
+          action: {
+            kind: "repay",
+            loanId: DEMO_BO_LOAN_ID,
+            amountUsdc: DEMO_BO_LOAN.principalUsdc,
+          },
+        });
+      }
     }
   }
 
@@ -333,12 +392,18 @@ export async function onTick(
   }
 
   if (ctx.stage === "prepare") {
-    const world = patchDemoWorld(ctx.world, tick, phase);
+    const world = patchDemoWorld(ctx.world, tick, phase, ctx.executeEnabled);
     console.log(`[sim] storyline prepare tick=${tick} phase=${phase}`);
     return { world, forcedActions: [] };
   }
 
-  const forcedActions = await demoForcedActions(tick, phase, ctx.world, ctx.ledger);
+  const forcedActions = await demoForcedActions(
+    tick,
+    phase,
+    ctx.world,
+    ctx.ledger,
+    ctx.executeEnabled,
+  );
   console.log(`[sim] storyline finalize tick=${tick} phase=${phase} forced=${forcedActions.length}`);
   return { world: ctx.world, forcedActions };
 }
