@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **56d9b91** (Thu 10 Sep ~11:12 EDT, M7.1c #49) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
+main == origin/main at **0fd4075** (Thu 10 Sep ~11:17 EDT, M8.2a #50) unless git fetch shows otherwise. STATUS is the live log — keep it truthful and push when GitHub should match.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT.** Then Sat 12 Sep 12:00.
@@ -65,7 +65,7 @@ Pending occupies `activeLoanOf` — bo/cy cannot `request_loan` again until deny
 - M5 in_progress: M5.1 #39, M5.4 #42, M5.7 #47, **M5.8 #48 `3154be0`** on main. Open: **M5.2 map** (no PR). Mock default.
 - M6 in_progress: dry-run green; three live 12-ticks; latest 12/12 with 0 failed txs after M6.2e #40.
 - M7 in_progress: M7.1 #45 · M7.1b #46 · M7.2 #41 · M7.3 #43 · **M7.1c #49 `56d9b91`**. Remaining P2 skipped on purpose (function splits, CORS, codegen).
-- M8 todo (video + form). **M8.2a** outline tightening in flight. Stretch B/D not started.
+- M8 in_progress: **M8.2a #50** outline on main; record/upload still todo. Stretch B/D not started.
 
 ## Why a “full” PRD §12 12-tick still isn’t true
 Storyline still injects fixture ids (`L-1`, `L-2`, `J-demo`, `L-flag`). #40 skips them so live ticks don’t revert; repay/default/job-settle still do not land on the real book. Overlay hides pending bo loans at t4; ada runs before merchants so same-tick auto-approve never happens. On-chain grace is seconds (term + 120s), not ticks — a 3-min run cannot `markDefault` a new loan.
@@ -90,9 +90,8 @@ True story beats need a later card: live execute uses subgraph/on-chain ids for 
 
 ## Next up (orchestrator)
 1. **M5.2 map** — wait/nudge Dan; brief `docs/ASTRA-MAP-BRIEF.md`. Review/merge when PR opens. Do not edit `apps/web`.
-2. **M8.2a** — review/merge video outline PR (`docs/M8.2a-VIDEO-BRIEF.md`).
-3. Optional BE: live storyline ids (not L-1/J-demo) only if human wants another live 12-tick to look like §12.
-4. Checkpoint **Thu 22:00**: truth in STATUS; apply scope-cut ladder if behind (MILESTONES). Map is the remaining FE demo-risk; M8 video still todo.
-5. Do not start stretch B/D.
+2. Optional BE: live storyline ids (not L-1/J-demo) only if human wants another live 12-tick to look like §12.
+3. Checkpoint **Thu 22:00**: truth in STATUS; apply scope-cut ladder if behind (MILESTONES). Map is the remaining FE demo-risk; M8 record still todo.
+4. Do not start stretch B/D. Do not re-review merged #48/#49/#50.
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.

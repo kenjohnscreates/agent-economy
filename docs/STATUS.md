@@ -17,7 +17,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M5 Frontend | in_progress | FE | **M5.1** #39 · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 `3154be0` · **M5.2 map** still no PR · mock default |
 | M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | todo | both | |
+| M8 Video + submission | in_progress | both | **M8.2a** #50 outline on main · record still todo |
 
 ## Log
 
@@ -512,4 +512,12 @@ In progress: FE **M5.2 map** · **M8.2a** video outline (`docs/M8.2a-VIDEO-BRIEF
 Blocked: `revokeName`
 Risks changed: —
 Next up: Dan M5.2. Checkpoint Thu 22:00. No live 12-tick unless asked.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 11:17 EDT
+Done: **M8.2a** #50 squash-merged `0fd4075` T1 `VERDICT: APPROVE` (self-opened). CI green. `docs/SUBMISSION.md` filming notes: mock default, map placeholder until M5.2, mayor click on mock, live skip `L-1`/`J-demo`, no video URL. Did not edit `apps/web`. Did not approve #7/#8. Stretch B/D not started. 0 open PRs.
+In progress: FE **M5.2 map** (`docs/ASTRA-MAP-BRIEF.md`) — still no PR
+Blocked: `revokeName`
+Risks changed: —
+Next up: Dan M5.2 — `Read docs/ASTRA-MAP-BRIEF.md in full and build card M5.2 … branch card/M5.2-town-map off origin/main`. Checkpoint Thu 22:00. No live 12-tick unless asked.
 Checkpoint call: none (Thu 10 Sep 22:00)
