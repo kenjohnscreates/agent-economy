@@ -93,7 +93,7 @@ Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-s
 
 ## Demo video outline
 
-*Placeholder for M8.2 — paste link above when uploaded.*
+Target length 2–4 min. Beats are [PRD §10](PRD.md#10-demo-video-outline-24-min). **No video URL yet** (record Sunday / M8.2).
 
 | Time | Beat |
 |---|---|
@@ -104,3 +104,26 @@ Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-s
 | 2:30 | Mayor approves loan; tx on arcscan |
 | 3:00 | Architecture slide + sponsor mapping |
 | 3:30 | Close |
+
+### Filming notes (Thu 10 Sep — what is on `origin/main` now)
+
+Record against **mock**. `API_MODE=mock`. Two terminals:
+
+```bash
+pnpm --filter @agent-town/api dev:mock    # :3001
+pnpm --filter @agent-town/web dev         # :3000
+```
+
+Real is opt-in (`API_MODE=real`). Mayor POSTs return **501** without `ALLOW_BROADCAST=true`. Do not enable broadcast for this recording.
+
+**Hero / map.** M5.2 overworld still has **no PR** — `MapSlot` is the SVG placeholder (`data-map-placeholder`). If the map has not landed by record time: hero = bank panel + mayor panel + agent cards + feed, not the overworld. If M5.2 has merged by then, use the map as hero ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees)).
+
+**Mayor click (PRD §8).** Works on mock (M5.7 #47): Approve a flagged loan → toast + feed. Do **not** approve on-chain loans **#7/#8** unless the human says so. Mock toast hashes are fixture, not live arcscan proofs.
+
+**Live vs mock storyline.** A live 12-tick does **not** land repay / default / job-settle — fixture ids `L-1` / `J-demo` are skipped on live execute (#38/#40). Do not promise those beats on arcscan from a live run. The mock storyline still plays PRD §12 for the recording.
+
+**Agent cards (M5.8 #48).** Arcscan wallet link + ENS explorer link. Town = **botanica** — film `ada.botanica.eth`. Connection warming card exists for real-mode 501; not needed when filming mock.
+
+**Architecture slide (3:00).** ENS Sepolia names → Arc USDC + TownTreasury `0xCE0e…FfC1` → Studio subgraph `agent-town` → Signal C (Aave V3 + Uniswap V3). Town = **botanica**. Do not paste `SUBGRAPH_URL` (local `.env` only). Cut to [docs/architecture.png](architecture.png) / [ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview).
+
+Do not invent tx hashes. Do not claim a recorded file until M8.2 uploads it.
