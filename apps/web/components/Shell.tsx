@@ -9,6 +9,7 @@ import { API_URL, TOWN_NAME } from "@/lib/config";
 import { Controls } from "./Controls";
 import { Scoreboard } from "./Scoreboard";
 import { BankPanel } from "./BankPanel";
+import { MayorPanel } from "./MayorPanel";
 import { Feed } from "./Feed";
 import { AgentCard } from "./AgentCard";
 import { MapSlot } from "./MapSlot";
@@ -125,6 +126,12 @@ export function Shell() {
         <aside className="column" aria-label="Panels">
           <Scoreboard scoreboard={state.scoreboard} reducedMotion={reducedMotion} />
           <BankPanel scoreboard={state.scoreboard} loans={state.loans} tick={state.tick} />
+          <MayorPanel
+            pendingLoans={state.pendingLoans}
+            scoreboard={state.scoreboard}
+            mode={mode}
+            onLoansChanged={controls.refreshLoans}
+          />
           <Feed items={state.feed} pending={state.pendingLoans} />
         </aside>
       </main>

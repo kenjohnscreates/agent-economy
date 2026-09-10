@@ -457,3 +457,11 @@ Blocked: `revokeName`
 Risks changed: —
 Next up: Dan M5.7. Optional BE: live storyline ids (only if we want another 12-tick to look like §12). Checkpoint Thu 22:00.
 Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Wed 9 Sep 23:10 EDT (FE)
+Done: **M5.7** mayor panel on `card/M5.7-mayor-panel` off main `36b4445`: Fund (human USDC through `parseUsdc`, zero and malformed amounts rejected client-side), loan queue from `state.pendingLoans` with advisor reasoning and Approve / Deny, base rate slider 100 to 2000 bps in 10 bps steps seeded from `scoreboard.rate.baseRateBps`. Local toast stack (no library): success shows `{kind} · {txHash.slice(0,10)}…` plus the arcscan link, errors show the API message, 501 shows the ALLOW_BROADCAST wording. After a loan decision the panel calls a new `controls.refreshLoans()` in `useTown` so the row leaves the queue before the next tick. Replay mode disables every action. `lib/mayor.ts` unit-tested (5 tests, 23 web tests total). Headless mock run: fund, rate, tick 9 `L-3` approve, feed `approve_loan`, bank loan book updated, zero console errors.
+In progress: M5.2 map next (`docs/ASTRA-MAP-BRIEF.md`), then M5.8 `API_MODE=real`.
+Blocked: —
+Risks changed: —
+Next up: M5.2, then M5.8.
+Checkpoint call: none

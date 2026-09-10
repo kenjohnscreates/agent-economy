@@ -16,6 +16,8 @@ export interface TownControls {
   resume(): void;
   setSpeed(x: number): void;
   seekTick(tick: number): void;
+  /** Refetch `/loans` now (live only), e.g. after a mayor decision, so the queue updates before the next tick. */
+  refreshLoans(): void;
 }
 
 export function useTown(source: TownSource | null): {
@@ -114,6 +116,19 @@ export function useTown(source: TownSource | null): {
     replayRef.current?.setSpeed(x);
   }, []);
   const seekTick = useCallback((t: number) => replayRef.current?.seekTick(t), []);
+  const refreshLoans = useCallback(() => {
+    if (!source || source.mode !== "live") return;
+    api
+      .loans(undefined, source.apiUrl)
+      .then((l) => dispatch({ event: "loans", data: l }))
+      .catch(() => undefined);
+  }, [source]);
 
-  return { state, controls: { pause, resume, setSpeed, seekTick }, error, speed, paused };
+  return {
+    state,
+    controls: { pause, resume, setSpeed, seekTick, refreshLoans },
+    error,
+    speed,
+    paused,
+  };
 }
