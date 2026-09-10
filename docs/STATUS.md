@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | done | FE | **M5.1** #39 · **M5.2** #51 `9721597` · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 · mock default |
-| M6 Integration + demo | in_progress | both | **M6.1 dry-run done** · live 12-tick ×3 · **0 failed txs** on latest · **#7/#8 pending** (not approved) · M6.2 #35–#38 + **#40** |
+| M6 Integration + demo | in_progress | both | **M6.3** #52 · live 12-tick ×4 · **#7/#8 repaid** · mark_default missed (rules repaid first) · accept_job reverts |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
 | M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero (#51) · record still todo |
 
@@ -536,4 +536,20 @@ In progress: M8 record (Sun) · M6 still in_progress (fixture ids vs live)
 Blocked: `revokeName`
 Risks changed: map demo-risk closed. Remaining: live §12 beats still skip `L-1`/`J-demo`; video not recorded.
 Next up: Checkpoint Thu 22:00. No live 12-tick unless asked. Film against mock; map is hero.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 15:26 EDT
+Done: **M6.3** #52 squash-merged `4b24b6f` T1 `VERDICT: APPROVE`. Live storyline uses numeric ids; dry-run fixtures unchanged. Gate A: deployer `fund(8 USDC)` [0xe457d01e…](https://testnet.arcscan.app/tx/0xe457d01e310c81ed62934aebc0b97ac47cb5ae967236ead23ab651f69afe4709) · ada **approveLoan #7** bo [0x812f3496…](https://testnet.arcscan.app/tx/0x812f34960f0dae41821e3abbf74141127c27407ef34e1ffc1301d0a27a30dd5a) · **#8** cy [0x01d9de61…](https://testnet.arcscan.app/tx/0x01d9de61cff4cd16fa5c1c11640fbf48c7528298e7486413c192239b3b9e5b68). Waiting term+grace (60+120s) then live `--ticks 12 --yes`. Will **not** markDefault bo (#2 already defaulted → 2nd would revokeName). t7 default = cy #8; t9 repay = bo #7.
+In progress: live 12-tick after grace
+Blocked: `revokeName`
+Risks changed: —
+Next up: live 12-tick. Checkpoint Thu 22:00.
+Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 15:35 EDT
+Done: Gate A live `--ticks 12 --yes` 12/12 `execute=LIVE` (~166 s) after M6.3. **On-chain repay landed:** cy #8 t4 · bo #7 t5 (also cy t5; t6 cy repay skipped). Complete also: gus/hal **buy** t1–3; bo/cy **post_job** t1–4; ada **pay_stipend** t3+t6+t9+t12; ada **set_rate** t9. Skipped: request_loan t1–4 (`activeLoanOf` until repay). **t7 mark_default forced=0** — rules repaid #7/#8 before default tick (no Active loan left). dee **accept_job failed** every tick (`ESTIMATION_ERROR` revert — likely non-roster / unfunded ERC-8183 ids). stats: loanCount 8, outstanding 0, defaults **1** (still #2), rate 839, deposits 0.92, free 5.5 USDC. Did not revoke names. Did not default bo (2nd default gated).
+In progress: M8 record
+Blocked: `revokeName`
+Risks changed: live repay works; live default still unmet unless we hold repay until after t7 and keep an Active non-bo loan. Job settle still broken on shared ERC-8183.
+Next up: Checkpoint Thu 22:00. Optional follow-up: suppress live merchant repay until after t7, then new cy loan + grace for markDefault. Stretch B/D not started.
 Checkpoint call: none (Thu 10 Sep 22:00)
