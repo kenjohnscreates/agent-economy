@@ -12,6 +12,7 @@ import type {
   StorylinePhase,
   TxEvent,
 } from "@agent-town/shared";
+import { upsertLoan } from "./rate";
 
 export type StreamStatus = "idle" | "connecting" | "live" | "replay" | "reconnecting" | "error";
 
@@ -35,6 +36,9 @@ export interface TownState {
   /** Roster order, so the grid is stable. */
   order: string[];
   scoreboard: ScoreboardResponse | null;
+  /** Every loan the API knows about (all statuses); the bank panel's loan book. */
+  loans: Loan[];
+  /** Flagged loans waiting on the mayor; derived from `loans` plus `loan_flagged` events. */
   pendingLoans: Loan[];
   feed: FeedItem[];
   lastTx: TxEvent | null;
@@ -51,6 +55,7 @@ export function initialState(): TownState {
     agents: {},
     order: [],
     scoreboard: null,
+    loans: [],
     pendingLoans: [],
     feed: [],
     lastTx: null,
@@ -82,7 +87,7 @@ export function reduce(s: TownState, a: TownAction): TownState {
       return { ...s, agents, order };
     }
     case "loans":
-      return { ...s, pendingLoans: a.data.filter((l) => l.status === "pending") };
+      return { ...s, loans: a.data, pendingLoans: a.data.filter((l) => l.status === "pending") };
     case "tick":
       return { ...s, tick: a.data.tick, phase: a.data.phase, ...pushFeed(s, a) };
     case "tx":
@@ -96,7 +101,12 @@ export function reduce(s: TownState, a: TownAction): TownState {
     }
     case "loan_flagged": {
       const others = s.pendingLoans.filter((l) => l.id !== a.data.id);
-      return { ...s, pendingLoans: [...others, a.data], ...pushFeed(s, a) };
+      return {
+        ...s,
+        loans: upsertLoan(s.loans, a.data),
+        pendingLoans: [...others, a.data],
+        ...pushFeed(s, a),
+      };
     }
     case "scoreboard":
       return { ...s, scoreboard: a.data, tick: Math.max(s.tick, a.data.ticks) };
