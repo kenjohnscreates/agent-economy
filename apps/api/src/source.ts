@@ -43,22 +43,3 @@ export interface DataSource {
   /** Subscribe to live events; returns an unsubscribe fn. */
   subscribe(listener: SseListener): () => void;
 }
-
-/** Real mode placeholder until M4.7 — every call answers 501. */
-export function notImplementedSource(): DataSource {
-  const nyi = (): never => {
-    throw new SourceError(501, "NOT_IMPLEMENTED", "real mode lands in M4.7");
-  };
-  return {
-    mode: "real",
-    getState: nyi,
-    getAgents: nyi,
-    getAgent: nyi,
-    getScoreboard: nyi,
-    getLoans: nyi,
-    mayorFund: nyi,
-    mayorLoanDecision: nyi,
-    mayorRate: nyi,
-    subscribe: nyi,
-  };
-}
