@@ -148,6 +148,7 @@ export async function runSingleTick(
     stage: "prepare",
     world: baseWorld,
     ledger,
+    executeEnabled: config.executeEnabled,
   });
   const world = prepared.world;
   for (const agent of ROSTER) {
@@ -192,6 +193,7 @@ export async function runSingleTick(
     stage: "finalize",
     world,
     ledger,
+    executeEnabled: config.executeEnabled,
   });
   for (const { agent, action } of finalized.forcedActions) {
     const { status } = await persistAction(ledger, nextTick, agent, action, config, deps.executeAction);
