@@ -2,11 +2,13 @@
 // App shell (M5.1, M5.8, M5.10): Forest surface, world window on the left, panels on the right.
 // The world card frames the map at its whole-number scale and captions it underneath.
 // Runs live against the API by default (mock or real, same contract); the replay toggle
-// loads fixtures/replay.json. While the live snapshot cannot load, a connection card
-// explains why and keeps retrying; the header shows the API mode and feature flags.
+// loads fixtures/replay.json. While the live snapshot cannot load, or once a live stream
+// drops under a page that already has a town on it, a connection card explains why and
+// offers retry or replay; the header shows the API mode and feature flags.
 import { useEffect, useMemo, useState } from "react";
 import { ROSTER } from "@agent-town/shared";
 import { useTown, type TownSource } from "@/lib/useTown";
+import type { ConnectPhase } from "@/lib/connect";
 import { ReplayFileSchema, type ReplayFile } from "@/lib/replay";
 import { API_URL, TOWN_NAME } from "@/lib/config";
 import { Controls } from "./Controls";
@@ -19,6 +21,16 @@ import { MapSlot } from "./MapSlot";
 import { Wordmark } from "./Wordmark";
 
 type Mode = "live" | "replay";
+
+// Headings for the connection card. The stream ones read differently from the cold-start
+// ones on purpose: there the page has nothing, here the town is on screen but frozen.
+const CONNECT_TITLES: Record<ConnectPhase, string> = {
+  warming: "Town API is warming up",
+  unreachable: "Cannot reach the town API",
+  failed: "Town API error",
+  "stream-dropped": "Live stream dropped",
+  "stream-closed": "Live stream closed",
+};
 
 export function Shell() {
   const [mode, setMode] = useState<Mode>("live");
@@ -132,13 +144,7 @@ export function Shell() {
           {error ? (
             <div className="card connect" data-phase={error.phase} role="status">
               <div className="card-title">
-                <span className="h3">
-                  {error.phase === "warming"
-                    ? "Town API is warming up"
-                    : error.phase === "unreachable"
-                      ? "Cannot reach the town API"
-                      : "Town API error"}
-                </span>
+                <span className="h3">{CONNECT_TITLES[error.phase]}</span>
                 <span className="label">
                   attempt {error.attempt} · {API_URL}
                 </span>

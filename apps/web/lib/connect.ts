@@ -22,7 +22,12 @@ export function backoffMs(attempt: number): number {
   return Math.min(BACKOFF_CAP_MS, BACKOFF_BASE_MS * 2 ** (n - 1));
 }
 
-export type ConnectPhase = "warming" | "unreachable" | "failed";
+export type ConnectPhase =
+  | "warming"
+  | "unreachable"
+  | "failed"
+  | "stream-dropped"
+  | "stream-closed";
 
 /** What to tell the mayor while the snapshot keeps failing. */
 export function describeConnect(
@@ -43,4 +48,31 @@ export function describeConnect(
   }
   const msg = err instanceof Error ? err.message : String(err);
   return { phase: "failed", text: `The town API answered with an error: ${msg}` };
+}
+
+/**
+ * The two live-stream statuses that mean frames have stopped arriving.
+ * "reconnecting" is the browser still retrying by itself; "error" is a closed stream.
+ */
+export type StreamDrop = "reconnecting" | "error";
+
+/**
+ * What to tell the mayor when the stream drops under a page that is already live.
+ * Different from describeConnect: there is a town on screen, it is just frozen at the
+ * last frame we received, so the wording says that rather than "cannot reach the API".
+ */
+export function describeStreamDrop(
+  status: StreamDrop,
+  apiUrl: string,
+): { phase: ConnectPhase; text: string } {
+  if (status === "reconnecting") {
+    return {
+      phase: "stream-dropped",
+      text: `The live stream from ${apiUrl} stopped sending. The town below is the last state that arrived, and the browser is already retrying on its own. Retry now to reload the snapshot and reattach, or switch to replay.`,
+    };
+  }
+  return {
+    phase: "stream-closed",
+    text: `The live stream from ${apiUrl} closed and the browser has given up retrying. The town below is the last state that arrived. Retry now to reload the snapshot and reattach, or switch to replay.`,
+  };
 }
