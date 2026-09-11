@@ -1,5 +1,6 @@
 "use client";
-// App shell (M5.1, M5.8): Forest surface, world window on the left, panels on the right.
+// App shell (M5.1, M5.8, M5.10): Forest surface, world window on the left, panels on the right.
+// The world card frames the map at its whole-number scale and captions it underneath.
 // Runs live against the API by default (mock or real, same contract); the replay toggle
 // loads fixtures/replay.json. While the live snapshot cannot load, a connection card
 // explains why and keeps retrying; the header shows the API mode and feature flags.
@@ -109,15 +110,17 @@ export function Shell() {
       <main className="main">
         <section className="column" aria-label="Town">
           <div className="card world">
-            <MapSlot
-              agents={agents}
-              lastTx={state.lastTx}
-              tick={state.tick}
-              phase={state.phase}
-              selected={selected}
-              onSelectAgent={setSelected}
-              reducedMotion={reducedMotion}
-            />
+            <div className="map-frame">
+              <MapSlot
+                agents={agents}
+                lastTx={state.lastTx}
+                tick={state.tick}
+                phase={state.phase}
+                selected={selected}
+                onSelectAgent={setSelected}
+                reducedMotion={reducedMotion}
+              />
+            </div>
             <div className="statement">
               <div className="h2">Agents grow the economy.</div>
               <div className="label" style={{ marginTop: 6 }}>
