@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **917a31c** unless git fetch shows otherwise (Thu 10 Sep ~21:50 EDT after #53/#54/#55 + mock walk). STATUS is the live log — keep it truthful and push when GitHub should match. If STATUS lags HEAD, refresh this file.
+main == origin/main at **9fbf0cd** unless git fetch shows otherwise (Thu 10 Sep ~22:20 EDT after **M6.4** #56). STATUS is the live log — keep it truthful and push when GitHub should match. If STATUS lags HEAD, refresh this file.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT — DONE (no scope-cut).** Next: **Sat 12 Sep 12:00**.
@@ -34,7 +34,7 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 - **Kenny has now seen the UI** (mock walk Thu 21:50). Film mock; map is hero.
 
 ## Open PRs
-None as of Thu 21:50. T1 any new Dan polish if it lands. Frozen: `packages/shared`, MapSlot **props** (`MapSlotProps`/`ZONES`/`zonePoint`). No `ALLOW_BROADCAST`. Squash-merge from **primary** checkout.
+None as of Thu 22:20. T1 any new Dan polish if it lands. Frozen: `packages/shared`, MapSlot **props** (`MapSlotProps`/`ZONES`/`zonePoint`). No `ALLOW_BROADCAST`. Squash-merge from **primary** checkout.
 
 ## Live artifacts (do not redo deploys)
 - TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` Arc 5042002
@@ -62,18 +62,18 @@ bo/cy `activeLoanOf` clear. Mayor **mock** queue is fixtures (`L-flag`), not #7/
 
 ## Board
 - M0–M5 **done**. Mock default. FE polish #53/#54/#55 on main.
-- M6 in_progress: dry-run green; four live 12-ticks. **Repay lands** (#7/#8). Live `markDefault` unmet (rules repaid before t7). dee `accept_job` reverts on shared ERC-8183.
-- M7: findings + rate-stack + README + SUBMISSION + P2 nits landed. Leftover P2: function splits, CORS, codegen `any`.
+- M6 in_progress: dry-run green; **M6.4** #56 on main (repay held to t9; roster/funded jobs). Live `markDefault` still unmet — outstanding 0; need a **non-bo** Active loan past grace, then Gate A `--yes`.
+- M7: findings + rate-stack + README + SUBMISSION + P2 nits landed. Leftover P2: function splits, CORS, codegen `any` — skip.
 - M8: outline on main; **mock walk done**; **record still todo**. Film **mock**, map is hero.
 - Stretch B/D **not started**. Do not start.
 
 ## Why live still ≠ PRD §12
-M6.3 (#52) stopped emitting `L-1`/`J-demo` on live execute. Repay landed. Remaining:
-- Rules repay Active loans ASAP → t7 `mark_default` has nothing unless we hold repay until after t7 + a **non-bo** Active loan past grace (term 60s + grace 120s).
-- dee `accept_job` reverts (foreign/unfunded ERC-8183 ids). Filter to roster+funded.
-- Do not default **bo**.
+M6.4 (#56) holds live `repay` until t9 and filters `accept_job` to funded + unassigned roster jobs. Remaining is **chain state**, not code:
+- Outstanding is 0. t7 `markDefault` needs a **non-bo** Active loan past term+grace (60s+120s). Do not default **bo**.
+- Job settle still depends on roster-owned funded ERC-8183 ids (createJob already sets dee).
+- Fixture ids `L-1` / `J-demo` still skipped on live execute (intentional).
 
-Optional BE only if human asks. Not blocking video (mock still plays §12).
+Not blocking video (mock still plays §12). Gate A live 12-tick only if human asks.
 
 ## Video
 Record against mock. Commands:
@@ -105,10 +105,10 @@ Walk evidence (Thu 21:50): Pixi map + coins; bank rate stack; Approve L-3 → fe
 - Do not start stretch B (Gateway) or D (open deposits)
 
 ## Next up (orchestrator)
-1. **M8 record** (mock, map hero). Form Sun.
-2. Optional BE (only if asked): hold live repay until after t7; roster-filter `accept_job`.
+1. **M8 record** (mock, map hero). ETHGlobal form Sun.
+2. Optional Gate A live 12-tick (only if asked): need a **non-bo** Active loan past 180s grace first. Do not default bo.
 3. T1 any new Dan polish PRs.
-4. Do not start stretch B/D. Do not re-review merged #48–#55.
+4. Do not start stretch B/D. Do not re-review merged #48–#56. Skip leftover P2.
 5. Sat 12:00 checkpoint.
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.

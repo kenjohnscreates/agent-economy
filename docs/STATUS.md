@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock default |
-| M6 Integration + demo | in_progress | both | **M6.3** #52 · live 12-tick ×4 · **#7/#8 repaid** · mark_default missed (rules repaid first) · accept_job reverts |
+| M6 Integration + demo | in_progress | both | **M6.4** #56 · repay held to t9 · roster/funded jobs · live `markDefault` still Gate A (outstanding 0) |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
 | M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero · **mock walk 1440×900 done** · record still todo |
 
@@ -571,3 +571,11 @@ Blocked: `revokeName`
 Risks changed: —
 Next up: **M8 record** against mock; map is hero. Optional BE only if asked (hold repay past t7; roster-filter `accept_job`). Do not start stretch B/D.
 Checkpoint call: **Thu 22:00 — no scope-cut** (mayor click + map + mock §12 all work). Next checkpoint Sat 12 Sep 12:00.
+
+## Thu 10 Sep 22:20 EDT
+Done: **M6.4** #56 squash-merged `9fbf0cd` T1 inherit `VERDICT: APPROVE`. CI green. Live `repay` skipped until tick 9; workers `accept_job` only funded + unassigned roster jobs; named provider hydrates assignments (deliver, not `setProvider`); foreign providers stay non-empty; rules skip `markDefault` bo. Dry-run `--ticks 12` still plays fixture beats. sim **110/110**. Did not `--yes` / `ALLOW_BROADCAST`. Did not edit `apps/web`. Stretch B/D not started.
+In progress: M8 record (Sun) · M6 live `markDefault` still unmet (outstanding 0 — need a **non-bo** Active loan past 60s+120s grace, then Gate A `--ticks 12 --yes`)
+Blocked: `revokeName`
+Risks changed: code now holds repay past t7; chain still has no Active loan to default.
+Next up: **M8 record** (mock, map hero). Optional Gate A live 12-tick only if human asks. Leftover P2 (function splits, CORS, codegen `any`) skip. Do not start stretch B/D.
+Checkpoint call: none (Thu 22:00 already logged). Next Sat 12 Sep 12:00.
