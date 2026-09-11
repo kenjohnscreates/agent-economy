@@ -1,6 +1,7 @@
 "use client";
-// Local toast stack for mayor actions (M5.7). No library: a small hook plus a fixed
-// list. Success toasts carry the arcscan link; error toasts stay until dismissed.
+// Local toast stack for mayor actions (M5.7). No library: a small hook plus a list that
+// sits in the flow at the foot of the mayor card, so a toast never covers the mayor's own
+// controls. Success toasts carry the arcscan link; error toasts stay until dismissed.
 import { useCallback, useRef, useState } from "react";
 import { ExternalLink, X } from "lucide-react";
 import type { Toast } from "@/lib/mayor";
