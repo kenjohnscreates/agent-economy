@@ -10,6 +10,7 @@ import {
   type CreateTransferTransactionInput,
   type CreateWalletSetInput,
   type CreateWalletsInput,
+  type DeriveWalletInput,
   type GetTransactionInput,
   type GetWalletSetInput,
   type GetWalletTokenBalanceInput,
@@ -19,6 +20,9 @@ import { z } from "zod";
 
 /** Circle blockchain identifier for Arc Testnet (Circle `Blockchain` enum). */
 export const ARC_TESTNET_BLOCKCHAIN = "ARC-TESTNET" as const;
+
+/** Circle blockchain identifier for Ethereum Sepolia (Gateway deposit source). */
+export const ETH_SEPOLIA_BLOCKCHAIN = "ETH-SEPOLIA" as const;
 
 /** Env vars this package needs for live calls. Secrets are redacted in errors. */
 export const CircleEnvSchema = z.object({
@@ -98,6 +102,8 @@ export interface CircleClient {
   createWalletSet(input: CreateWalletSetInput): Promise<{ data?: { walletSet: { id: string } } }>;
   getWalletSet(input: GetWalletSetInput): Promise<{ data?: { walletSet: { id: string } } }>;
   createWallets(input: CreateWalletsInput): Promise<{ data?: { wallets: CircleWallet[] } }>;
+  /** PUT /v1/w3s/developer/wallets/{id}/blockchains/{blockchain} — same 0x on a new EVM chain. */
+  deriveWallet(input: DeriveWalletInput): Promise<{ data?: { wallet?: CircleWallet } }>;
   listWallets(input?: ListWalletsInput): Promise<{ data?: { wallets: CircleWallet[] } }>;
   createContractExecutionTransaction(
     input: CreateContractExecutionTransactionInput,

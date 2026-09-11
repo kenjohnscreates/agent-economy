@@ -20,6 +20,7 @@ function mockClient(over: Partial<CircleClient> = {}): CircleClient {
         })),
       },
     })),
+    deriveWallet: vi.fn(),
     listWallets: vi.fn(async () => ({ data: { wallets: [] } })),
     createContractExecutionTransaction: vi.fn(),
     createTransaction: vi.fn(),

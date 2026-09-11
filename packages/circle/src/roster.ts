@@ -70,3 +70,9 @@ export function walletFor(roster: WalletRoster, name: WalletName): RosterWallet 
   if (!w) throw new Error(`roster.json has no wallet for "${name}" — run setup-wallets`);
   return w;
 }
+
+/** Case-insensitive address → roster row (CREATE2 clones share 0x across chains). */
+export function rosterOwnerOfAddress(roster: WalletRoster, address: string): RosterWallet | undefined {
+  const needle = address.toLowerCase();
+  return roster.wallets.find((w) => w.address.toLowerCase() === needle);
+}

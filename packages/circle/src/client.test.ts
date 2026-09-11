@@ -30,6 +30,7 @@ describe("parseCircleEnv", () => {
       CIRCLE_ENTITY_SECRET: SECRET,
     });
     expect(typeof c.createWallets).toBe("function");
+    expect(typeof c.deriveWallet).toBe("function");
     expect(typeof c.getTransaction).toBe("function");
   });
 });

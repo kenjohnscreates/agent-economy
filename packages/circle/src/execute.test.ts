@@ -32,6 +32,7 @@ function client(over: Partial<CircleClient>): CircleClient {
     createWalletSet: vi.fn(),
     getWalletSet: vi.fn(),
     createWallets: vi.fn(),
+    deriveWallet: vi.fn(),
     listWallets: vi.fn(),
     createContractExecutionTransaction: vi.fn(async () => ({
       data: { id: "tx-exec", state: "INITIATED" },
