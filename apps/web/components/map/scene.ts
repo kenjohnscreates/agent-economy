@@ -10,7 +10,7 @@ import { formatUsdc } from "../../lib/usdc";
 import { AgentMotion } from "./agents";
 import { CoinPool } from "./coins";
 import { makePath, route, type Point } from "./paths";
-import { Chip, wrapText } from "./hud";
+import { Chip, stackChips, wrapText, type ChipBox } from "./hud";
 import { loadAssets, type MapAssets, type Frames } from "./assets";
 
 interface AgentView {
@@ -42,6 +42,9 @@ export class TownScene {
     LAYERS.map((name) => [name, new Container()]),
   ) as Record<(typeof LAYERS)[number], Container>;
   private readonly agents: AgentView[] = [];
+  /** Agents with a live speech chip this frame, and their reused layout rectangles. */
+  private readonly speakers: AgentView[] = [];
+  private readonly speechBoxes: ChipBox[] = [];
   private readonly coins: CoinView[] = [];
   private readonly clouds: Sprite[] = [];
   private readonly foam: Sprite[] = [];
@@ -288,14 +291,57 @@ export class TownScene {
       a.sprite.position.set(Math.round(m.x) - 24, Math.round(m.y) - 47);
       a.ring.position.set(Math.round(m.x), Math.round(m.y));
       a.label.place(m.x - a.label.chipWidth / 2, m.y - 54);
-      a.speech.visible = m.elapsed < m.speechUntil;
-      a.speech.place(m.x - a.speech.chipWidth / 2, m.y - 58 - a.speech.chipHeight);
       a.emote.visible = m.elapsed < m.emoteUntil;
       a.emote.position.set(
         Math.max(0, Math.min(624, Math.round(m.x) + 13)),
         Math.max(0, Math.round(m.y) - 46),
       );
       if (m.data.name === this.hovered) this.hover.place(m.x + 18, m.y - 30);
+    }
+    this.layoutSpeech();
+  }
+
+  /**
+   * Speech chips used to sit at a fixed height above each head, so two agents standing
+   * together drew their lines on top of each other and neither could be read (M5.13).
+   * Chips are laid out together now: newest speech keeps the spot beside its own head and
+   * older chips are lifted clear of it, or dropped when there is no room left.
+   *
+   * Remaining speech time is the sort key. It compares across agents because every
+   * controller advances by the same ms each frame, and the agent name breaks ties, so the
+   * order holds still from frame to frame and no chip can shuffle or bounce.
+   */
+  private layoutSpeech(): void {
+    this.speakers.length = 0;
+    for (const a of this.agents) {
+      a.speech.visible = false;
+      if (a.motion.elapsed < a.motion.speechUntil) this.speakers.push(a);
+    }
+    if (this.speakers.length === 0) return;
+    this.speakers.sort((p, q) => {
+      const left =
+        q.motion.speechUntil - q.motion.elapsed - (p.motion.speechUntil - p.motion.elapsed);
+      return left !== 0 ? left : p.motion.data.name < q.motion.data.name ? -1 : 1;
+    });
+    for (let i = 0; i < this.speakers.length; i++) {
+      const { motion: m, speech } = this.speakers[i]!;
+      let box = this.speechBoxes[i];
+      if (!box) {
+        box = { x: 0, y: 0, width: 0, height: 0, visible: false };
+        this.speechBoxes[i] = box;
+      }
+      box.width = speech.chipWidth;
+      box.height = speech.chipHeight;
+      box.x = m.x - speech.chipWidth / 2;
+      box.y = m.y - 58 - speech.chipHeight;
+      box.visible = false;
+    }
+    stackChips(this.speechBoxes, this.speakers.length);
+    for (let i = 0; i < this.speakers.length; i++) {
+      const speech = this.speakers[i]!.speech,
+        box = this.speechBoxes[i]!;
+      speech.visible = box.visible;
+      speech.place(box.x, box.y);
     }
   }
 

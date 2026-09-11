@@ -77,7 +77,67 @@ export class Chip extends Container {
     this.background.height = this.chipHeight;
   }
   place(x: number, y: number): void {
-    this.x = Math.max(1, Math.min(639 - this.chipWidth, Math.round(x)));
-    this.y = Math.max(1, Math.min(359 - this.chipHeight, Math.round(y)));
+    this.x = clampX(x, this.chipWidth);
+    this.y = clampY(y, this.chipHeight);
+  }
+}
+
+/** Native frame from the brand book, the same 640x360 the scene renders into. */
+export const MAP_WIDTH = 640;
+export const MAP_HEIGHT = 360;
+/** Whole pixels of clear space kept between two chips, horizontally and vertically. */
+export const CHIP_GAP = 2;
+
+function clampX(x: number, width: number): number {
+  return Math.max(1, Math.min(MAP_WIDTH - 1 - width, Math.round(x)));
+}
+function clampY(y: number, height: number): number {
+  return Math.max(1, Math.min(MAP_HEIGHT - 1 - height, Math.round(y)));
+}
+
+/** A chip's wanted rectangle on the way in, its resolved rectangle on the way out. */
+export interface ChipBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+}
+
+/**
+ * Keeps speech chips off each other (M5.13). Boxes arrive in priority order, newest
+ * speech first, each one asking for the spot directly above its own agent. The first box
+ * gets what it asked for; every later box that would land on an already placed one is
+ * lifted to sit a whole `gap` of pixels above it, so it still points down at its own
+ * agent and still reads as that agent's line. A box with no room left above the frame is
+ * hidden instead, which caps how many chips show at once with the newest winning.
+ *
+ * Boxes are resolved in place so the animation loop allocates nothing, and the result is
+ * a pure function of the wanted rectangles: same input, same integer output, no easing,
+ * no per-frame drift, nothing that could bounce.
+ */
+export function stackChips(boxes: ChipBox[], count = boxes.length, gap = CHIP_GAP): void {
+  for (let i = 0; i < count; i++) {
+    const box = boxes[i]!;
+    box.x = clampX(box.x, box.width);
+    let y = clampY(box.y, box.height);
+    // Each pass lifts above at least one placed box and y only ever decreases, so the
+    // worst case is one pass per box already on the map.
+    for (let pass = 0; pass <= i; pass++) {
+      let lifted = false;
+      for (let j = 0; j < i; j++) {
+        const other = boxes[j]!;
+        if (!other.visible) continue;
+        if (box.x >= other.x + other.width + gap) continue;
+        if (other.x >= box.x + box.width + gap) continue;
+        if (y >= other.y + other.height + gap) continue;
+        if (other.y >= y + box.height + gap) continue;
+        y = other.y - box.height - gap;
+        lifted = true;
+      }
+      if (!lifted) break;
+    }
+    box.visible = y >= 1;
+    box.y = Math.max(1, y);
   }
 }
