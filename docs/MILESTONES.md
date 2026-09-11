@@ -6,7 +6,7 @@ Rule: one PR per card; reviewer gate before merge; master updates [STATUS](STATU
 
 Checkpoints (master decides scope cuts): **Thu 22:00** (done, no cut) · **Sat 12:00**.
 
-**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). Deliver fix `bc6e112`. `API_MODE=real` + Supabase. M8 = record live Saturday. M9.1 Gateway authorized Friday. D off.
+**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). Deliver fix `a475ccb`. `API_MODE=real` + Supabase. M8 = record live Saturday. M9.1 Gateway authorized Friday. D off. Studio 429 until Fri 15:22 EDT.
 
 ---
 

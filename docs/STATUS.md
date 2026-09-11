@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
-| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `bc6e112` · `API_MODE=real` + Supabase ledger |
+| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase ledger · **Studio 429 until Fri 15:22 EDT** |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
 | M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · Gateway Fri spike · freeze Sun 08:00 |
 
@@ -624,3 +624,14 @@ Done: `docs/MASTER-HANDOFF.md` pickup for next Master. Cycle + git-email + empty
 In progress: live UI walk · Fri Gateway · Sat record
 Blocked: `revokeName` · 2nd default on **bo**
 Next up: walk UI + mayor #11 · Gateway Fri. Do not `--ticks 12 --yes` until #11.
+
+## Fri 11 Sep 09:05 EDT
+Done: `git fetch` · HEAD `76a711a` == `origin/main`. Deliver SHA in docs → `a475ccb` (rewrite). **#57** OPEN MERGEABLE CI green (Dan `don-radman` email correct) — T1 inherit in flight. Live UI 1440×900 `http://localhost:3000`: header **api · real**, map 8 agents, town rate **8.29%**, defaults **2**, treasury **2.22**, mayor queue **#11** 0.20 USDC Approve/Deny. Did **not** click Approve. Loan book shows cy as `0xc0469ad2…` (subgraph `ensName` null).
+Done: dry-run `pnpm --filter @agent-town/sim tick -- --once` (no `--yes`) → Supabase tick **1** + 8 narration + skipped buys/jobs. **No** `approve_loan` (cy score unset → flag). Chain #11 still Pending.
+Blocked: **Graph Studio 429** — real API `:3001` (PID ~8831, up since 03:50 UTC) burned 3000/15s polls; `x-ratelimit-remaining: 0` reset **Fri 15:22 EDT**. Refresh throw after ledger read → UI cache frozen at tick 0 / empty speech (signals fetched 03:50 UTC). **Left that process up** (only warm scoreboard/mayor cache). `--watch` restart now → 501.
+In progress: **#57** T1 · **M6.6** graph backoff brief [`docs/M6.6-GRAPH-BACKOFF-BRIEF.md`](M6.6-GRAPH-BACKOFF-BRIEF.md) · Gateway waits on wallet gate
+Blocked: `revokeName` · 2nd default on **bo** · Studio until 15:22 · **M9.1 wallets** (say `approve M9.1 wallets`)
+Risks changed: live SSE/speech blocked until backoff + quota reset. Do not hammer Studio.
+Next up: T1+#57 squash-merge · M6.6 worktree `/tmp/wt-m6.6` (do not touch primary `apps/api`) · restart API **after 15:22** · Gateway only after wallet gate · Sat record. Do not `--ticks 12 --yes` until #11.
+`touching:` M6.6 `apps/api/src/real/store.ts` (worktree only). Dan #57 `apps/web` RateTooltip + map hud/scene.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.

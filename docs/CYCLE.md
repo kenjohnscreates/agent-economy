@@ -84,7 +84,7 @@ Town wakes. Consumers shop. Merchants hire. A worker delivers and saves.
 | **2** | boom | **dee** **deliver** (after 1 tick). More buys. | dee “delivering / coin in the bank.” |
 | **3** | boom | **bo** **complete_job** (escrow → dee). **dee** **deposit** 20%. **ada** **pay_stipend**. | dee deposit line; hal “stipend landed.” |
 
-- **BE:** `buy` = Circle ERC-20 transfer. `post_job` + `fund_escrow` = ERC-8183 create/fund (`0x0747…`). `accept_job` / `deliver` / `complete_job` = setProvider / submit / complete. Live skips fixture ids `J-demo` / `L-1`. Deliver only if job still **funded** (re-submit reverts — `bc6e112`). `deposit` = TownTreasury. Subgraph indexes within seconds → scoreboard GDP.
+- **BE:** `buy` = Circle ERC-20 transfer. `post_job` + `fund_escrow` = ERC-8183 create/fund (`0x0747…`). `accept_job` / `deliver` / `complete_job` = setProvider / submit / complete. Live skips fixture ids `J-demo` / `L-1`. Deliver only if job still **funded** (re-submit reverts — `a475ccb`). `deposit` = TownTreasury. Subgraph indexes within seconds → scoreboard GDP.
 - **Live already:** buys, post_job, some dee deliver, stipends on the M6.5 run.
 
 ### Ticks 4–5 — borrow (~0:45–1:15)
