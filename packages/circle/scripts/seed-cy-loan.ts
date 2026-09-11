@@ -28,6 +28,7 @@ const PRINCIPAL_USDC_6 = 200_000n;
 const TERM_SECONDS = 1;
 
 const { values: flags } = parseArgs({
+  args: process.argv.slice(2).filter((a) => a !== "--"),
   options: { yes: { type: "boolean", default: false } },
   strict: true,
 });
@@ -69,7 +70,7 @@ async function execFn(
     fee: DEFAULT_FEE,
     idempotencyKey: randomUUID(),
   });
-  const tx = await waitComplete(client, txId);
+    const tx = await waitComplete(client, txId, { timeoutMs: 180_000 });
   console.log(`  ${input.label}  ${tx.txHash ? explorerTx(tx.txHash) : txId}`);
 }
 
