@@ -7,9 +7,11 @@ Botanica desktop UI for Agent Town (docs/ARCHITECTURE.md §9). Next.js app route
 ```bash
 pnpm install
 pnpm -r build                                  # shared + api first
-pnpm --filter @agent-town/api dev:mock         # terminal 1: mock API + SSE on :3001
+pnpm --filter @agent-town/api dev              # terminal 1: real API (needs .env API_MODE=real)
 pnpm --filter @agent-town/web dev              # terminal 2: UI on :3000
 ```
+
+Clone-without-secrets / rehearsal: `pnpm --filter @agent-town/api dev:mock` instead.
 
 Env (all optional): `NEXT_PUBLIC_API_URL` (default `http://localhost:3001`), `NEXT_PUBLIC_TOWN_NAME` (default `botanica`), `NEXT_PUBLIC_ENS_EXPLORER_URL` (default `https://explorer.ens.dev`).
 
@@ -66,7 +68,7 @@ The map reads props and nothing else. It never fetches, so it behaves the same i
 pnpm --filter @agent-town/web dev        # then open /map-demo
 ```
 
-The page imports `fixtures/replay.json` directly, so it does not need the API, the SSE stream, or the `public/replay.json` copy that the shell's replay toggle uses. It feeds each recorded event through the same `lib/store.ts` reducer the shell uses, one event at a time, and hands the result to `MapSlot`. The toolbar has Play/Pause, a speed select (0.25x, 0.5x, 1x, 2x, 4x, 8x), a Restart button, and a live readout of the current tick and storyline phase. This is the page to use when filming, because playback is repeatable and you can slow a beat down or hold it still.
+The page imports `fixtures/replay.json` directly, so it does not need the API, the SSE stream, or the `public/replay.json` copy that the shell's replay toggle uses. It feeds each recorded event through the same `lib/store.ts` reducer the shell uses, one event at a time, and hands the result to `MapSlot`. The toolbar has Play/Pause, a speed select (0.25x, 0.5x, 1x, 2x, 4x, 8x), a Restart button, and a live readout of the current tick and storyline phase. **Rehearsal / fallback only** — the ETHOnline prize video is the live shell (`:3000` → real `:3001`), not this route.
 
 ### Regenerating the art
 
@@ -90,7 +92,7 @@ MOCK_TICK_MS=1500 pnpm --filter @agent-town/api dev:mock      # fast ticks
 pnpm --filter @agent-town/web record -- --seconds 60         # writes fixtures/replay.json
 ```
 
-`dev`/`build` copy the fixture to `public/replay.json` (gitignored). Switch the header toggle to **replay** to play it with speed controls. This is how the video gets recorded if a testnet is down.
+`dev`/`build` copy the fixture to `public/replay.json` (gitignored). Switch the header toggle to **replay** to play it with speed controls. Fallback if testnet is down — **not** the Sat 12 Sep live film.
 
 ## Brand
 

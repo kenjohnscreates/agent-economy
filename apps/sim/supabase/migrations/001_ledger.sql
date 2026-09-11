@@ -28,3 +28,8 @@ CREATE TABLE IF NOT EXISTS cache_agents (
   json JSONB NOT NULL,
   ts TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- MCP apply_migration does not grant DML; PostgREST service_role needs it.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.ticks, public.actions, public.narration, public.cache_agents
+TO service_role;

@@ -1,10 +1,12 @@
 # Agent Town — Milestones & Task Cards (v0.1)
 
-Clock: now **Tue 8 Sep 13:00 EDT** → code freeze **Sun 13 Sep 08:00 EDT** → submit **12:00 EDT**.
+Clock: **Fri 11 Sep 00:05 EDT** → video **Sat 12 Sep live** → code freeze **Sun 13 Sep 08:00 EDT** → submit **12:00 EDT**.
 Owners: **BE** (onchain/backend human), **FE** (frontend human), **Any** (either). Tiers: **T1** heavy (senior model), **T2** medium, **T3** light (cheap model). See [AGENT-RUNBOOK](AGENT-RUNBOOK.md).
 Rule: one PR per card; reviewer gate before merge; master updates [STATUS](STATUS.md).
 
-Checkpoints (master decides scope cuts): **Thu 22:00**, **Sat 12:00**.
+Checkpoints (master decides scope cuts): **Thu 22:00** (done, no cut) · **Sat 12:00**.
+
+**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). Deliver fix `bc6e112`. `API_MODE=real` + Supabase. M8 = record live Saturday. M9.1 Gateway authorized Friday. D off.
 
 ---
 
@@ -95,7 +97,12 @@ Checkpoints (master decides scope cuts): **Thu 22:00**, **Sat 12:00**.
 |---|---|---|---|
 | M6.1 | Full run on fresh DB: reset → storyline → 3‑min walkthrough | T2 | zero manual intervention |
 | M6.2 | Fix list triage (master); only P0/P1 | T1 | STATUS updated |
-| M6.3 | Record backup demo footage | T3 | file saved |
+| M6.3 | Live ids + live 12-tick (dirty ledger) | T1 | repay on-chain; STATUS |
+| M6.4 | Hold repay to t9; accept only funded unassigned roster jobs | T1 | #56 `9fbf0cd` |
+| M6.5 | Seed cy Active → live `--ticks 12 --yes` → default #9 + pending #11 | T1 | **DONE** Thu 23:30 |
+| M6.6 | Do not re-submit already-submitted ERC-8183 jobs | T1 | **DONE** `bc6e112` |
+
+Mock backup footage is rehearsal only. Prize video = **live** (M8.2).
 
 ## M7 — Review + docs · Sat PM (4 h) · reviewer + T3
 
@@ -105,17 +112,17 @@ Checkpoints (master decides scope cuts): **Thu 22:00**, **Sat 12:00**.
 | M7.2 | README: run steps, `.env.example`, deployed addresses, prize mapping, diagram export (PNG of ARCHITECTURE mermaid) | T3 | fresh clone runs < 15 min |
 | M7.3 | `docs/SUBMISSION.md`: per‑sponsor blurbs, track selections, links | T3 | ready to paste |
 
-## M8 — Video + submission · Sun 08:00–12:00 · both
+## M8 — Video + submission · Sat record · Sun 08:00–12:00 form · both
 
 | ID | Task | Exit |
 |---|---|---|
-| M8.1 | Code freeze 08:00; tag `v0.1-ethonline` | tag pushed |
-| M8.2 | Record 2–4 min video (PRD §10) | uploaded |
+| M8.1 | Code freeze Sun 08:00; tag `v0.1-ethonline` | tag pushed |
+| M8.2 | Record 2–4 min video (PRD §10) **Sat 12 Sep live** (`API_MODE=real`, mayor **#11**) | uploaded |
 | M8.3 | ETHGlobal form: repo, video, tracks (Arc Agentic Economy [+ Launch], Graph AI From Scratch, ENS Best Use of ENSv2) | submitted by **11:00**, 1 h buffer |
 
 ## Stretch (only if M6 exits early; priority order)
-- M9.1 **B — Circle App Kit / Gateway**: treasury wallet holds a unified USDC balance across chains, settles on Arc; show deposit from another testnet landing in the town bank. T1, ~3–5 h.
-- M9.2 **D — Open deposits**: LP share accounting on `TownTreasury.deposit`; anyone (incl. the mayor) earns the interest agents pay; UI "Deposit" button. T1, ~2–3 h.
+- M9.1 **B — Circle App Kit / Gateway**: treasury wallet holds a unified USDC balance across chains, settles on Arc; show deposit from another testnet landing in the town bank. T1, ~3–5 h. **Authorized Fri 11 Sep.** Visitor = **gus** ETH-SEPOLIA SCA; token = Circle Sepolia USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` (**not** ENS MockUSDC). Drop Saturday if faucet/API blocks.
+- M9.2 **D — Open deposits**: LP share accounting on `TownTreasury.deposit`; anyone (incl. the mayor) earns the interest agents pay; UI "Deposit" button. T1, ~2–3 h. **Off — do not start.**
 - M9.3 Mayor registers a new agent: mint subname + create Circle wallet from UI. T2.
 - M9.4 ERC‑8004 registration on Arc + ENSIP‑25 `agent-registration` record loop. T2.
 - M9.5 Arc mainnet deploy script dry‑run (Launch‑to‑Mainnet track). T3.

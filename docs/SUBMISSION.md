@@ -8,7 +8,7 @@
 
 **Repo:** https://github.com/kenjohnscreates/agent-economy
 
-**Demo video:** TBD M8.2 (see [Video outline](#demo-video-outline) below)
+**Demo video:** TBD M8.2 — record **Sat 12 Sep live** (see [Video outline](#demo-video-outline) below)
 
 ---
 
@@ -66,7 +66,7 @@ This repository started **8 Sep 2026** with no prior Agent Town code — eligibl
 | **Subgraph Studio** | https://thegraph.com/studio/subgraph/agent-town |
 | **Signal C — Aave V3 ETH** | https://thegraph.com/explorer/subgraphs/JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk |
 | **Signal C — Uniswap V3** | https://thegraph.com/explorer/subgraphs/5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV |
-| **Architecture diagram** | Mermaid: [docs/ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview) · PNG lands in M7.2 (`docs/architecture.png`) |
+| **Architecture diagram** | Mermaid: [docs/ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview) · PNG: [docs/architecture.png](architecture.png) |
 
 Canonical JSON: [`packages/ens/town.json`](../packages/ens/town.json), [`packages/contracts/deployments/arc-testnet.json`](../packages/contracts/deployments/arc-testnet.json), [`packages/circle/roster.json`](../packages/circle/roster.json).
 
@@ -78,14 +78,15 @@ Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-s
 
 **Flow:** boom (buys, jobs, deposits) → merchant borrows with advisor reasoning → worker defaults → rate hike + ENS review → mayor approves flagged loan → recovery. Tick-keyed storyline (`STORYLINE=demo`) replays identically at any speed.
 
-**Live 12-tick caveat:** We have run **three live 12-tick** passes with **0 failed txs** on the latest run (M6.2e). Fixture-only ids (`L-1`, `J-demo`) are **skipped on live execute** — repay, default, and job-settle for those storyline beats do not emit extra chain txs on a dirty ledger; buys, post_job, request_loan, stipend, set_rate, and deposits do. The **mayor loan approve/deny** click remains the PRD §8 gate (human `ALLOW_BROADCAST`). Dry-run and mock/replay fixtures show the full narrative including fixture loan/job ids.
+**Live chain (film this, not mock):** M6.5 Gate A `--ticks 12 --yes` landed **cy #9 Defaulted**, **bo #10 Repaid**, buys/jobs/rate on [arcscan](https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1). Mayor click is **loan #11 Pending cy** (not fixture `L-3`). Do **not** run another live 12-tick until the mayor uses #11. Fixture ids (`L-1`, `J-demo`) are still skipped on live execute. Mock / `/map-demo` / replay = rehearsal only.
 
 ---
 
 ## What we do NOT claim
 
 - **Option A — external yield vault** on idle treasury USDC: not planned (no live permissionless pool on Arc Testnet; see [RISKS R16](RISKS.md)).
-- **Stretch B (Circle App Kit / Gateway)** and **stretch D (open public deposits)**: not started.
+- **Stretch B (Circle App Kit / Gateway)**: authorized **Fri 11 Sep** (gus ETH-SEPOLIA Circle USDC → Gateway → TownTreasury). Not started at docs catch-up. Drop Saturday if faucet/API blocks — film Arc-only.
+- **Stretch D (open public deposits)**: not started; do not start.
 - **Arc mainnet deploy**: not done this weekend; contracts are mainnet-portable only.
 - **Subgraph query URL**: not committed (set `SUBGRAPH_URL` locally after Studio deploy).
 
@@ -93,7 +94,7 @@ Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-s
 
 ## Demo video outline
 
-Target length 2–4 min. Beats are [PRD §10](PRD.md#10-demo-video-outline-24-min). **No video URL yet** (record Sunday / M8.2).
+Target length 2–4 min. Beats are [PRD §10](PRD.md#10-demo-video-outline-24-min). **No video URL yet** (record **Sat 12 Sep live** / M8.2).
 
 | Time | Beat |
 |---|---|
@@ -105,25 +106,28 @@ Target length 2–4 min. Beats are [PRD §10](PRD.md#10-demo-video-outline-24-mi
 | 3:00 | Architecture slide + sponsor mapping |
 | 3:30 | Close |
 
-### Filming notes (Thu 10 Sep — what is on `origin/main` now)
+### Filming notes (Fri 11 Sep — live, not mock)
 
-Record against **mock**. `API_MODE=mock`. Two terminals:
+Record against **live testnet**. Header must show `api · real`. Two terminals:
 
 ```bash
-pnpm --filter @agent-town/api dev:mock    # :3001
+# repo-root .env: API_MODE=real  ALLOW_BROADCAST=true  SUPABASE_* filled (service_role / sb_secret_, not publishable)
+pnpm --filter @agent-town/api dev         # :3001 — loads ../../.env
 pnpm --filter @agent-town/web dev         # :3000
 ```
 
-Real is opt-in (`API_MODE=real`). Mayor POSTs return **501** without `ALLOW_BROADCAST=true`. Do not enable broadcast for this recording.
+Mayor POSTs need `ALLOW_BROADCAST=true` or they 501. That is required for the **Approve #11** beat.
 
-**Hero / map.** M5.2 #51 is on main. Use the PixiJS overworld as hero ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees)): agents on islands, coins on monetary txs, Bank pulse on loan/rate. Fixture-only `/map-demo` if you want pause/speed. Live shell: mock `:3001` + web `:3000`.
+**Hero / map.** PixiJS overworld in the live shell (`:3000` → real `:3001`). `/map-demo` and header **replay** are rehearsal / fallback if testnet is down — not the prize video.
 
-**Mayor click (PRD §8).** Works on mock (M5.7 #47): Approve a flagged loan → toast + feed. Do **not** approve on-chain loans **#7/#8** unless the human says so. Mock toast hashes are fixture, not live arcscan proofs.
+**Mayor click (PRD §8).** Approve **loan #11** (Pending cy 0.2 USDC). Toast hash must be a real [arcscan](https://testnet.arcscan.app) tx. Do **not** `markDefault` **bo**. Do **not** run another `--ticks 12 --yes` before this click (ada would auto-approve #11).
 
-**Live vs mock storyline.** A live 12-tick does **not** land repay / default / job-settle — fixture ids `L-1` / `J-demo` are skipped on live execute (#38/#40). Do not promise those beats on arcscan from a live run. The mock storyline still plays PRD §12 for the recording.
+**What is already on chain (cut to explorer, do not re-run the 12-tick):** cy **#9 Defaulted** [seed approve 0x3421ad32…](https://testnet.arcscan.app/tx/0x3421ad323c32381fcbd0815b0d44cc3904f2adea706bd5ef606edd3cc0ed6940); bo **#10 Repaid**; buys, jobs, `set_rate`. Deliver re-submit bug fixed `bc6e112` (do not film pre-fix ESTIMATION_ERROR as current).
 
-**Agent cards (M5.8 #48).** Arcscan wallet link + ENS explorer link. Town = **botanica** — film `ada.botanica.eth`. Connection warming card exists for real-mode 501; not needed when filming mock.
+**Feed / speech.** Needs this Supabase project’s ledger. After catch-up the tables exist but are **empty** (`/health` `tick:null`) until sim writes here. Scoreboard + loan book still come from the subgraph.
 
-**Architecture slide (3:00).** ENS Sepolia names → Arc USDC + TownTreasury `0xCE0e…FfC1` → Studio subgraph `agent-town` → Signal C (Aave V3 + Uniswap V3). Town = **botanica**. Do not paste `SUBGRAPH_URL` (local `.env` only). Cut to [docs/architecture.png](architecture.png) / [ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview).
+**Agent cards.** Arcscan wallet + ENS explorer. Town = **botanica** — film `ada.botanica.eth` / `cy.botanica.eth`.
+
+**Architecture slide (3:00).** ENS Sepolia names → Arc USDC + TownTreasury `0xCE0e…FfC1` → Studio subgraph `agent-town` → Signal C (Aave V3 + Uniswap V3). Optional Fri: Circle Gateway (Sepolia USDC `0x1c7D4B…7238` ≠ ENS MockUSDC). Do not paste `SUBGRAPH_URL`. Cut to [docs/architecture.png](architecture.png) / [ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview).
 
 Do not invent tx hashes. Do not claim a recorded file until M8.2 uploads it.

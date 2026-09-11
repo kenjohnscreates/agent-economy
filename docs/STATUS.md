@@ -14,10 +14,10 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock default |
-| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick: **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · `API_MODE=real` |
+| M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
+| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `bc6e112` · `API_MODE=real` + Supabase ledger |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep** live · mock = rehearsal only · Gateway Fri spike |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · Gateway Fri spike · freeze Sun 08:00 |
 
 ## Log
 
@@ -596,3 +596,13 @@ Blocked: `revokeName` · Supabase keys for live SSE
 Risks changed: live default **landed**. Do not run another 12-tick until mayor uses #11 (ada would auto-approve).
 Next up: fill Supabase if we want bubbles/feed; start real API+web; Fri M9.1 Gateway. Do not start D.
 Checkpoint call: none. Record Sat.
+
+## Fri 11 Sep 00:05 EDT
+Done: **Deliver fix** `bc6e112` on `main` — `assignmentsFromJobs` / `implicitAssignments` only `status === "funded"`; `jobAllowsDeliver` skips already-submitted ERC-8183 jobs (root cause of `ESTIMATION_ERROR` re-submit). sim tests **112/112**.
+Done: **Supabase ledger** on Kenny personal project (not the work-account MCP). Tables `ticks`/`actions`/`narration`/`cache_agents` (0 rows). `SUPABASE_SERVICE_KEY` = `sb_secret_…` (not publishable). First real API boot: `permission denied for table narration` — MCP `apply_migration` had no DML for `service_role`. Granted `SELECT, INSERT, UPDATE, DELETE` to `service_role` only (anon still no SELECT). SQL also in `apps/sim/supabase/migrations/001_ledger.sql`. **Do not enable RLS** without policies (would block sim).
+Done: real API restarted: `pnpm --filter @agent-town/api dev` → `[api] real mode on http://localhost:3001` · `GET /health` `{"ok":true,"mode":"real","tick":null}`. `tick:null` = empty ledger (feed/speech empty until sim writes this project).
+In progress: live UI walk (`header api · real`, mayor Approve **#11**) · Fri **M9.1 Gateway** (gus ETH-SEPOLIA Circle USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`, not ENS MockUSDC) · Sat live record
+Blocked: `revokeName` · 2nd default on **bo**
+Risks changed: live SSE unblocked; ledger still empty. Dirty chain: do not another `--ticks 12 --yes` until mayor uses **#11**.
+Next up: walk UI + mayor #11 · Gateway Fri · record Sat 12th live. Do not start D. Do not `markDefault` bo.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.

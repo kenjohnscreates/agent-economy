@@ -23,4 +23,4 @@ Ping in STATUS before a PR: `touching: <paths>`.
 
 ## Video bar
 
-Live Arc §12 (arcscan txs + subgraph + ENS resolve + mayor click). Gateway is Fri spike; if faucet/API blocks, film Arc-only Saturday.
+Live Arc §12 (arcscan txs + subgraph + ENS resolve + mayor click **#11**). API is `API_MODE=real` + Supabase service key. Do **not** `--ticks 12 --yes` until mayor uses #11. Gateway is Fri spike; if faucet/API blocks, film Arc-only Saturday.

@@ -8,12 +8,12 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main unless git fetch shows otherwise (Thu 10 Sep ~23:00 EDT — **live demo pivot**, M6.4 `9fbf0cd`). STATUS is the live log — keep it truthful and push when GitHub should match. If STATUS lags HEAD, refresh this file.
+main HEAD **`bc6e112`** (deliver fix). STATUS + this file should match git. Uncommitted at last pickup: `apps/sim/supabase/migrations/001_ledger.sql` (`service_role` GRANT) + docs catch-up.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
-**Checkpoint tonight: Thu 10 Sep 22:00 EDT — DONE (no scope-cut).** Next: **Sat 12 Sep 12:00**.
+Checkpoints: Thu 10 Sep 22:00 **DONE**. Next: **Sat 12 Sep 12:00**.
 
-Spec: docs/PRD.md, ARCHITECTURE.md, MILESTONES.md, AGENT-RUNBOOK.md, RISKS.md, STATUS.md.
+Spec: docs/PRD.md, ARCHITECTURE.md, MILESTONES.md, AGENT-RUNBOOK.md, RISKS.md, STATUS.md, SUBMISSION.md.
 This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 
 ## Protocol
@@ -29,11 +29,11 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 - Human (operator / Kenny) owns BE/onchain.
 - Dan (`don-radman`) owns map/speech chrome. Kenny may edit `apps/web` for live bank/mayor wiring. Split: `docs/DAN-LIVE-SPLIT.md`.
 - Do not give Dan Circle keys or `DEPLOYER_PRIVATE_KEY`.
-- FE live: `API_MODE=real` + `pnpm --filter @agent-town/api dev` (:3001, load `.env`) + `pnpm --filter @agent-town/web dev` (:3000), viewport **1440×900**. `/map-demo` = rehearsal fixtures only.
-- Record **Sat 12 Sep** against live. Mock is rehearsal.
+- FE live: `API_MODE=real` + `pnpm --filter @agent-town/api dev` (:3001, loads repo-root `.env`) + `pnpm --filter @agent-town/web dev` (:3000), viewport **1440×900**. `/map-demo` = rehearsal fixtures only.
+- Record **Sat 12 Sep** against **live**. Mock / `/map-demo` / replay = rehearsal or fallback if testnet is down.
 
 ## Open PRs
-None as of Thu 23:00. T1 Dan polish if it lands. Frozen: `packages/shared`, MapSlot **props**. Squash-merge from **primary** checkout. Gate A approved for M6.5.
+None as of Fri 11 Sep 00:05. T1 Dan polish if it lands. Frozen: `packages/shared`, MapSlot **props**. Squash-merge from **primary** checkout. Gate A approved for M6.5. Do **not** run another live 12-tick until mayor uses **#11**.
 
 ## Live artifacts (do not redo deploys)
 - TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` Arc 5042002
@@ -43,6 +43,7 @@ None as of Thu 23:00. T1 Dan polish if it lands. Frozen: `packages/shared`, MapS
 - Names: ada|bo|cy|dee|eli|fay|gus|hal + `bank.botanica.eth` → ada
 - Circle set `949545dc-5e02-5050-8e2f-7e6bc12bfed3`. Treasurer ada SCA `0x97847b3C…`. Mayor `0x52B9c05D…`. Owner/deployer EOA `0xD4282940…`
 - Subgraph Studio `agent-town` 0.0.1. Query URL only in local `.env`. Public: `packages/ens/town.json`, `packages/contracts/deployments/arc-testnet.json`, `packages/circle/roster.json`
+- Ledger: Kenny personal Supabase. Tables exist. `service_role` has DML. **Do not enable RLS** without policies. Key = `sb_secret_…` or JWT `eyJ…` service_role — **never** `sb_publishable_…`. URL/key stay in local `.env`.
 
 ## Loan book (Thu 10 23:30 after M6.5 live 12-tick)
 | ID | Status | Who | Amount |
@@ -62,16 +63,16 @@ None as of Thu 23:00. T1 Dan polish if it lands. Frozen: `packages/shared`, MapS
 stats: loanCount 10 (+ pending 11), outstanding 0, defaults **2**, baseRateBps 829, deposits 0.92. bo `activeLoanOf` clear. cy slot = **#11 Pending** (mayor click). Do not run another live 12-tick until the mayor uses #11.
 
 ## Board
-- M0–M5 **done**. Mock = rehearsal.
-- M6: **live default landed** (cy #9). M6.5 12-tick done. `API_MODE=real`.
+- M0–M5 **done**. Mock = rehearsal / clone-without-secrets.
+- M6: **live default landed** (cy #9). M6.5 12-tick done. Deliver re-submit **fixed** (`bc6e112`). `API_MODE=real` + Supabase wired.
 - M8: record **Sat 12 Sep live**.
 - Stretch **B Gateway Fri**. D off.
 
-## Why live still ≠ PRD §12
-Default + repay + buys + jobs **are on arcscan**. Remaining:
-- Some `dee deliver` reverts (ESTIMATION_ERROR).
-- Real UI feed/speech needs **Supabase** keys (currently empty).
-- Mayor click = **loan #11** (not mock L-3).
+## Why live still ≠ PRD §12 (clean reset)
+Default + repay + buys + jobs **are on arcscan**. Remaining vs a from-tick-0 film:
+- Ledger on this Supabase project is **empty** (`tick:null`) until sim writes here — bubbles/feed stay blank until then. Scoreboard/loans still come from subgraph.
+- Mayor click = **loan #11** (not mock `L-3`).
+- Dirty treasury: do **not** `pnpm reset --yes` / another `--ticks 12 --yes` before mayor uses #11.
 - Gateway not started.
 
 ## Video
@@ -79,11 +80,11 @@ Record live Saturday. Rehearsal mock still works. Commands (live):
 
 ```
 API_MODE=real ALLOW_BROADCAST=true
-pnpm --filter @agent-town/api dev         # :3001 — needs --env-file .env
+pnpm --filter @agent-town/api dev         # :3001 — node --env-file-if-exists=../../.env
 pnpm --filter @agent-town/web dev         # :3000
-ALLOW_BROADCAST=true STORYLINE=demo TICK_MS=15000 \
-  pnpm --filter @agent-town/sim tick -- --ticks 12 --yes
 ```
+
+Do **not** start another 12-tick until mayor Approve/Deny **#11**. If a later recording needs ticks, human Gate A first.
 
 ENS names are on Sepolia; money is Arc USDC. Gateway uses **Circle Sepolia USDC** `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`.
 
@@ -97,15 +98,17 @@ ENS names are on Sepolia; money is Arc USDC. Gateway uses **Circle Sepolia USDC*
 - `gh pr merge` from a non-main worktree can fail — merge from the primary checkout.
 - Rate-tooltip: click races focus+toggle (hover/focus still open it).
 - `#54` 2x `@container (min-width: 1280px)` cannot fire under 1440 shell + 400px rail (1440×900 stays 1x).
+- MCP `apply_migration` does **not** GRANT DML. PostgREST `service_role` needs `SELECT/INSERT/UPDATE/DELETE` on ledger tables. Publishable keys (`sb_publishable_…`) cannot read them.
 
 ## Human gates still
 - `revokeName` roster names
 - New Sepolia Circle wallet create (Gateway)
 - Stretch D (open deposits) — off
+- Another live `--ticks 12 --yes` (blocked until mayor uses #11)
 
 ## Next up (orchestrator)
-1. Fill Supabase so live SSE has ticks/narration. Walk UI `API_MODE=real` against #11 mayor click.
-2. **M9.1 Gateway** Fri (gus ETH-SEPOLIA Circle USDC).
+1. Walk UI `API_MODE=real` against **#11** mayor click + arcscan/subgraph.
+2. **M9.1 Gateway** Fri (gus ETH-SEPOLIA Circle USDC). Timebox ~5h. Drop Saturday if faucet/API blocks.
 3. FE live polish per `DAN-LIVE-SPLIT.md`.
 4. Record Sat 12th live. Form Sun.
 5. Do **not** run another `--ticks 12 --yes` until mayor uses #11.

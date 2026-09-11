@@ -1,8 +1,9 @@
 # Agent Town — Product Requirements (v0.1)
 
 > ETHOnline 2026 · Deadline **Sun 13 Sep 12:00 EDT** (no late entries) · Code freeze **Sun 08:00 EDT**
+> **Video: record Sat 12 Sep against live testnet** (mock / `/map-demo` = rehearsal only)
 > Sponsors: **ENSv2** (Sepolia) · **Arc** (Circle L1, testnet) · **The Graph** (Subgraph Studio)
-> Companion docs: [ARCHITECTURE](ARCHITECTURE.md) · [MILESTONES](MILESTONES.md) · [AGENT-RUNBOOK](AGENT-RUNBOOK.md) · [RISKS](RISKS.md) · [STATUS](STATUS.md)
+> Companion docs: [ARCHITECTURE](ARCHITECTURE.md) · [MILESTONES](MILESTONES.md) · [AGENT-RUNBOOK](AGENT-RUNBOOK.md) · [RISKS](RISKS.md) · [STATUS](STATUS.md) · [SUBMISSION](SUBMISSION.md)
 
 ---
 
@@ -33,8 +34,8 @@ Agent economies are invisible: wallets are hex, decisions are logs, money moves 
 "A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on‑chain transaction; agents' decisions are driven by live on‑chain data from The Graph, including real DeFi market rates." The Treasury is our own contract; it is not a third‑party DeFi protocol.
 
 ### Optional — only if M6 exits early (in priority order)
-- **B. Circle App Kit / Gateway**: treasury holds a unified USDC balance across chains and settles on Arc (named directly in the Arc prize text). ~3–5 h.
-- **D. Open deposits**: anyone can deposit USDC into the Treasury and earn the interest agents pay (LP share accounting on top of existing `deposit`). ~2–3 h.
+- **B. Circle App Kit / Gateway**: treasury holds a unified USDC balance across chains and settles on Arc (named directly in the Arc prize text). ~3–5 h. **Authorized Fri 11 Sep** (gus ETH-SEPOLIA Circle USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`, not ENS MockUSDC). Drop Saturday if faucet/API blocks; film Arc-only.
+- **D. Open deposits**: anyone can deposit USDC into the Treasury and earn the interest agents pay (LP share accounting on top of existing `deposit`). ~2–3 h. **Do not start.**
 - **A. Treasury yield on idle USDC** via an external vault/pool on Arc Testnet — **not planned**: scan on Sep 8 found no live permissionless DeFi pool with real USDC on Arc Testnet (see RISKS R16). Revisit only if one appears.
 
 ### Out of scope (post‑hackathon)
@@ -124,16 +125,21 @@ Required artefacts: public repo, README with run steps, **architecture diagram**
 
 ## 11. Open questions
 
-- Town name (register in M0).
-- Whether Arc Testnet is selectable in Subgraph Studio (verify hour 1; see RISKS R5).
-- LLM provider key availability (Anthropic/OpenAI) by M4.
-- Which exact external subgraphs for Signal C (pick via Subgraph MCP in M0; must have live 30‑day query volume).
+Resolved during the hackathon (see STATUS):
+- Town name = **botanica** (`botanica.eth`).
+- Arc Testnet **is** in Subgraph Studio (`arc-testnet` / R5).
+- Signal C: Messari Aave V3 Ethereum `JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk` + Uniswap V3 Ethereum `5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV`.
+- LLM keys optional; rules fallback is the default path.
+
+Still operational (not product-open): stretch B Gateway Fri spike; dirty-ledger mayor click is loan **#11**.
 
 ## 12. Sample demo walkthrough (what the judge sees)
 
 About three minutes, twelve ticks at 15 s, no hands on the keyboard except one mayor click.
 
-**Before recording.** `pnpm reset` clears the Supabase log, re‑seeds wallets to their starting USDC, sets the storyline to tick 0. Start the sim with `TICK_MS=15000 STORYLINE=demo`. Frontend open at 1440×900.
+**ETHOnline 2026 recording (Sat 12 Sep).** Film **live** (`API_MODE=real`), not mock. The chain is a **dirty ledger** after M6.5 — do **not** `pnpm reset --yes` or another `--ticks 12 --yes` before the mayor uses **loan #11**. Cut to arcscan for beats already landed (cy **#9** default, bo **#10** repay, buys/jobs/rate). The cinematic tick-0 script below is the *intended* story; the live film proves the same stack on the current book. Mock / `/map-demo` / replay = rehearsal only.
+
+**Before a clean (from-tick-0) recording.** `pnpm reset` clears the Supabase log, re‑seeds wallets to their starting USDC, sets the storyline to tick 0. Start the sim with `TICK_MS=15000 STORYLINE=demo`. Frontend open at 1440×900. **Not this weekend's Sat film** unless the human explicitly re-seeds after #11.
 
 **0:00 — The town wakes up (ticks 1–3, "boom").** A little town: Bank, Market, Workshop, Homes. Eight sprites with names over their heads — `ada.<town>.eth`, `bo.<town>.eth`… Nothing is typed in; names are resolved live from ENS on Sepolia, and each resolves to that agent's real USDC wallet on Arc. Every 15 s: two consumers buy at the Market (real USDC moves to the merchant); the merchant's stock runs low so it posts a job with pay locked in escrow (ERC‑8183); a worker takes it, delivers, the merchant approves, escrow pays the worker; the worker deposits 20% at the Bank. The Market price isn't fixed: it drifts with real Uniswap USDC volume pulled from The Graph each tick (Signal C), so a busy day in DeFi is a busy day in town. Speech bubbles appear. The scoreboard ticks up — GDP, treasury balance, jobs done — read from The Graph as it indexes the Arc transactions. The event feed prints each transaction with a link; clicking opens arcscan.
 
@@ -141,7 +147,7 @@ About three minutes, twelve ticks at 15 s, no hands on the keyboard except one m
 
 **1:30 — A worker defaults (ticks 6–8).** One worker took a small loan earlier and stops repaying (storyline‑forced). Grace passes; the treasurer marks the loan defaulted on chain. Three visible effects: the default counter rises and the treasurer raises the town rate — the Bank panel shows it stacking on the real anchor ("market 4.1% + spread 2% + default premium 2% → 8.1%"), so the hike is a priced response, not an invented number; the treasurer writes to the worker's ENS name — credit score drops to 35, a review record is added ("defaulted on 1 USDC, tick 7") — and only the treasurer has permission to write those records; the worker's bubble sulks while other agents' loans now cost more. Hovering the worker shows the lowered score and review, resolved live from Sepolia.
 
-**2:15 — The mayor steps in (ticks 9–10).** A second loan request arrives from an agent with a middling score. Rules say flag; it lands in the Mayor panel with the advisor's reasoning. You click **Approve**. The tx goes out through the treasurer's wallet, the toast shows the hash, the feed shows it land, The Graph updates, the borrower's bubble reacts. One human action, whole stack visible.
+**2:15 — The mayor steps in (ticks 9–10).** A second loan request arrives from an agent with a middling score. Rules say flag; it lands in the Mayor panel with the advisor's reasoning. You click **Approve**. The tx goes out through the treasurer's wallet, the toast shows the hash, the feed shows it land, The Graph updates, the borrower's bubble reacts. One human action, whole stack visible. **Live film:** that flagged loan is **#11 Pending cy** (not fixture `L-3`).
 
 **2:45 — Recovery and close (ticks 11–12).** Rates settle, the merchant repays with interest (treasury ends higher than it started), GDP peaks. Cut to the architecture slide: names on ENS (Sepolia) → wallets and money on Arc → indexed by The Graph → agents decide on live signals → you're the mayor.
 

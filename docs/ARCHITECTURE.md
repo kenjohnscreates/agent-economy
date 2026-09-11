@@ -197,6 +197,8 @@ Input JSON: borrower name, credit score (ENS), balance history + defaults (subgr
 ### 6.4 Supabase tables
 `ticks(id, ts, phase)`, `actions(tick, agent, kind, tx, status)`, `narration(tick, agent, text)`, `cache_agents(name, json, ts)`.
 
+SQL: `apps/sim/supabase/migrations/001_ledger.sql`. MCP `apply_migration` does **not** GRANT DML — PostgREST `service_role` needs `SELECT, INSERT, UPDATE, DELETE`. Anon has no SELECT (server-only). **Do not enable RLS** without policies (blocks sim). Service key = JWT `service_role` or `sb_secret_…`, never `sb_publishable_…`.
+
 ## 7. Sequence: merchant loan
 
 ```mermaid
@@ -255,9 +257,11 @@ ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 # App
 SUPABASE_URL=
-SUPABASE_SERVICE_KEY=
+SUPABASE_SERVICE_KEY=            # service_role / sb_secret_ only; never publishable
 TICK_MS=15000
 NEXT_PUBLIC_API_URL=
+API_MODE=mock                    # real for live demo
+ALLOW_BROADCAST=                 # string `true` for mayor POSTs / sim --yes
 ```
 
 ## 9. Frontend (owner: FE dev) — inputs it needs

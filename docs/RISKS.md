@@ -19,6 +19,7 @@
 | R15 | **Scope creep** (ERC‑8004, user‑added agents, reverse names) | Miss deadline | Stretch list only after M6 exit; scope‑cut ladder in MILESTONES | Master | checkpoints |
 | R16 | **No real DeFi on Arc Testnet** (scan Sep 8): Circle's lend/borrow sample uses mock USDC + cirBTC (no public faucet, Discord allocation); community ERC‑4626 `ArcUSDCVault` `0x6C13…2BFe` has owner‑injected fake yield; community UniV2 `ArcDEX` USDC/EURC `0x1A14…890E` is unaudited/thin; USYC needs 24–48 h allowlist + institutional eligibility | Option A (treasury yield) would be cosmetic or blocked | Do not build A. Real‑economy tie‑in comes from Signal C (live market rates via public subgraphs) and, if time, B (App Kit/Gateway) or D (open deposits). State honesty line from PRD §3 | BE | closed |
 | R17 | **Signal C subgraph availability**: chosen external subgraphs may be slow, rate‑limited, or deprecated | Rules starve | Pick by 30‑day query volume via Subgraph MCP (M0.9); per‑tick cache + last‑known fallback + `stale` flag; `EXTERNAL_SIGNALS=off` kill switch | BE | M0.9 |
+| R18 | **Dirty live ledger vs PRD §12 reset** | A from-tick-0 `pnpm reset --yes` / extra `--ticks 12 --yes` would auto-approve mayor loan **#11** and blur the Sat film | Film live on current book; mayor click = **#11**; cut to arcscan for #9 default / #10 repay; mock is rehearsal only | BE | M8.2 |
 
 ## Verified so far (Sep 8)
 - USDC on Arc: ERC‑20 interface `0x3600000000000000000000000000000000000000`, 6 decimals; native gas uses 18. No wrapped USDC. Deploy with `evm_version = "paris"`.

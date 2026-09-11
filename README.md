@@ -93,7 +93,7 @@ pnpm --filter @agent-town/web dev
 # → http://localhost:3000
 ```
 
-Open the UI at 1440×900. If the API is not running, use the header **replay** toggle to play from recorded fixtures (no backend needed).
+Open the UI at 1440×900. If the API is not running, use the header **replay** toggle to play from recorded fixtures (no backend needed). Mock / replay / `/map-demo` are for clone-without-secrets and rehearsal — **ETHOnline video is live** (`API_MODE=real`).
 
 ## Storyline demo (optional)
 
@@ -106,13 +106,19 @@ TICK_MS=15000 STORYLINE=demo pnpm --filter @agent-town/sim tick
 
 `pnpm reset -- --yes` prints fund hints and requires human approval — do not run unattended.
 
-## Real mode (optional — needs filled `.env`)
+## Real mode (ETHOnline demo — needs filled `.env`)
 
-Copy [`.env.example`](.env.example) → `.env` and fill secrets (Circle, RPC URLs, `SUBGRAPH_URL`, Supabase, deployer keys). Then:
+Video: **Sat 12 Sep live**. Copy [`.env.example`](.env.example) → `.env` and fill secrets (Circle, RPC URLs, `SUBGRAPH_URL`, Supabase **service_role** / `sb_secret_…` — never `sb_publishable_…`, deployer keys). Then:
 
-- Set `API_MODE=real` and run `pnpm --filter @agent-town/api dev` (default mock).
-- Mayor POST actions return **501** unless `ALLOW_BROADCAST=true`.
+```bash
+# .env: API_MODE=real  ALLOW_BROADCAST=true
+pnpm --filter @agent-town/api dev         # :3001 — loads repo-root .env
+pnpm --filter @agent-town/web dev         # :3000
+```
+
+- Header must show `api · real`. Mayor POST actions return **501** unless `ALLOW_BROADCAST=true`.
 - Sim ticks and Foundry/ENS scripts default to **dry-run**; `--broadcast` / `--yes` also require `ALLOW_BROADCAST=true`.
+- Do **not** run another live `--ticks 12 --yes` until the mayor uses pending loan **#11**.
 
 Never commit `.env` or paste secret values.
 
@@ -122,7 +128,7 @@ Never commit `.env` or paste secret values.
 - [Architecture](docs/ARCHITECTURE.md) — chains, contracts, API, env vars
 - [Milestones](docs/MILESTONES.md) — M0–M8 task cards
 - [Agent Runbook](docs/AGENT-RUNBOOK.md) — builder/reviewer protocol
-- [Risks](docs/RISKS.md) · [Status](docs/STATUS.md)
+- [Risks](docs/RISKS.md) · [Status](docs/STATUS.md) · [Submission](docs/SUBMISSION.md) · [Live split](docs/DAN-LIVE-SPLIT.md)
 
 ## License
 
