@@ -172,26 +172,41 @@ input {
   margin-bottom: 12px;
 }
 
-/* world window */
+/* world window: the card frames the map at its whole-number scale (640x360 at 1x,
+   1280x720 once 2x fits) and the statement sits in a caption row under the frame,
+   so nothing is ever drawn on top of the canvas. */
 .world {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  padding: 0;
   background: var(--surface);
+  container-type: inline-size;
+}
+.world .map-frame {
+  position: relative;
+  width: 640px;
+  height: 360px;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  background: var(--bg);
 }
 .world .statement {
-  position: absolute;
-  right: 20px;
-  bottom: 16px;
-  max-width: 320px;
+  width: 640px;
+  max-width: 100%;
+  margin: 14px auto 0;
   text-align: right;
 }
-.world canvas,
-.world svg {
+@container (min-width: 1280px) {
+  .world .map-frame {
+    width: 1280px;
+    height: 720px;
+  }
+  .world .statement {
+    width: 1280px;
+  }
+}
+.world .map-frame canvas,
+.world .map-frame svg {
   display: block;
-  width: 100%;
-  height: 100%;
   image-rendering: pixelated;
 }
 
