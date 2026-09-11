@@ -675,3 +675,11 @@ Blocked: faucet 403 · `revokeName` · 2nd default **bo** · Studio until 15:22
 Next up: T1+#59 · film Arc-only unless faucet later · 15:22 API restart. Do not `--ticks 12 --yes` until #11.
 `touching:` #59 `packages/circle`. `apps/web` free.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 12:42 EDT
+Done: T1 inherit **VERDICT: REQUEST_CHANGES** on #59. Blockers: Sepolia gus `0x97847b3c…` is ada CREATE2 clone (do not fund); `gateway-deposit` missing `ALLOW_BROADCAST`. Comment posted (cannot GitHub request-changes on own PR). Fix builder on `card/M9.1-gateway`.
+In progress: #59 fixes · Studio **15:22**
+Blocked: faucet 403 · do not fund ada clone · `revokeName` · 2nd default **bo**
+Next up: re-review #59 · film Arc-only · 15:22 API. Do not `--ticks 12 --yes` until #11.
+`touching:` #59 `packages/circle`. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
