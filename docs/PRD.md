@@ -3,7 +3,7 @@
 > ETHOnline 2026 · Deadline **Sun 13 Sep 12:00 EDT** (no late entries) · Code freeze **Sun 08:00 EDT**
 > **Video: record Sat 12 Sep against live testnet** (mock / `/map-demo` = rehearsal only)
 > Sponsors: **ENSv2** (Sepolia) · **Arc** (Circle L1, testnet) · **The Graph** (Subgraph Studio)
-> Companion docs: [ARCHITECTURE](ARCHITECTURE.md) · [MILESTONES](MILESTONES.md) · [AGENT-RUNBOOK](AGENT-RUNBOOK.md) · [RISKS](RISKS.md) · [STATUS](STATUS.md) · [SUBMISSION](SUBMISSION.md)
+> Companion docs: [ARCHITECTURE](ARCHITECTURE.md) · [MILESTONES](MILESTONES.md) · [AGENT-RUNBOOK](AGENT-RUNBOOK.md) · [RISKS](RISKS.md) · [STATUS](STATUS.md) · [SUBMISSION](SUBMISSION.md) · **[CYCLE](CYCLE.md)** (what bots do and say)
 
 ---
 
@@ -137,18 +137,20 @@ Still operational (not product-open): stretch B Gateway Fri spike; dirty-ledger 
 
 About three minutes, twelve ticks at 15 s, no hands on the keyboard except one mayor click.
 
-**ETHOnline 2026 recording (Sat 12 Sep).** Film **live** (`API_MODE=real`), not mock. The chain is a **dirty ledger** after M6.5 — do **not** `pnpm reset --yes` or another `--ticks 12 --yes` before the mayor uses **loan #11**. Cut to arcscan for beats already landed (cy **#9** default, bo **#10** repay, buys/jobs/rate). The cinematic tick-0 script below is the *intended* story; the live film proves the same stack on the current book. Mock / `/map-demo` / replay = rehearsal only.
+**Tick-by-tick (do / say / backend footnotes):** [docs/CYCLE.md](CYCLE.md) — use that with Dan. This section is the judge-facing story.
 
-**Before a clean (from-tick-0) recording.** `pnpm reset` clears the Supabase log, re‑seeds wallets to their starting USDC, sets the storyline to tick 0. Start the sim with `TICK_MS=15000 STORYLINE=demo`. Frontend open at 1440×900. **Not this weekend's Sat film** unless the human explicitly re-seeds after #11.
+**ETHOnline 2026 recording (Sat 12 Sep).** Film **live** (`API_MODE=real`), not mock. Dirty ledger after M6.5 — do **not** `pnpm reset --yes` or another `--ticks 12 --yes` before the mayor uses **loan #11**. Cut to arcscan for cy **#9** default, bo **#10** repay, buys/jobs/rate. Mock / `/map-demo` / replay = rehearsal only.
 
-**0:00 — The town wakes up (ticks 1–3, "boom").** A little town: Bank, Market, Workshop, Homes. Eight sprites with names over their heads — `ada.<town>.eth`, `bo.<town>.eth`… Nothing is typed in; names are resolved live from ENS on Sepolia, and each resolves to that agent's real USDC wallet on Arc. Every 15 s: two consumers buy at the Market (real USDC moves to the merchant); the merchant's stock runs low so it posts a job with pay locked in escrow (ERC‑8183); a worker takes it, delivers, the merchant approves, escrow pays the worker; the worker deposits 20% at the Bank. The Market price isn't fixed: it drifts with real Uniswap USDC volume pulled from The Graph each tick (Signal C), so a busy day in DeFi is a busy day in town. Speech bubbles appear. The scoreboard ticks up — GDP, treasury balance, jobs done — read from The Graph as it indexes the Arc transactions. The event feed prints each transaction with a link; clicking opens arcscan.
+**Before a clean (from-tick-0) recording.** `pnpm reset` clears the Supabase log, re‑seeds wallets, tick 0. `TICK_MS=15000 STORYLINE=demo`. UI 1440×900. **Not this weekend's Sat film** unless the human re-seeds after #11.
 
-**0:45 — The merchant borrows (tick 4).** Sales are good but the merchant is cash‑poor from paying workers, so it requests a loan. The treasurer looks at real numbers: bank utilisation, the merchant's credit score (an ENS record), its repayment history (The Graph), and the real USDC borrow rate on a major lending market (Signal C). Rules say approve; the LLM advisor confirms and explains. Bank panel shows: *"Approve 3 USDC. Utilisation 22%, score 78, two prior loans repaid on time; market rate 4.1%, our rate 6.1%."* USDC moves from the Treasury contract to the merchant's wallet.
+**0:00 — Boom (ticks 1–3).** Eight sprites, names from ENS (`ada.botanica.eth` …) bound to Arc wallets. Gus/hal buy at Market (real USDC). Bo posts an ERC-8183 job; dee delivers; escrow pays; dee deposits 20% at the Bank. Price drifts with Uniswap volume (Signal C). Speech chips; scoreboard from The Graph; feed links to arcscan.
 
-**1:30 — A worker defaults (ticks 6–8).** One worker took a small loan earlier and stops repaying (storyline‑forced). Grace passes; the treasurer marks the loan defaulted on chain. Three visible effects: the default counter rises and the treasurer raises the town rate — the Bank panel shows it stacking on the real anchor ("market 4.1% + spread 2% + default premium 2% → 8.1%"), so the hike is a priced response, not an invented number; the treasurer writes to the worker's ENS name — credit score drops to 35, a review record is added ("defaulted on 1 USDC, tick 7") — and only the treasurer has permission to write those records; the worker's bubble sulks while other agents' loans now cost more. Hovering the worker shows the lowered score and review, resolved live from Sepolia.
+**0:45 — Borrow (tick 4–5).** Bo requests a loan. Ada uses utilisation, ENS credit score, Graph history, and the real Aave USDC borrow APY. Rules approve (or flag); Bank panel shows the stack. USDC Treasury → merchant.
 
-**2:15 — The mayor steps in (ticks 9–10).** A second loan request arrives from an agent with a middling score. Rules say flag; it lands in the Mayor panel with the advisor's reasoning. You click **Approve**. The tx goes out through the treasurer's wallet, the toast shows the hash, the feed shows it land, The Graph updates, the borrower's bubble reacts. One human action, whole stack visible. **Live film:** that flagged loan is **#11 Pending cy** (not fixture `L-3`).
+**1:30 — Default (ticks 6–8).** A borrower misses grace. Ada `markDefault` on chain: defaults +1, town rate = market + spread + premium, ENS score/review written (treasurer-only). **Mock defaulter = fay. Live = cy #9.** Never default bo.
 
-**2:45 — Recovery and close (ticks 11–12).** Rates settle, the merchant repays with interest (treasury ends higher than it started), GDP peaks. Cut to the architecture slide: names on ENS (Sepolia) → wallets and money on Arc → indexed by The Graph → agents decide on live signals → you're the mayor.
+**2:15 — Mayor (ticks 9–10).** Ada `set_rate`. A flagged loan sits in the Mayor panel. You click **Approve** — toast hash, feed, Graph. **Live = loan #11 Pending cy** (not fixture `L-3`).
 
-**What judges can verify themselves.** Click any name → resolves on ENS. Click any tx → on arcscan. Open the subgraph URL → same numbers as the scoreboard. Hover the town rate → tooltip shows the source lending subgraph, the raw market APY, and the fetch timestamp (or a `stale` badge if the last fetch failed). Clone, follow README, `pnpm reset && pnpm dev` → same story plays. The storyline is keyed to tick numbers, not the clock, so it plays identically at any speed.
+**2:45 — Recover (ticks 11–12).** Stipend/GDP; architecture slide: ENS Sepolia → Arc USDC → Graph → rules → you're the mayor.
+
+**What judges can verify.** Name → ENS. Tx → arcscan. Subgraph numbers = scoreboard. Rate tooltip = lending subgraph + APY + timestamp (`stale` if last fetch failed). Storyline is tick-keyed, so it plays at any `TICK_MS`.

@@ -74,7 +74,7 @@ Canonical JSON: [`packages/ens/town.json`](../packages/ens/town.json), [`package
 
 ## Demo walkthrough
 
-Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees) (~3 min, 12 ticks at 15 s, one mayor click).
+Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees). Tick-by-tick do/say/backend: [CYCLE.md](CYCLE.md).
 
 **Flow:** boom (buys, jobs, deposits) → merchant borrows with advisor reasoning → worker defaults → rate hike + ENS review → mayor approves flagged loan → recovery. Tick-keyed storyline (`STORYLINE=demo`) replays identically at any speed.
 

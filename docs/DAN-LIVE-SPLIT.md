@@ -2,6 +2,8 @@
 
 Record **Sat 12 Sep** against **live testnet**, not mock. Anyone may edit `apps/web`; do not dual-write the same files in the same hour.
 
+**Cycle (do / say / BE footnotes):** [`docs/CYCLE.md`](CYCLE.md)
+
 Ping in STATUS before a PR: `touching: <paths>`.
 
 ## Kenny / this session (BE + live wiring)

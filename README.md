@@ -125,6 +125,7 @@ Never commit `.env` or paste secret values.
 ## Docs
 
 - [PRD](docs/PRD.md) — product, roles, demo script, sponsor mapping
+- [Cycle](docs/CYCLE.md) — 12-tick do / say / backend footnotes (Dan + Kenny)
 - [Architecture](docs/ARCHITECTURE.md) — chains, contracts, API, env vars
 - [Milestones](docs/MILESTONES.md) — M0–M8 task cards
 - [Agent Runbook](docs/AGENT-RUNBOOK.md) — builder/reviewer protocol

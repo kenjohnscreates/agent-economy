@@ -606,3 +606,9 @@ Blocked: `revokeName` · 2nd default on **bo**
 Risks changed: live SSE unblocked; ledger still empty. Dirty chain: do not another `--ticks 12 --yes` until mayor uses **#11**.
 Next up: walk UI + mayor #11 · Gateway Fri · record Sat 12th live. Do not start D. Do not `markDefault` bo.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 00:35 EDT
+Done: [`docs/CYCLE.md`](CYCLE.md) — 12-tick do/say + BE footnotes; mock speech pools; live vs #9/#10/#11. Linked from PRD §12, DAN-LIVE-SPLIT, README, SUBMISSION.
+In progress: live UI walk · Fri Gateway · Sat record
+Blocked: `revokeName` · 2nd default on **bo**
+Next up: walk UI + mayor #11 · Gateway Fri. Do not `--ticks 12 --yes` until #11.

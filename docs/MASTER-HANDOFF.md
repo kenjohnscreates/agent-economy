@@ -13,7 +13,7 @@ main HEAD **`bc6e112`** (deliver fix). STATUS + this file should match git. Unco
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 Checkpoints: Thu 10 Sep 22:00 **DONE**. Next: **Sat 12 Sep 12:00**.
 
-Spec: docs/PRD.md, ARCHITECTURE.md, MILESTONES.md, AGENT-RUNBOOK.md, RISKS.md, STATUS.md, SUBMISSION.md.
+Spec: docs/PRD.md, CYCLE.md (12-tick do/say), ARCHITECTURE.md, MILESTONES.md, AGENT-RUNBOOK.md, RISKS.md, STATUS.md, SUBMISSION.md.
 This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 
 ## Protocol
