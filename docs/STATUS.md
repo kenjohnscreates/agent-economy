@@ -659,3 +659,11 @@ Blocked: `revokeName` · 2nd default on **bo** · Studio until 15:22 · **M9.1 w
 Next up: 15:22 restart API · Gateway only after wallet gate · Sat record. Do not `--ticks 12 --yes` until #11.
 `touching:` none. `apps/web` free. Do not save `apps/api` on primary until restart.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 12:24 EDT
+Done: Kenny **`approve M9.1 wallets`**. Spawned T1 builder `/tmp/wt-m9.1` `card/M9.1-gateway` — gus **ETH-SEPOLIA** SCA only (not `setup-wallets --yes`). API still down until **15:22**.
+In progress: **M9.1** Gateway (faucet 403 → drop, film Arc-only)
+Blocked: `revokeName` · 2nd default on **bo** · Studio until 15:22
+Next up: M9.1 PR · 15:22 `pnpm --filter @agent-town/api dev`. Do not `--ticks 12 --yes` until #11.
+`touching:` M9.1 `packages/circle` (worktree). `apps/web` free unless inbound strip — ping first.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
