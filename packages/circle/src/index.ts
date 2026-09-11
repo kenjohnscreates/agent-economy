@@ -11,3 +11,4 @@ export * from "./execute.js";
 export * from "./fund.js";
 export * from "./job.js";
 export * from "./treasury-e2e.js";
+export * from "./gateway.js";

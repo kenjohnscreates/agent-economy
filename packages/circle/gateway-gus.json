@@ -1,0 +1,16 @@
+{
+  "blockchain": "ETH-SEPOLIA",
+  "accountType": "SCA",
+  "walletSetId": "949545dc-5e02-5050-8e2f-7e6bc12bfed3",
+  "refId": "gus-eth-sepolia",
+  "walletId": "16ee5651-81ab-5c52-8bca-610a5cf7785c",
+  "address": "0x97847b3c015994784ae8cf776ef9a4d563618cf2",
+  "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+  "gatewayWallet": "0x0077777d7EBA4688BDeF3E311b846F25870A19B9",
+  "domain": 0,
+  "faucet": {
+    "ok": false,
+    "status": 403,
+    "detail": "Forbidden"
+  }
+}

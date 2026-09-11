@@ -20,6 +20,9 @@ import { z } from "zod";
 /** Circle blockchain identifier for Arc Testnet (Circle `Blockchain` enum). */
 export const ARC_TESTNET_BLOCKCHAIN = "ARC-TESTNET" as const;
 
+/** Circle blockchain identifier for Ethereum Sepolia (Gateway deposit source). */
+export const ETH_SEPOLIA_BLOCKCHAIN = "ETH-SEPOLIA" as const;
+
 /** Env vars this package needs for live calls. Secrets are redacted in errors. */
 export const CircleEnvSchema = z.object({
   CIRCLE_API_KEY: z.string().min(1, "CIRCLE_API_KEY is required"),

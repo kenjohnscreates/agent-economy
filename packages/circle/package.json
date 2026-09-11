@@ -14,7 +14,8 @@
   },
   "files": [
     "dist",
-    "roster.json"
+    "roster.json",
+    "gateway-gus.json"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -22,6 +23,8 @@
     "test": "vitest run",
     "lint": "eslint src scripts",
     "setup-wallets": "node --env-file-if-exists=../../.env --import tsx scripts/setup-wallets.ts",
+    "setup-gateway-gus": "node --env-file-if-exists=../../.env --import tsx scripts/setup-gateway-gus.ts",
+    "gateway-deposit": "node --env-file-if-exists=../../.env --import tsx scripts/gateway-deposit.ts",
     "balances": "node --env-file-if-exists=../../.env --import tsx scripts/balances.ts",
     "fund": "node --env-file-if-exists=../../.env --import tsx scripts/fund.ts",
     "job-e2e": "node --env-file-if-exists=../../.env --import tsx scripts/job-e2e.ts",
