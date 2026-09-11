@@ -629,16 +629,18 @@ input {
   gap: 8px;
   margin-top: 8px;
 }
+/* Toasts sit in the flow at the foot of the mayor card, not floating over the page,
+   so a toast can never land on top of approve, deny, fund or the rate slider. */
 .toasts {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 320px;
-  max-width: calc(100vw - 48px);
+  width: 100%;
+  min-width: 0;
+  margin-top: 14px;
+}
+.toasts:empty {
+  display: none;
 }
 .toast {
   display: flex;
@@ -649,7 +651,7 @@ input {
   border: 1px solid var(--surface-2);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius-card);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   font-size: 12px;
   line-height: 16px;
 }
@@ -721,8 +723,12 @@ input {
 .connect[data-phase="warming"] {
   border-left-color: var(--info);
 }
-.connect[data-phase="failed"] {
+.connect[data-phase="failed"],
+.connect[data-phase="stream-closed"] {
   border-left-color: var(--danger);
+}
+.connect[data-phase="stream-dropped"] {
+  border-left-color: var(--sand);
 }
 .connect pre {
   margin: 8px 0 0;

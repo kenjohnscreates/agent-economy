@@ -3,11 +3,13 @@
 // the API is unreachable or its real source is still warming), attaches the stream
 // (live SSE or recorded replay) to the reducer, refetches /agents and /loans on every
 // tick in live mode (positions, balances and the loan book only live there), and
-// exposes controls including reconnect.
+// exposes controls including reconnect. A live stream that drops under an already
+// loaded page reports through the same `error` object as a failing snapshot, so the
+// connection card explains the gap without the town being thrown away.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type { StateResponse } from "@agent-town/shared";
 import { api, type HealthResponse } from "./api";
-import { backoffMs, describeConnect, type ConnectPhase } from "./connect";
+import { backoffMs, describeConnect, describeStreamDrop, type ConnectPhase } from "./connect";
 import { openReplay, type ReplayControls, type ReplayFile } from "./replay";
 import { openTownStream, type StreamHandle } from "./sse";
 import { initialState, reduce, type TownAction, type TownState } from "./store";
@@ -34,7 +36,10 @@ export interface ConnectError {
 export function useTown(source: TownSource | null): {
   state: TownState;
   controls: TownControls;
-  /** Null while connected. While the snapshot keeps failing, what is wrong and how many tries so far. */
+  /**
+   * Null while connected. While the snapshot keeps failing, or while a live stream that
+   * had already opened is dropped, what is wrong and how many tries so far.
+   */
   error: ConnectError | null;
   /** `/state` from the API (flags, tickMs), once loaded. */
   info: StateResponse | null;
@@ -87,6 +92,9 @@ export function useTown(source: TownSource | null): {
       })
       .catch(() => undefined);
 
+    // How many times the live stream has reported a gap since it was last open.
+    let drops = 0;
+
     const snapshot = async (attempt: number): Promise<void> => {
       try {
         const [agents, scoreboard, loans, st] = await Promise.all([
@@ -124,7 +132,19 @@ export function useTown(source: TownSource | null): {
               .catch(() => undefined);
           }
         },
-        (s) => guarded({ event: "status", data: s }),
+        (s) => {
+          guarded({ event: "status", data: s });
+          if (cancelled) return;
+          // EventSource retries by itself; we only report the gap. Each onerror it
+          // raises is one more failed attempt, and an open stream clears the card.
+          if (s === "live") {
+            drops = 0;
+            setError(null);
+          } else if (s === "reconnecting" || s === "error") {
+            drops += 1;
+            setError({ ...describeStreamDrop(s, apiUrl), attempt: drops });
+          }
+        },
       );
     };
     void snapshot(1);
