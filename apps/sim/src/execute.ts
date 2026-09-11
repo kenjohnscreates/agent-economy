@@ -1,5 +1,6 @@
 // M4.3 — map ProposedAction → Circle tx via packages/circle (dry-run default).
 // Live tick: ALLOW_BROADCAST=true AND (--yes | SIM_EXECUTE=on). Gate A after merge.
+// Live repay is skipped until tick 9 so t7 mark_default can still see an Active loan.
 import { randomUUID } from "node:crypto";
 import {
   ARC_USDC_ADDRESS,
@@ -283,6 +284,8 @@ export async function executeProposedAction(
       }
 
       case "repay": {
+        // Hold live merchant repay until t9 so t7 mark_default can still see an Active loan.
+        if (input.tick < 9) return { status: "skipped" };
         const loanId = parseLoanId(action.loanId, "repay");
         if (!loanId) return { status: "skipped" };
         if (deps.loanStatus && (await deps.loanStatus(loanId)) !== LOAN_ACTIVE) {

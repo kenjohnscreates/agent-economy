@@ -212,7 +212,7 @@ describe("executeProposedAction (mocked Circle)", () => {
     for (const kind of kinds) {
       const result = await executeProposedAction(
         {
-          tick: 1,
+          tick: 9,
           agent: "ada",
           action: { kind, loanId: kind === "repay" ? "L-1" : "L-2", amountUsdc: "1200000" },
         },
@@ -222,6 +222,25 @@ describe("executeProposedAction (mocked Circle)", () => {
     }
     expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
     expect(client.createTransaction).not.toHaveBeenCalled();
+  });
+
+  it("repay skipped on ticks 1–8 so t7 mark_default can see an Active loan", async () => {
+    const client = mockClient();
+    const result = await executeProposedAction(
+      { tick: 8, agent: "bo", action: { kind: "repay", loanId: "7", amountUsdc: "1200000" } },
+      { ...deps(client), loanStatus: async () => 2 },
+    );
+    expect(result).toEqual({ status: "skipped" });
+    expect(client.createContractExecutionTransaction).not.toHaveBeenCalled();
+  });
+
+  it("repay at tick 9 executes when on-chain status is Active", async () => {
+    const client = mockClient();
+    const result = await executeProposedAction(
+      { tick: 9, agent: "bo", action: { kind: "repay", loanId: "7", amountUsdc: "1200000" } },
+      { ...deps(client), loanStatus: async () => 2 },
+    );
+    expect(result).toEqual({ status: "complete", txHash: "0xabc", txId: "tx-exec" });
   });
 
   it("request_loan skipped when borrower already has an activeLoanOf slot", async () => {

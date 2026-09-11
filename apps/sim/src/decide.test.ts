@@ -152,13 +152,14 @@ describe("merchant (PRD §5)", () => {
 });
 
 describe("worker (PRD §5)", () => {
-  it("picks the highest-pay open town job; ignores non-roster clients", () => {
+  it("picks the highest-pay funded unassigned town job; ignores open and non-roster clients", () => {
     const world = loadWorld(2, {
       jobs: [
-        { id: "J-low", client: "bo", provider: "", amountUsdc: "1000000", status: "open" },
-        { id: "J-high", client: "cy", provider: "", amountUsdc: "2500000", status: "open" },
-        { id: "J-noise", client: "0xdead", provider: "", amountUsdc: "9000000", status: "open" },
-        { id: "J-funded", client: "bo", provider: "eli", amountUsdc: "8000000", status: "funded" },
+        { id: "J-low", client: "bo", provider: "", amountUsdc: "1000000", status: "funded" },
+        { id: "J-high", client: "cy", provider: "", amountUsdc: "2500000", status: "funded" },
+        { id: "J-open", client: "bo", provider: "", amountUsdc: "4000000", status: "open" },
+        { id: "J-noise", client: "0xdead", provider: "", amountUsdc: "9000000", status: "funded" },
+        { id: "J-named", client: "bo", provider: "eli", amountUsdc: "8000000", status: "funded" },
       ],
     });
     expect(decide(dee, ctx(world))).toEqual([
@@ -185,7 +186,7 @@ describe("worker (PRD §5)", () => {
     expect(decide(dee, ctx(emptyWorld(1)))).toEqual([{ kind: "idle" }]);
   });
 
-  it("accepts funded (and open) roster jobs; ignores submitted/completed/rejected", () => {
+  it("accepts funded unassigned roster jobs; ignores open/submitted/completed/rejected", () => {
     const world = loadWorld(2, {
       jobs: [
         { id: "J-open", client: "bo", provider: "", amountUsdc: "1000000", status: "open" },
@@ -200,19 +201,15 @@ describe("worker (PRD §5)", () => {
     ]);
   });
 
-  it("only the named roster worker accepts; empty provider is highest-pay open/funded", () => {
+  it("named roster provider delivers instead of setProvider; empty provider is highest-pay funded", () => {
     const named = loadWorld(2, {
       jobs: [
         { id: "J-dee", client: "bo", provider: "dee", amountUsdc: "1000000", status: "funded" },
         { id: "J-eli", client: "cy", provider: "eli", amountUsdc: "9000000", status: "funded" },
       ],
     });
-    expect(decide(dee, ctx(named))).toEqual([
-      { kind: "accept_job", jobId: "J-dee", amountUsdc: "1000000" },
-    ]);
-    expect(decide(eli, ctx(named))).toEqual([
-      { kind: "accept_job", jobId: "J-eli", amountUsdc: "9000000" },
-    ]);
+    expect(decide(dee, ctx(named))).toEqual([{ kind: "deliver", jobId: "J-dee" }]);
+    expect(decide(eli, ctx(named))).toEqual([{ kind: "deliver", jobId: "J-eli" }]);
     expect(decide(fay, ctx(named))).toEqual([{ kind: "idle" }]);
 
     const openMarket = loadWorld(2, {
@@ -227,6 +224,21 @@ describe("worker (PRD §5)", () => {
     expect(decide(eli, ctx(openMarket))).toEqual([
       { kind: "accept_job", jobId: "J-high", amountUsdc: "2500000" },
     ]);
+  });
+
+  it("does not accept a job whose provider is a foreign address", () => {
+    const world = loadWorld(2, {
+      jobs: [
+        {
+          id: "185900",
+          client: "bo",
+          provider: "0x1111111111111111111111111111111111111111",
+          amountUsdc: "3000000",
+          status: "funded",
+        },
+      ],
+    });
+    expect(decide(dee, ctx(world))).toEqual([{ kind: "idle" }]);
   });
 });
 
@@ -299,6 +311,26 @@ describe("treasurer (PRD §5)", () => {
     ]);
     const t6 = loadWorld(6, { loans: [loan], treasury: t7.treasury });
     expect(kinds(ada, t6)).toEqual(["idle"]);
+  });
+
+  it("does not markDefault bo (2nd default would revokeName)", () => {
+    const loan: WorldLoan = {
+      id: "L-bo",
+      borrower: "bo",
+      principalUsdc: "1200000",
+      status: "approved",
+      approvedAtTick: 1,
+    };
+    const t7 = loadWorld(7, {
+      loans: [loan],
+      treasury: {
+        utilisationBps: 0,
+        outstandingUsdc: "1200000",
+        baseRateBps: computeBaseRateBps(0),
+        defaults: 0,
+      },
+    });
+    expect(kinds(ada, t7)).toEqual(["idle"]);
   });
 
   it("set_rate when market APY + spread (+ default premium) ≠ on-chain", () => {
@@ -384,8 +416,8 @@ describe("determinism", () => {
       balances: { gus: "2000000", bo: "500000" },
       inventory: { bo: 1 },
       jobs: [
-        { id: "J-a", client: "bo", provider: "", amountUsdc: "1000000", status: "open" },
-        { id: "J-b", client: "cy", provider: "", amountUsdc: "3000000", status: "open" },
+        { id: "J-a", client: "bo", provider: "", amountUsdc: "1000000", status: "funded" },
+        { id: "J-b", client: "cy", provider: "", amountUsdc: "3000000", status: "funded" },
       ],
     });
     const a = decide(bo, ctx(world));
