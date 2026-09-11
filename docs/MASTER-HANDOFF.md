@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main == origin/main at **9fbf0cd** unless git fetch shows otherwise (Thu 10 Sep ~22:20 EDT after **M6.4** #56). STATUS is the live log — keep it truthful and push when GitHub should match. If STATUS lags HEAD, refresh this file.
+main == origin/main unless git fetch shows otherwise (Thu 10 Sep ~23:00 EDT — **live demo pivot**, M6.4 `9fbf0cd`). STATUS is the live log — keep it truthful and push when GitHub should match. If STATUS lags HEAD, refresh this file.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 **Checkpoint tonight: Thu 10 Sep 22:00 EDT — DONE (no scope-cut).** Next: **Sat 12 Sep 12:00**.
@@ -18,23 +18,22 @@ This file is a snapshot; **STATUS + git are source of truth** if they disagree.
 
 ## Protocol
 - One builder per card. Worktrees `/tmp/wt-…`. Branch `card/<id>-<slug>`. PR → T1 review (inherit) → comment `VERDICT: APPROVE` or `VERDICT: REQUEST_CHANGES` → squash-merge.
-- Master does **not** write feature code (briefs + gated broadcasts). **Never edit `apps/web` except merging Dan’s PRs.**
+- File split: [`docs/DAN-LIVE-SPLIT.md`](DAN-LIVE-SPLIT.md). Kenny: sim/api/circle. Dan: Pixi speech/dashboard. Ping `touching:` in STATUS before overlapping PRs. Frozen: `packages/shared` schemas, MapSlot **props**.
 - Town = **botanica**. Never persist ENS tokenIds (R3). No secrets in git.
-- Gate A: `--yes` / `--broadcast` / mayor POST needs `ALLOW_BROADCAST=true` after human approve (or explicit “run 12-tick” / “clear loans”).
-- Do not `revokeName` roster names unless explicitly approved. Do **not** `markDefault` **bo** (already defaulted #2 → 2nd default would revokeName).
-- Default dry-run. `--broadcast` also needs `ALLOW_BROADCAST=true`.
+- Gate A: `--yes` / `--broadcast` / mayor POST needs `ALLOW_BROADCAST=true`. **Human approved Gate A Thu 23:00** for M6.5 live 12-tick + cy seed. Still ask before `revokeName`.
+- Do **not** `markDefault` **bo** (already defaulted #2 → 2nd default would revokeName). Default **cy** only.
 - Frozen API: `packages/shared`. Changes need both humans + mock update in the same PR.
-- Stretch B/D (Circle Gateway, open deposits): do **not** start unless M6 actually exits. M6 has **not** exited.
+- Stretch **B (Gateway) authorized Fri**. Stretch D (open deposits): do not start. Do not build yield vault A.
 
 ## Team
 - Human (operator / Kenny) owns BE/onchain.
-- Dan (`don-radman`) owns FE in `apps/web`. **M5 cards 1–11 done** (#53 README, #54 framing, #55 stream-drop on main). Extra polish PRs may still land.
-- `API_MODE=mock` in `.env`. Real is opt-in. Do not give Dan Circle keys or `DEPLOYER_PRIVATE_KEY`.
-- FE run (film this): `pnpm --filter @agent-town/api dev:mock` (:3001) + `pnpm --filter @agent-town/web dev` (:3000), viewport **1440×900**. `/map-demo` = fixture-only. Header **replay** if API is down.
-- **Kenny has now seen the UI** (mock walk Thu 21:50). Film mock; map is hero.
+- Dan (`don-radman`) owns map/speech chrome. Kenny may edit `apps/web` for live bank/mayor wiring. Split: `docs/DAN-LIVE-SPLIT.md`.
+- Do not give Dan Circle keys or `DEPLOYER_PRIVATE_KEY`.
+- FE live: `API_MODE=real` + `pnpm --filter @agent-town/api dev` (:3001, load `.env`) + `pnpm --filter @agent-town/web dev` (:3000), viewport **1440×900**. `/map-demo` = rehearsal fixtures only.
+- Record **Sat 12 Sep** against live. Mock is rehearsal.
 
 ## Open PRs
-None as of Thu 22:20. T1 any new Dan polish if it lands. Frozen: `packages/shared`, MapSlot **props** (`MapSlotProps`/`ZONES`/`zonePoint`). No `ALLOW_BROADCAST`. Squash-merge from **primary** checkout.
+None as of Thu 23:00. T1 Dan polish if it lands. Frozen: `packages/shared`, MapSlot **props**. Squash-merge from **primary** checkout. Gate A approved for M6.5.
 
 ## Live artifacts (do not redo deploys)
 - TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` Arc 5042002
@@ -61,32 +60,30 @@ stats: loanCount 8, outstanding 0, defaults 1, baseRateBps 839, deposits 0.92, f
 bo/cy `activeLoanOf` clear. Mayor **mock** queue is fixtures (`L-flag`), not #7/#8.
 
 ## Board
-- M0–M5 **done**. Mock default. FE polish #53/#54/#55 on main.
-- M6 in_progress: dry-run green; **M6.4** #56 on main (repay held to t9; roster/funded jobs). Live `markDefault` still unmet — outstanding 0; need a **non-bo** Active loan past grace, then Gate A `--yes`.
-- M7: findings + rate-stack + README + SUBMISSION + P2 nits landed. Leftover P2: function splits, CORS, codegen `any` — skip.
-- M8: outline on main; **mock walk done**; **record still todo**. Film **mock**, map is hero.
-- Stretch B/D **not started**. Do not start.
+- M0–M5 **done**. Mock = rehearsal. FE polish #53/#54/#55 on main.
+- M6 in_progress: **M6.5** Gate A live walk (seed cy, 12-tick `--yes`, `API_MODE=real`). M6.4 code on main.
+- M7: leftover P2 skip.
+- M8: record **Sat 12 Sep live**. Form Sun. Freeze Sun 08:00.
+- Stretch **B Gateway Fri** (gus ETH-SEPOLIA Circle USDC → town bank). Not ENS MockUSDC. Stretch D off.
 
 ## Why live still ≠ PRD §12
-M6.4 (#56) holds live `repay` until t9 and filters `accept_job` to funded + unassigned roster jobs. Remaining is **chain state**, not code:
-- Outstanding is 0. t7 `markDefault` needs a **non-bo** Active loan past term+grace (60s+120s). Do not default **bo**.
-- Job settle still depends on roster-owned funded ERC-8183 ids (createJob already sets dee).
+Code (M6.4) is ready. Remaining is **chain state** until M6.5 lands:
+- Outstanding 0 → seed **cy** Active loan, wait ~120s grace, then `--ticks 12 --yes`. Never default **bo**.
+- Mayor click needs a **numeric Pending** loan (not mock `L-3`).
 - Fixture ids `L-1` / `J-demo` still skipped on live execute (intentional).
 
-Not blocking video (mock still plays §12). Gate A live 12-tick only if human asks.
-
 ## Video
-Record against mock. Commands:
+Record live Saturday. Rehearsal mock still works. Commands (live):
 
 ```
-pnpm --filter @agent-town/api dev:mock    # :3001
+API_MODE=real ALLOW_BROADCAST=true
+pnpm --filter @agent-town/api dev         # :3001 — needs --env-file .env
 pnpm --filter @agent-town/web dev         # :3000
+ALLOW_BROADCAST=true STORYLINE=demo TICK_MS=15000 \
+  pnpm --filter @agent-town/sim tick -- --ticks 12 --yes
 ```
 
-http://localhost:3000 at 1440×900. Also `/map-demo` (pause/speed, no API). Replay toggle if :3001 down.
-Mayor Approve on mock = fixture toast (not live chain). Do not set `ALLOW_BROADCAST` for filming.
-
-Walk evidence (Thu 21:50): Pixi map + coins; bank rate stack; Approve L-3 → feed `approve_loan`; `/map-demo`; kill :3001 → unreachable + replay. In-session SSE drop did not paint the #55 card in Cursor’s browser (reload did unreachable).
+ENS names are on Sepolia; money is Arc USDC. Gateway uses **Circle Sepolia USDC** `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`.
 
 ## Gotchas
 - Faucet was 403. Deployer ~49 USDC. Last `fund()` **8 USDC** [0xe457d01e…](https://testnet.arcscan.app/tx/0xe457d01e310c81ed62934aebc0b97ac47cb5ae967236ead23ab651f69afe4709).
@@ -101,14 +98,14 @@ Walk evidence (Thu 21:50): Pixi map + coins; bank rate stack; Approve L-3 → fe
 
 ## Human gates still
 - `revokeName` roster names
-- Mayor fund / loan-decision / `--yes` / `--broadcast` / `ALLOW_BROADCAST`
-- Do not start stretch B (Gateway) or D (open deposits)
+- New Sepolia Circle wallet create (Gateway)
+- Stretch D (open deposits) — off
 
 ## Next up (orchestrator)
-1. **M8 record** (mock, map hero). ETHGlobal form Sun.
-2. Optional Gate A live 12-tick (only if asked): need a **non-bo** Active loan past 180s grace first. Do not default bo.
-3. T1 any new Dan polish PRs.
-4. Do not start stretch B/D. Do not re-review merged #48–#56. Skip leftover P2.
+1. **M6.5** seed cy + live 12-tick + `API_MODE=real`.
+2. **M9.1 Gateway** Fri (gus ETH-SEPOLIA).
+3. FE live polish per `DAN-LIVE-SPLIT.md`.
+4. Record Sat 12th live. Form Sun.
 5. Sat 12:00 checkpoint.
 
 Start by reading `docs/STATUS.md` + `git log -5` + `gh pr list`.

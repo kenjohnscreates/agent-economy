@@ -15,9 +15,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock default |
-| M6 Integration + demo | in_progress | both | **M6.4** #56 · repay held to t9 · roster/funded jobs · live `markDefault` still Gate A (outstanding 0) |
+| M6 Integration + demo | in_progress | both | **M6.5** live Arc walk (Gate A) · M6.4 #56 on main · video = live not mock |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero · **mock walk 1440×900 done** · record still todo |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep** live · mock = rehearsal only · Gateway Fri spike |
 
 ## Log
 
@@ -579,3 +579,11 @@ Blocked: `revokeName`
 Risks changed: code now holds repay past t7; chain still has no Active loan to default.
 Next up: **M8 record** (mock, map hero). Optional Gate A live 12-tick only if human asks. Leftover P2 (function splits, CORS, codegen `any`) skip. Do not start stretch B/D.
 Checkpoint call: none (Thu 22:00 already logged). Next Sat 12 Sep 12:00.
+
+## Thu 10 Sep 23:00 EDT
+Done: Pivot off mock-film. **Video = live testnet Sat 12 Sep.** Split: [`docs/DAN-LIVE-SPLIT.md`](DAN-LIVE-SPLIT.md). Brief: [`docs/M6.5-LIVE-ARC-WALK-BRIEF.md`](M6.5-LIVE-ARC-WALK-BRIEF.md). Kenny: sim/api/circle + bank inbound. Dan: Pixi speech/dashboard. Frozen shared + MapSlotProps. Human approved Gate A (`--yes` / `ALLOW_BROADCAST`).
+In progress: **M6.5** seed **cy** Active loan (not bo) → wait grace → live `--ticks 12 --yes` → `API_MODE=real`. Then Fri **M9.1 Gateway** (gus ETH-SEPOLIA Circle USDC, not ENS MockUSDC).
+Blocked: `revokeName`
+Risks changed: mock is rehearsal only; judges need arcscan.
+Next up: seed cy loan + live 12-tick tonight. Stretch B Fri. Do not start D.
+Checkpoint call: none. Record Sat. Freeze Sun 08:00.

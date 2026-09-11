@@ -25,7 +25,8 @@
     "balances": "node --env-file-if-exists=../../.env --import tsx scripts/balances.ts",
     "fund": "node --env-file-if-exists=../../.env --import tsx scripts/fund.ts",
     "job-e2e": "node --env-file-if-exists=../../.env --import tsx scripts/job-e2e.ts",
-    "treasury-e2e": "node --env-file-if-exists=../../.env --import tsx scripts/treasury-e2e.ts"
+    "treasury-e2e": "node --env-file-if-exists=../../.env --import tsx scripts/treasury-e2e.ts",
+    "seed-cy-loan": "node --env-file-if-exists=../../.env --import tsx scripts/seed-cy-loan.ts"
   },
   "dependencies": {
     "@agent-town/shared": "workspace:*",
