@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { route, samplePath, BRIDGES } from "../components/map/paths";
 import { CoinPool } from "../components/map/coins";
 import { AgentMotion } from "../components/map/agents";
+import { CHIP_GAP, MAP_HEIGHT, MAP_WIDTH, stackChips, type ChipBox } from "../components/map/hud";
 import { FIXTURES, type AgentSummary } from "@agent-town/shared";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -170,5 +171,96 @@ describe("coin lifecycle", () => {
     expect(flying.stage).toBe("line");
     pool.update(400);
     expect(pool.activeCount).toBe(0);
+  });
+});
+
+// M5.13: two agents standing together used to draw their speech chips on top of each
+// other. stackChips is the whole of the new positioning rule, so it is tested directly.
+describe("speech chip stacking", () => {
+  const box = (x: number, y: number, width = 60, height = 13): ChipBox => ({
+    x,
+    y,
+    width,
+    height,
+    visible: false,
+  });
+  const clear = (a: ChipBox, b: ChipBox): boolean =>
+    a.x >= b.x + b.width || b.x >= a.x + a.width || a.y >= b.y + b.height || b.y >= a.y + a.height;
+  const shown = (boxes: ChipBox[]): ChipBox[] => boxes.filter((b) => b.visible);
+
+  it("leaves a chip that collides with nothing exactly where its agent asked", () => {
+    const boxes = [box(200, 180), box(400, 180)];
+    stackChips(boxes);
+    expect(boxes.map((b) => ({ x: b.x, y: b.y, visible: b.visible }))).toEqual([
+      { x: 200, y: 180, visible: true },
+      { x: 400, y: 180, visible: true },
+    ]);
+  });
+
+  it("rounds to whole pixels and keeps every chip inside the 640x360 frame", () => {
+    const boxes = [box(-40, 180.4), box(MAP_WIDTH, 6.6), box(300, MAP_HEIGHT)];
+    stackChips(boxes);
+    for (const b of shown(boxes)) {
+      expect(b.x).toBe(Math.round(b.x));
+      expect(b.y).toBe(Math.round(b.y));
+      expect(b.x).toBeGreaterThanOrEqual(1);
+      expect(b.y).toBeGreaterThanOrEqual(1);
+      expect(b.x + b.width).toBeLessThanOrEqual(MAP_WIDTH - 1);
+      expect(b.y + b.height).toBeLessThanOrEqual(MAP_HEIGHT - 1);
+    }
+  });
+
+  it("lifts a colliding chip clear of the newer one and keeps the gap", () => {
+    const boxes = [box(200, 180), box(210, 180)];
+    stackChips(boxes);
+    expect(boxes[0]).toMatchObject({ x: 200, y: 180, visible: true });
+    expect(boxes[1]).toMatchObject({ x: 210, y: 180 - 13 - CHIP_GAP, visible: true });
+    expect(clear(boxes[0]!, boxes[1]!)).toBe(true);
+  });
+
+  it("stacks a whole crowd asking for the same spot without a single overlap", () => {
+    const boxes = Array.from({ length: 8 }, (_, i) => box(200 + i, 180));
+    stackChips(boxes);
+    const visible = shown(boxes);
+    expect(visible).toHaveLength(8);
+    for (let i = 0; i < visible.length; i++)
+      for (let j = i + 1; j < visible.length; j++)
+        expect(clear(visible[i]!, visible[j]!)).toBe(true);
+    // Priority order survives: the newest chip is the lowest, nearest its own agent.
+    expect(visible.map((b) => b.y)).toEqual([...visible.map((b) => b.y)].sort((a, b) => b - a));
+  });
+
+  it("hides a chip rather than overlap when the lift runs out of frame", () => {
+    const boxes = Array.from({ length: 4 }, () => box(200, 40, 60, 23));
+    stackChips(boxes);
+    expect(boxes.map((b) => b.visible)).toEqual([true, true, false, false]);
+    expect(shown(boxes).map((b) => b.y)).toEqual([40, 15]);
+  });
+
+  it("ignores chips that are already far enough apart sideways", () => {
+    const boxes = [box(100, 180), box(100 + 60 + CHIP_GAP, 180)];
+    stackChips(boxes);
+    expect(boxes.map((b) => b.y)).toEqual([180, 180]);
+  });
+
+  it("respects the count argument so the loop can reuse one buffer", () => {
+    const boxes = [box(200, 180), box(200, 180), box(200, 180)];
+    stackChips(boxes, 2);
+    expect(boxes[1]!.y).toBe(180 - 13 - CHIP_GAP);
+    expect(boxes[2]).toMatchObject({ y: 180, visible: false });
+  });
+
+  it("is a pure function of the wanted rectangles, so a held frame never drifts", () => {
+    const wanted = [box(200, 180), box(206, 180), box(212, 180)];
+    const once = wanted.map((b) => ({ ...b }));
+    stackChips(once);
+    const twice = wanted.map((b) => ({ ...b }));
+    stackChips(twice);
+    expect(twice).toEqual(once);
+    // Re-running on the already resolved boxes holds them still, so a frame that repeats
+    // the same input cannot creep upwards.
+    const settled = once.map((b) => ({ ...b }));
+    stackChips(settled);
+    expect(settled).toEqual(once);
   });
 });
