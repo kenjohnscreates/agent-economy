@@ -6,7 +6,7 @@ Rule: one PR per card; reviewer gate before merge; master updates [STATUS](STATU
 
 Checkpoints (master decides scope cuts): **Thu 22:00** (done, no cut) · **Sat 12:00**.
 
-**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). Deliver fix `a475ccb`. `API_MODE=real` + Supabase. M8 = record live Saturday. M9.1 Gateway authorized Friday. D off. Studio 429 until Fri 15:22 EDT.
+**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). Deliver fix `a475ccb`. `API_MODE=real` + Supabase. M8 = record live Saturday. M9.1 code on main (`c800d64`); faucet 403 → film Arc-only. D off. Studio 429 until Fri 15:22 EDT.
 
 ---
 
@@ -121,7 +121,7 @@ Mock backup footage is rehearsal only. Prize video = **live** (M8.2).
 | M8.3 | ETHGlobal form: repo, video, tracks (Arc Agentic Economy [+ Launch], Graph AI From Scratch, ENS Best Use of ENSv2) | submitted by **11:00**, 1 h buffer |
 
 ## Stretch (only if M6 exits early; priority order)
-- M9.1 **B — Circle App Kit / Gateway**: treasury wallet holds a unified USDC balance across chains, settles on Arc; show deposit from another testnet landing in the town bank. T1, ~3–5 h. **Authorized Fri 11 Sep.** Visitor = **gus** ETH-SEPOLIA SCA; token = Circle Sepolia USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` (**not** ENS MockUSDC). Drop Saturday if faucet/API blocks.
+- M9.1 **B — Circle App Kit / Gateway**: treasury wallet holds a unified USDC balance across chains, settles on Arc; show deposit from another testnet landing in the town bank. T1, ~3–5 h. **Code on main** #59 `c800d64` (gus Sepolia = Arc gus `0x55911428…`). **Faucet 403** — no live deposit; film Arc-only. Token = Circle Sepolia USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` (**not** ENS MockUSDC).
 - M9.2 **D — Open deposits**: LP share accounting on `TownTreasury.deposit`; anyone (incl. the mayor) earns the interest agents pay; UI "Deposit" button. T1, ~2–3 h. **Off — do not start.**
 - M9.3 Mayor registers a new agent: mint subname + create Circle wallet from UI. T2.
 - M9.4 ERC‑8004 registration on Arc + ENSIP‑25 `agent-registration` record loop. T2.

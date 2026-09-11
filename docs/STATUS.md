@@ -17,7 +17,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
 | M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase ledger · **Studio 429 until Fri 15:22 EDT** |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · Gateway Fri spike · freeze Sun 08:00 |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · Gateway code on main, faucet 403 → Arc-only · freeze Sun 08:00 |
 
 ## Log
 
@@ -690,4 +690,12 @@ In progress: T1 re-review #59 · CI pending · Studio **15:22**
 Blocked: faucet 403 · `revokeName` · 2nd default **bo**
 Next up: T1+#59 merge if APPROVE · film Arc-only · 15:22 API. Do not `--ticks 12 --yes` until #11.
 `touching:` #59 `packages/circle`. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 12:57 EDT
+Done: **M9.1** #59 squash-merged `c800d64`. T1 inherit [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/59#pullrequestreview-5181356223). gus Sepolia = Arc gus `0x55911428…`. Ada clone not funded. Deposit gated `--yes`+`ALLOW_BROADCAST`. **Faucet 403** — no live Gateway money; film Arc-only. Worktrees cleaned.
+In progress: Studio wait **15:22 EDT** then `pnpm --filter @agent-town/api dev`
+Blocked: faucet 403 · `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: 15:22 API restart (`tick:1`, chips, mayor #11). Record Sat live. Form Sun.
+`touching:` none. `apps/web` free.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
