@@ -651,3 +651,11 @@ Blocked: `revokeName` · 2nd default on **bo** · Studio until **15:22 EDT** · 
 Next up: T1+#58 **remote** squash-merge (no `git pull` on primary) · restart API after 15:22. Do not `--ticks 12 --yes` until #11.
 `touching:` #58 `apps/api` + `packages/graphclient`. `apps/web` free.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 09:20 EDT
+Done: **M6.6** #58 squash-merged `69d5205`. T1 inherit [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/58#pullrequestreview-5179088571). Remote-only merge. Primary checkout **not** pulled (`:3001` PID 8831 still the 03:50 UTC process with #11 cache). Nits non-blocking (empty-cache zeros; Retry-After vs reset).
+In progress: wait Studio reset **15:22 EDT** · then `git pull` + restart `pnpm --filter @agent-town/api dev` · expect `/health` `tick:1` + chips
+Blocked: `revokeName` · 2nd default on **bo** · Studio until 15:22 · **M9.1 wallets** (say `approve M9.1 wallets`)
+Next up: 15:22 restart API · Gateway only after wallet gate · Sat record. Do not `--ticks 12 --yes` until #11.
+`touching:` none. `apps/web` free. Do not save `apps/api` on primary until restart.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
