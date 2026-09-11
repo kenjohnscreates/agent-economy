@@ -34,7 +34,7 @@ Agent economies are invisible: wallets are hex, decisions are logs, money moves 
 "A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on‑chain transaction; agents' decisions are driven by live on‑chain data from The Graph, including real DeFi market rates." The Treasury is our own contract; it is not a third‑party DeFi protocol.
 
 ### Optional — only if M6 exits early (in priority order)
-- **B. Circle App Kit / Gateway**: treasury holds a unified USDC balance across chains and settles on Arc (named directly in the Arc prize text). ~3–5 h. **Authorized Fri 11 Sep** (gus ETH-SEPOLIA Circle USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`, not ENS MockUSDC). Drop Saturday if faucet/API blocks; film Arc-only.
+- **B. Circle App Kit / Gateway**: treasury holds a unified USDC balance across chains and settles on Arc (named directly in the Arc prize text). ~3–5 h. **LIVE Fri 11 Sep** — gus Sepolia 2 USDC → TownTreasury 0.8 USDC (Circle `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`, not ENS MockUSDC).
 - **D. Open deposits**: anyone can deposit USDC into the Treasury and earn the interest agents pay (LP share accounting on top of existing `deposit`). ~2–3 h. **Do not start.**
 - **A. Treasury yield on idle USDC** via an external vault/pool on Arc Testnet — **not planned**: scan on Sep 8 found no live permissionless DeFi pool with real USDC on Arc Testnet (see RISKS R16). Revisit only if one appears.
 

@@ -37,7 +37,7 @@ export const GATEWAY_DOMAIN_SEPOLIA = 0;
 export const GATEWAY_DOMAIN_ARC = 26;
 export const SEPOLIA_GATEWAY_CONFIRMATIONS = 65;
 export const GATEWAY_DEPOSIT_USDC_6 = 2_000_000n; // 2 USDC
-export const GATEWAY_TRANSFER_USDC_6 = 1_000_000n; // 1 USDC after forwarding fee
+export const GATEWAY_TRANSFER_USDC_6 = 800_000n; // 0.8 USDC; ~1.02 USDC Gateway+forwarder fee fits in 2 USDC deposit
 export const GATEWAY_APPROVE_FN = "approve(address,uint256)";
 export const GATEWAY_DEPOSIT_FN = "deposit(address,uint256)";
 
@@ -655,17 +655,19 @@ export async function submitGatewayForwardingTransfer(input: {
     signature = sigResp.data.signature;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    log.warn(`Gateway burn-intent sign failed (SCA/EIP-1271 likely): ${msg}`);
+    log.warn(`Gateway burn-intent sign failed: ${msg}`);
     return {
       transferId: "",
-      blocked: `signTypedData: ${msg}. Gateway rejects EIP-1271; SCA needs an EOA delegate.`,
+      blocked: `signTypedData: ${msg}`,
     };
   }
 
   const response = await fetchFn(`${GATEWAY_API_BASE}/v1/transfer?enableForwarder=true`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: stringifyTypedData([{ burnIntent: typedData.message, signature }]),
+    body: stringifyTypedData([
+      { burnIntent: typedData.message, signature, contractSigner: true },
+    ]),
   });
   if (!response.ok) {
     const text = await response.text();

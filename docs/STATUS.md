@@ -17,7 +17,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
 | M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase ledger · **Studio 429 until Fri 15:22 EDT** |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · Gateway code on main, faucet 403 → Arc-only · freeze Sun 08:00 |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · **M9.1 Gateway LIVE** (0.8 USDC Sepolia → TownTreasury) · freeze Sun 08:00 |
 
 ## Log
 
@@ -697,5 +697,13 @@ Done: **M9.1** #59 squash-merged `c800d64`. T1 inherit [VERDICT: APPROVE](https:
 In progress: Studio wait **15:22 EDT** then `pnpm --filter @agent-town/api dev`
 Blocked: faucet 403 · `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
 Next up: 15:22 API restart (`tick:1`, chips, mayor #11). Record Sat live. Form Sun.
+`touching:` none. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 13:32 EDT
+Done: **M9.1 LIVE**. Kenny funded gus Sepolia `0x55911428…` (20 Circle USDC + 0.1 ETH). Deposit 2 USDC [0x27c49e4d…](https://sepolia.etherscan.io/tx/0x27c49e4d9c0b4bb170ffdc3f7e04257b023ccec60d454df0d678392ac15dc54c) · mint **0.8 USDC** → TownTreasury [0x14fad3ea…](https://testnet.arcscan.app/tx/0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea) transferId `6969d69e-…`. Receipt `status=0x1` USDC Transfer to `0xCE0e…FfC1` amount `800000`. Hotfix: `contractSigner: true` (ERC-1271) + transfer 0.8 (1.0 + ~1.02 fee > 2 deposit). Handoff rewritten `docs/MASTER-HANDOFF.md`.
+In progress: Studio wait **15:22 EDT** then real API
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · inbound BankPanel UI
+Next up: 15:22 API restart. Record Sat live (can cut to Gateway txs). Form Sun.
 `touching:` none. `apps/web` free.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.

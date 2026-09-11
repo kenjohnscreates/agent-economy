@@ -9,8 +9,21 @@
   "gatewayWallet": "0x0077777d7EBA4688BDeF3E311b846F25870A19B9",
   "domain": 0,
   "faucet": {
-    "ok": false,
-    "status": 403,
-    "detail": "Forbidden"
+    "ok": true,
+    "status": 0,
+    "detail": "manual: 20 Circle Sepolia USDC + 0.1 ETH (Circle faucet 403)"
+  },
+  "deposit": {
+    "amountUsdc6": "2000000",
+    "approveTxId": "eceaa834-26b0-5142-98a0-00026d6c8b6d",
+    "approveTxHash": "0x5f9d349d36d6fcd626747e41158d445042b54c566bee647361d97800385c6574",
+    "depositTxId": "52804bed-c746-5cb3-9026-8fc61f89455c",
+    "depositTxHash": "0x27c49e4d9c0b4bb170ffdc3f7e04257b023ccec60d454df0d678392ac15dc54c"
+  },
+  "transfer": {
+    "recipient": "0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1",
+    "amountUsdc6": "800000",
+    "transferId": "6969d69e-2f77-4f16-b7fa-e2aa8a7e4f21",
+    "mintTxHash": "0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea"
   }
 }

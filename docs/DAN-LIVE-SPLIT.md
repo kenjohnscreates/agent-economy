@@ -27,4 +27,4 @@ Ping in STATUS before a PR: `touching: <paths>`.
 
 ## Video bar
 
-Live Arc §12 (arcscan txs + subgraph + ENS resolve + mayor click **#11**). API is `API_MODE=real` + Supabase service key. Do **not** `--ticks 12 --yes` until mayor uses #11. Gateway is Fri spike; if faucet/API blocks, film Arc-only Saturday.
+Live Arc §12 (arcscan txs + subgraph + ENS resolve + mayor click **#11** + Gateway mint [0x14fad3ea…](https://testnet.arcscan.app/tx/0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea)). API is `API_MODE=real` + Supabase service key. Do **not** `--ticks 12 --yes` until mayor uses #11. Bank inbound strip optional; otherwise cut to arcscan.
