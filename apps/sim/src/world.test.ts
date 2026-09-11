@@ -88,3 +88,65 @@ describe("getWorld", () => {
     expect(world.merchantPriceUsdc).toBe(MERCHANT_BASE_PRICE_USDC);
   });
 });
+
+describe("getWorld jobs", () => {
+  const BO = "0x337512e3f78e9ad91493a98143b511c46c3775f7" as Address;
+  const DEE = "0x70b1300425c37af893ca4841e4183e7f0a1bdb89" as Address;
+  const FOREIGN = "0x1111111111111111111111111111111111111111";
+
+  function jobRoster(): GetWorldDeps["roster"] {
+    return {
+      blockchain: ARC_TESTNET_BLOCKCHAIN,
+      accountType: "SCA",
+      walletSetId: "test",
+      wallets: [
+        { name: "gus", walletId: "w-gus", address: GUS },
+        { name: "bo", walletId: "w-bo", address: BO },
+        { name: "dee", walletId: "w-dee", address: DEE },
+      ],
+    };
+  }
+
+  it("hydrates assignments from roster worker provider; keeps foreign provider non-empty", async () => {
+    const getWorld = createGetWorld(
+      testDeps({
+        roster: jobRoster(),
+        fetchSubgraph: async () => ({
+          jobs: [
+            {
+              id: "185764",
+              amount: "1200000",
+              status: "funded",
+              createdAt: "1",
+              settledAt: null,
+              client: { id: BO, ensName: "bo.botanica.eth" },
+              provider: { id: DEE, ensName: "dee.botanica.eth" },
+            },
+            {
+              id: "185900",
+              amount: "500000",
+              status: "funded",
+              createdAt: "1",
+              settledAt: null,
+              client: { id: BO, ensName: "bo.botanica.eth" },
+              provider: { id: FOREIGN, ensName: null },
+            },
+          ],
+        }),
+      }),
+    );
+    const world = await getWorld(4);
+    expect(world.jobs.find((j) => j.id === "185764")).toMatchObject({
+      client: "bo",
+      provider: "dee",
+      status: "funded",
+    });
+    expect(world.assignments).toContainEqual({
+      jobId: "185764",
+      worker: "dee",
+      acceptedAtTick: 3,
+    });
+    expect(world.jobs.find((j) => j.id === "185900")?.provider).toBe(FOREIGN);
+    expect(world.assignments.some((a) => a.jobId === "185900")).toBe(false);
+  });
+});

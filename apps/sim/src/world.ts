@@ -8,6 +8,7 @@ import {
   ARC_TESTNET_CHAIN_ID,
   ARC_USDC_ADDRESS,
   BASE_RATE_SPREAD_BPS,
+  ROSTER,
   computeBaseRateBps,
   computeMerchantPrice,
   computeTownRateBps,
@@ -179,10 +180,20 @@ export function loadWorld(tick: number, input: Partial<Omit<WorldState, "tick">>
   return { ...emptyWorld(tick), ...input, tick };
 }
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+function isRosterWorker(name: string): name is AgentName {
+  return ROSTER.some((a) => a.name === name && a.role === "worker");
+}
+
 function agentNameForAddress(roster: WalletRoster, address: string): AgentName | undefined {
   const wallet = roster.wallets.find((w) => w.address.toLowerCase() === address.toLowerCase());
   if (!wallet || !isRosterAgent(wallet.name)) return undefined;
   return wallet.name;
+}
+
+function isZeroAddress(address: string | undefined): boolean {
+  return !address || address.toLowerCase() === ZERO_ADDRESS;
 }
 
 function utilisationBps(outstandingUsdc: string, treasuryBalanceUsdc: string): number {
@@ -208,16 +219,29 @@ function mapSubgraphLoan(loan: SubgraphLoan, roster: WalletRoster): WorldLoan | 
 function mapSubgraphJob(job: SubgraphJob, roster: WalletRoster): WorldJob | null {
   const client = agentNameForAddress(roster, job.client.id);
   if (!client) return null;
-  const provider = job.provider.id
-    ? (agentNameForAddress(roster, job.provider.id) ?? "")
-    : "";
+  const raw = job.provider.id?.trim() ?? "";
+  if (isZeroAddress(raw)) {
+    return { id: job.id, client, provider: "", amountUsdc: job.amount, status: job.status };
+  }
+  const named = agentNameForAddress(roster, raw);
+  // Foreign (non-roster) provider must stay non-empty so workers do not treat it as open.
   return {
     id: job.id,
     client,
-    provider,
+    provider: named ?? raw.toLowerCase(),
     amountUsdc: job.amount,
     status: job.status,
   };
+}
+
+function assignmentsFromJobs(tick: number, jobs: WorldJob[]): WorldAssignment[] {
+  return jobs
+    .filter((j) => isRosterWorker(j.provider) && j.status !== "completed" && j.status !== "rejected")
+    .map((j) => ({
+      jobId: j.id,
+      worker: j.provider as AgentName,
+      acceptedAtTick: Math.max(0, tick - 1),
+    }));
 }
 
 async function fetchErc20Balances(
@@ -313,11 +337,13 @@ export function createGetWorld(deps: GetWorldDeps): (tick: number) => Promise<Wo
     const loans = (subgraphSnap?.loans ?? [])
       .map((loan) => mapSubgraphLoan(loan, deps.roster))
       .filter((loan): loan is WorldLoan => loan !== null);
+    const assignments = assignmentsFromJobs(tick, jobs);
 
     return loadWorld(tick, {
       balances,
       jobs,
       loans,
+      assignments,
       treasury,
       signals: {
         usdcBorrowApyBps: signals.usdcBorrowApyBps,

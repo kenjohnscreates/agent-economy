@@ -1,6 +1,6 @@
 // Role rules (PRD §5) — pure decide(agent, ctx.world) → ProposedAction[].
 // Deterministic: no network, no Date, no LLM. Circle txs are M4.3.
-// Worker: accept_job on open|funded (named roster worker → that agent only).
+// Worker: accept_job on funded + unassigned (named roster worker → that agent only).
 // Merchant: complete_job on submitted (client match; oldest id).
 // Stipend: tick % STIPEND_EVERY_TICKS === 0 (3, 6, 9, …); treasurer emits it.
 // Flag to mayor = no approve_loan / deny_loan (loan stays pending). No new ActionKind.
@@ -94,7 +94,7 @@ function decideConsumer(agent: RosterEntry, world: WorldState): ProposedAction[]
   return [{ kind: "buy", amountUsdc: world.merchantPriceUsdc, to: pickSeller(world) }];
 }
 
-const FUNDABLE_JOB_STATUSES = new Set(["open", "funded"]);
+const FUNDABLE_JOB_STATUSES = new Set(["funded"]);
 
 function isRosterWorker(name: string): boolean {
   return ROSTER.some((a) => a.name === name && a.role === "worker");
@@ -139,15 +139,34 @@ function providerAllowsWorker(provider: string, worker: AgentName): boolean {
   return false;
 }
 
+function implicitAssignments(world: WorldState): WorldState["assignments"] {
+  const existing = new Set(world.assignments.map((a) => a.jobId));
+  const fromJobs = world.jobs
+    .filter(
+      (j) =>
+        isRosterWorker(j.provider) &&
+        j.status !== "completed" &&
+        j.status !== "rejected" &&
+        !existing.has(j.id),
+    )
+    .map((j) => ({
+      jobId: j.id,
+      worker: j.provider as AgentName,
+      acceptedAtTick: Math.max(0, world.tick - 1),
+    }));
+  return [...world.assignments, ...fromJobs];
+}
+
 function bestFundableJob(
   world: WorldState,
   worker: AgentName,
 ): WorldState["jobs"][number] | undefined {
-  const taken = new Set(world.assignments.map((a) => a.jobId));
+  const taken = new Set(implicitAssignments(world).map((a) => a.jobId));
   const fundable = world.jobs.filter(
     (j) =>
       FUNDABLE_JOB_STATUSES.has(j.status) &&
       isRosterAgent(j.client) &&
+      !j.provider &&
       !taken.has(j.id) &&
       providerAllowsWorker(j.provider, worker),
   );
@@ -160,7 +179,7 @@ function bestFundableJob(
 
 function decideWorker(agent: RosterEntry, world: WorldState): ProposedAction[] {
   const actions: ProposedAction[] = [];
-  const mine = world.assignments.filter((a) => a.worker === agent.name);
+  const mine = implicitAssignments(world).filter((a) => a.worker === agent.name);
   const due = mine.filter((a) => world.tick >= a.acceptedAtTick + WORKER_DELIVER_TICKS);
   const held = mine.filter((a) => world.tick < a.acceptedAtTick + WORKER_DELIVER_TICKS);
   for (const a of due.sort((x, y) => x.jobId.localeCompare(y.jobId))) {
@@ -232,6 +251,7 @@ function maybeDefault(world: WorldState): ProposedAction | undefined {
       (l) =>
         l.status === "approved" &&
         isRosterAgent(l.borrower) &&
+        l.borrower !== "bo" &&
         l.approvedAtTick !== null &&
         world.tick >= dueAt(l.approvedAtTick) + GRACE_TICKS,
     )
