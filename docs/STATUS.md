@@ -643,3 +643,11 @@ Blocked: `revokeName` · 2nd default on **bo** · Studio until **15:22 EDT** · 
 Next up: M6.6 PR → merge → restart API after 15:22. Do not `--ticks 12 --yes` until #11.
 `touching:` M6.6 `apps/api` (worktree). `apps/web` free for Dan.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 09:12 EDT
+Done: **M6.6** #58 OPEN — https://github.com/kenjohnscreates/agent-economy/pull/58 · worktree `/tmp/wt-m6.6`. T1 inherit in flight. CI pending. Do **not** pull primary / restart `:3001` (would drop #11 cache).
+In progress: T1 #58
+Blocked: `revokeName` · 2nd default on **bo** · Studio until **15:22 EDT** · **M9.1 wallets**
+Next up: T1+#58 **remote** squash-merge (no `git pull` on primary) · restart API after 15:22. Do not `--ticks 12 --yes` until #11.
+`touching:` #58 `apps/api` + `packages/graphclient`. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
