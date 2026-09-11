@@ -1,4 +1,5 @@
 // SSE diff helpers — emit tick/narration/tx/loan_flagged on ledger/subgraph changes.
+// Ledger-only refresh (Studio 429) still emits tick/narration with last-good scoreboard.
 import {
   ARC_EXPLORER_URL,
   type Loan,

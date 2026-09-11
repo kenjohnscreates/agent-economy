@@ -16,17 +16,20 @@ import {
   type MayorLoanDecisionRequest,
   type MayorRateRequest,
   type ScoreboardResponse,
+  type Signals,
   type SseEvent,
   type StateResponse,
   type TxResponse,
 } from "@agent-town/shared";
 import {
-  agentState,
   createGraphClient,
   fetchExternalSignals,
   gdpSeries,
   loanHistory,
+  rosterJobs,
   scoreboard as fetchScoreboard,
+  type Scoreboard as GraphScoreboard,
+  type SubgraphJob,
 } from "@agent-town/graphclient";
 import type { GraphQLClient } from "graphql-request";
 import { createEnsClient, type ResolvedAgent } from "@agent-town/ens";
@@ -36,6 +39,7 @@ import { SourceError, type DataSource, type SseListener } from "../source.js";
 import { createBalanceReader, type BalanceReader } from "./balances.js";
 import { parseRealEnv, type RealEnv } from "./env.js";
 import { createLedgerReader, type LedgerReader, type TickAnchor } from "./ledger.js";
+import { graphBackoffActive, retryUntilMs } from "./graphBackoff.js";
 import { mapGdpSeriesPoints, mapJob, mapLoan } from "./map.js";
 import { buildRateBreakdown } from "./rate.js";
 import { diffSseEvents, emptySseCursor, type SseCursor } from "./sse.js";
@@ -95,6 +99,7 @@ export class RealSource implements DataSource {
   private cache: RealCache | undefined;
   private readyPromise: Promise<void> | undefined;
   private timer: ReturnType<typeof setInterval> | undefined;
+  private graphBackoffUntilMs = 0;
   private readonly listeners = new Set<SseListener>();
   private readonly sseCursor: SseCursor = emptySseCursor();
 
@@ -187,48 +192,30 @@ export class RealSource implements DataSource {
     return Number.isFinite(ms) ? Math.floor(ms / 1000) : 0;
   }
 
-  async refresh(): Promise<void> {
-    const [anchor, ledgerActions, ledgerNarration] = await Promise.all([
-      this.ledger.getTickAnchor(),
-      this.ledger.listActions(),
-      this.ledger.listNarration(),
-    ]);
-    const tick = anchor.currentTick;
-    const phase = anchor.currentTick > 0 ? anchor.phase : phaseForTick(tick);
-    const anchorSec = this.anchorSec(anchor);
+  private noteGraphError(err: unknown): void {
+    const until = retryUntilMs(err);
+    if (until !== undefined) this.graphBackoffUntilMs = until;
+    const untilIso =
+      until !== undefined ? new Date(until).toISOString() : "next poll";
+    console.error(`[api] real graph refresh failed; backoff until ${untilIso}:`, err);
+  }
 
-    const [sb, signals, loansRaw, gdpRaw] = await Promise.all([
-      fetchScoreboard(this.graph),
-      fetchExternalSignals({
-        tick,
-        apiKey: this.env.graphApiKey,
-        externalSignalsEnabled: this.env.flags.externalSignals,
-      }),
-      loanHistory(this.graph),
-      gdpSeries(this.graph),
-    ]);
-
-    const loans = loansRaw.map((l) => mapLoan(l, this.env.townName, anchorSec, this.tickMs));
-    const gdpPoints = mapGdpSeriesPoints(gdpRaw.points, anchorSec, this.tickMs);
-    const gdpUsdc = gdpPoints.at(-1)?.gdpUsdc ?? "0";
-
+  private composeScoreboard(
+    tick: number,
+    sb: GraphScoreboard,
+    gdpPoints: ScoreboardResponse["gdpSeries"],
+    loans: Loan[],
+    signals: Signals,
+  ): ScoreboardResponse {
     const outstanding = BigInt(sb.outstandingUsdc);
     const treasury = BigInt(sb.treasuryBalanceUsdc);
     const utilisationBps =
       treasury + outstanding === 0n
         ? 0
         : Number((outstanding * 10_000n) / (treasury + outstanding));
-
     const everApproved = loans.filter((l) => l.status !== "pending" && l.status !== "denied");
-    const rate = buildRateBreakdown({
-      marketApyBps: signals.usdcBorrowApyBps,
-      onChainBaseRateBps: sb.baseRateBps,
-      defaults: sb.defaults,
-      utilisationBps,
-    });
-
-    const scoreboard: ScoreboardResponse = {
-      gdpUsdc,
+    return {
+      gdpUsdc: gdpPoints.at(-1)?.gdpUsdc ?? "0",
       treasuryBalanceUsdc: sb.treasuryBalanceUsdc,
       outstandingUsdc: sb.outstandingUsdc,
       defaults: sb.defaults,
@@ -240,12 +227,114 @@ export class RealSource implements DataSource {
       loansOutstanding: sb.loansOutstanding,
       gdpSeries: gdpPoints,
       signals,
-      rate,
+      rate: buildRateBreakdown({
+        marketApyBps: signals.usdcBorrowApyBps,
+        onChainBaseRateBps: sb.baseRateBps,
+        defaults: sb.defaults,
+        utilisationBps,
+      }),
     };
+  }
+
+  private graphFieldsFromScoreboard(scoreboard: ScoreboardResponse): GraphScoreboard {
+    return {
+      treasuryBalanceUsdc: scoreboard.treasuryBalanceUsdc,
+      outstandingUsdc: scoreboard.outstandingUsdc,
+      baseRateBps: scoreboard.baseRateBps,
+      jobsCompleted: scoreboard.jobsCompleted,
+      loansOutstanding: scoreboard.loansOutstanding,
+      defaults: scoreboard.defaults,
+    };
+  }
+
+  private bucketJobs(
+    jobs: SubgraphJob[],
+    anchorSec: number,
+  ): Map<string, Job[]> {
+    const jobsByAgent = new Map<string, Job[]>();
+    for (const name of this.rosterAddresses.keys()) jobsByAgent.set(name, []);
+    for (const raw of jobs) {
+      const mapped = mapJob(raw, this.env.townName, anchorSec, this.tickMs);
+      const clientId = raw.client.id.toLowerCase();
+      const providerId = raw.provider.id.toLowerCase();
+      for (const [name, addr] of this.rosterAddresses) {
+        const id = addr.toLowerCase();
+        if (clientId !== id && providerId !== id) continue;
+        jobsByAgent.get(name)?.push(mapped);
+      }
+    }
+    return jobsByAgent;
+  }
+
+  private async fetchGraphSnapshot(anchorSec: number): Promise<{
+    sb: GraphScoreboard;
+    loans: Loan[];
+    gdpPoints: ScoreboardResponse["gdpSeries"];
+    jobsByAgent: Map<string, Job[]>;
+  }> {
+    const [sb, loansRaw, gdpRaw, jobsRaw] = await Promise.all([
+      fetchScoreboard(this.graph),
+      loanHistory(this.graph),
+      gdpSeries(this.graph),
+      rosterJobs(this.graph, { first: 160 }),
+    ]);
+    return {
+      sb,
+      loans: loansRaw.map((l) => mapLoan(l, this.env.townName, anchorSec, this.tickMs)),
+      gdpPoints: mapGdpSeriesPoints(gdpRaw.points, anchorSec, this.tickMs),
+      jobsByAgent: this.bucketJobs(jobsRaw, anchorSec),
+    };
+  }
+
+  async refresh(): Promise<void> {
+    const [anchor, ledgerActions, ledgerNarration] = await Promise.all([
+      this.ledger.getTickAnchor(),
+      this.ledger.listActions(),
+      this.ledger.listNarration(),
+    ]);
+    const tick = anchor.currentTick;
+    const phase = anchor.currentTick > 0 ? anchor.phase : phaseForTick(tick);
+    const anchorSec = this.anchorSec(anchor);
+    const prior = this.cache;
+
+    const signalsPromise = fetchExternalSignals({
+      tick,
+      apiKey: this.env.graphApiKey,
+      externalSignalsEnabled: this.env.flags.externalSignals,
+    });
+
+    let sb: GraphScoreboard = prior
+      ? this.graphFieldsFromScoreboard(prior.scoreboard)
+      : {
+          treasuryBalanceUsdc: "0",
+          outstandingUsdc: "0",
+          baseRateBps: 0,
+          jobsCompleted: 0,
+          loansOutstanding: 0,
+          defaults: 0,
+        };
+    let loans = prior?.loans ?? [];
+    let gdpPoints = prior?.scoreboard.gdpSeries ?? [];
+    let jobsByAgent = prior?.jobsByAgent ?? new Map<string, Job[]>();
+
+    if (!graphBackoffActive(this.graphBackoffUntilMs)) {
+      try {
+        const snap = await this.fetchGraphSnapshot(anchorSec);
+        this.graphBackoffUntilMs = 0;
+        sb = snap.sb;
+        loans = snap.loans;
+        gdpPoints = snap.gdpPoints;
+        jobsByAgent = snap.jobsByAgent;
+      } catch (err) {
+        this.noteGraphError(err);
+      }
+    }
+
+    const signals = await signalsPromise;
+    const scoreboard = this.composeScoreboard(tick, sb, gdpPoints, loans, signals);
 
     const ensByName = new Map<string, ResolvedAgent>();
     const agents: AgentSummary[] = [];
-    const jobsByAgent = new Map<string, Job[]>();
 
     for (const entry of ROSTER) {
       const arcAddress = this.rosterAddresses.get(entry.name);
@@ -258,17 +347,11 @@ export class RealSource implements DataSource {
       } catch (err) {
         console.warn(`[api] ENS resolve ${entry.name}:`, err);
       }
-      const [balanceUsdc, action, narration, state] = await Promise.all([
+      const [balanceUsdc, action, narration] = await Promise.all([
         this.readBalance(arcAddress),
         this.ledger.latestAction(entry.name),
         this.ledger.latestNarration(entry.name),
-        agentState(this.graph, arcAddress, { recentLoans: 20, recentJobs: 20 }),
       ]);
-
-      const agentJobs = (state?.jobs ?? []).map((j) =>
-        mapJob(j, this.env.townName, anchorSec, this.tickMs),
-      );
-      jobsByAgent.set(entry.name, agentJobs);
 
       const home = HOME_POSITION[entry.home];
       agents.push({
