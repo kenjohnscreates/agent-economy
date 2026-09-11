@@ -10,6 +10,13 @@ import {
   type SseEvent,
 } from "@agent-town/shared";
 import type { GraphQLClient } from "graphql-request";
+import {
+  scoreboard as fetchScoreboard,
+  loanHistory,
+  gdpSeries,
+  fetchExternalSignals,
+  rosterJobs,
+} from "@agent-town/graphclient";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../routes.js";
 import {
@@ -95,21 +102,7 @@ vi.mock("@agent-town/graphclient", () => ({
       dex: { subgraphId: "dex", name: "dex" },
     },
   })),
-  agentState: vi.fn(async (_c, key: string) => ({
-    agent: {
-      id: key,
-      ensName: key === BO ? "bo.botanica.eth" : null,
-      role: null,
-      balanceDeposited: "0",
-      loansTaken: 0,
-      defaults: 0,
-      jobsCompleted: 0,
-      earned: "0",
-      spent: "0",
-    },
-    loans: [],
-    jobs: [],
-  })),
+  rosterJobs: vi.fn(async () => []),
 }));
 
 function makeSource(overrides: Partial<ConstructorParameters<typeof RealSource>[0]> = {}) {
@@ -153,6 +146,32 @@ function makeSource(overrides: Partial<ConstructorParameters<typeof RealSource>[
     ...overrides,
   });
 }
+
+const gdpDto = {
+  interval: "day" as const,
+  source: "rosterPayments" as const,
+  points: [{ timestamp: "1", gdpUsdc: "500000" }],
+};
+
+const signalsDto = {
+  usdcBorrowApyBps: 410,
+  dexVolume24hUsd: "100.00",
+  fetchedAt: "2026-09-08T18:00:00.000Z",
+  stale: false,
+  sources: {
+    lending: { subgraphId: "lend", name: "lending" },
+    dex: { subgraphId: "dex", name: "dex" },
+  },
+};
+
+beforeEach(() => {
+  mockLoans = [loanRow];
+  vi.mocked(fetchScoreboard).mockReset().mockResolvedValue(scoreboardDto);
+  vi.mocked(loanHistory).mockReset().mockImplementation(async () => mockLoans);
+  vi.mocked(gdpSeries).mockReset().mockResolvedValue(gdpDto);
+  vi.mocked(fetchExternalSignals).mockReset().mockResolvedValue(signalsDto);
+  vi.mocked(rosterJobs).mockReset().mockResolvedValue([]);
+});
 
 describe("RealSource GET contract", () => {
   let source: RealSource;
@@ -302,5 +321,102 @@ describe("RealSource SSE", () => {
     await new Promise((r) => setTimeout(r, 80));
     source.stop();
     expect(events.some((e) => e.event === "scoreboard")).toBe(true);
+  });
+});
+
+describe("RealSource Studio 429 backoff", () => {
+  const jobRow = {
+    id: "j1",
+    amount: "500000",
+    status: "open",
+    createdAt: "1",
+    settledAt: null,
+    client: { id: BO, ensName: "bo.botanica.eth" },
+    provider: { id: BO, ensName: "bo.botanica.eth" },
+  };
+
+  function studio429(retryAfterSec = 3600): Error {
+    const reset = Math.floor(Date.now() / 1000) + retryAfterSec;
+    return Object.assign(new Error("Too Many Requests (429)"), {
+      response: {
+        status: 429,
+        headers: new Headers({
+          "retry-after": String(retryAfterSec),
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": String(reset),
+        }),
+      },
+    });
+  }
+
+  function rejectStudio(err: Error): void {
+    vi.mocked(fetchScoreboard).mockRejectedValue(err);
+    vi.mocked(loanHistory).mockRejectedValue(err);
+    vi.mocked(gdpSeries).mockRejectedValue(err);
+    vi.mocked(rosterJobs).mockRejectedValue(err);
+  }
+
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("keeps prior scoreboard/jobs and applies ledger on 429", async () => {
+    vi.mocked(rosterJobs).mockResolvedValue([jobRow]);
+    const ledger = new TestLedger();
+    const source = makeSource({ ledger });
+    const events: SseEvent[] = [];
+    source.subscribe((ev) => events.push(ev));
+    await source.ready();
+
+    expect(source.getScoreboard().treasuryBalanceUsdc).toBe("3000000");
+    expect(source.getScoreboard().ticks).toBe(1);
+    expect(source.getAgent("bo").jobs[0]?.id).toBe("j1");
+
+    ledger.tick = 2;
+    ledger.actions.push({
+      tick: 2,
+      agent: "bo",
+      kind: "buy",
+      tx: TX,
+      status: "complete",
+    });
+    ledger.narrations.push({ tick: 2, agent: "bo", text: "Shopping time" });
+    rejectStudio(studio429());
+    vi.mocked(fetchExternalSignals).mockResolvedValue({
+      usdcBorrowApyBps: 410,
+      dexVolume24hUsd: "100.00",
+      fetchedAt: "2026-09-11T19:00:00.000Z",
+      stale: true,
+      sources: {
+        lending: { subgraphId: "lend", name: "lending" },
+        dex: { subgraphId: "dex", name: "dex" },
+      },
+    });
+
+    await source.refresh();
+
+    const sb = source.getScoreboard();
+    expect(sb.treasuryBalanceUsdc).toBe("3000000");
+    expect(sb.ticks).toBe(2);
+    expect(sb.signals.stale).toBe(true);
+    expect(source.getState().tick).toBe(2);
+    expect(source.getAgent("bo").jobs[0]?.id).toBe("j1");
+    expect(source.getAgents().find((a) => a.name === "bo")?.narration).toBe("Shopping time");
+    expect(events.map((e) => e.event)).toEqual(["tick", "tx", "narration", "scoreboard"]);
+  });
+
+  it("skips Studio queries until Retry-After", async () => {
+    const source = makeSource();
+    await source.ready();
+    rejectStudio(studio429(3600));
+    await source.refresh();
+
+    const scoreboardCalls = vi.mocked(fetchScoreboard).mock.calls.length;
+    const jobsCalls = vi.mocked(rosterJobs).mock.calls.length;
+    const signalCalls = vi.mocked(fetchExternalSignals).mock.calls.length;
+    await source.refresh();
+    expect(vi.mocked(fetchScoreboard).mock.calls.length).toBe(scoreboardCalls);
+    expect(vi.mocked(rosterJobs).mock.calls.length).toBe(jobsCalls);
+    expect(vi.mocked(fetchExternalSignals).mock.calls.length).toBe(signalCalls + 1);
   });
 });

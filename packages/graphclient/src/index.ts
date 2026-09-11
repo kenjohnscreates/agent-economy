@@ -45,7 +45,7 @@ export {
 } from "./schemas.js";
 
 export { agentState, type AgentStateOptions } from "./queries/agentState.js";
-export { openJobs, type OpenJobsOptions } from "./queries/openJobs.js";
+export { openJobs, rosterJobs, type OpenJobsOptions } from "./queries/openJobs.js";
 export { loanHistory, type LoanHistoryOptions } from "./queries/loanHistory.js";
 export { scoreboard } from "./queries/scoreboard.js";
 export { gdpSeries, type GdpInterval, type GdpSeriesOptions } from "./queries/gdpSeries.js";

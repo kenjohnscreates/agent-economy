@@ -2,12 +2,13 @@
  * Unit tests for graphclient query helpers (mocked SDK).
  * Live subgraph evidence: live.test.ts (skipped without SUBGRAPH_URL).
  */
+import { JOB_STATUSES } from "@agent-town/shared";
 import type { GraphQLClient } from "graphql-request";
 import { describe, expect, it, vi } from "vitest";
 import { agentState } from "./agentState.js";
 import { gdpSeries } from "./gdpSeries.js";
 import { loanHistory } from "./loanHistory.js";
-import { openJobs } from "./openJobs.js";
+import { openJobs, rosterJobs } from "./openJobs.js";
 import { scoreboard } from "./scoreboard.js";
 import * as sdkModule from "../sdk.js";
 
@@ -94,6 +95,18 @@ describe("openJobs", () => {
     const jobs = await openJobs(fakeClient);
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.status).toBe("open");
+  });
+});
+
+describe("rosterJobs", () => {
+  it("queries OpenTownJobs with all job statuses", async () => {
+    const sdk = mockSdk({
+      OpenTownJobs: vi.fn().mockResolvedValue({ jobs: [] }),
+    });
+    await rosterJobs(fakeClient);
+    expect(sdk.OpenTownJobs).toHaveBeenCalledWith(
+      expect.objectContaining({ statuses: [...JOB_STATUSES] }),
+    );
   });
 });
 
