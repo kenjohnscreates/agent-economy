@@ -61,25 +61,21 @@ class TestLedger implements LedgerReader {
   readonly startedAtFirst = "2026-01-01T00:00:00.000Z";
   actions: LedgerAction[] = [];
   narrations: LedgerNarration[] = [];
+  fail = false;
 
   async getTickAnchor(): Promise<TickAnchor> {
+    if (this.fail) throw new Error("Supabase getTickAnchor: Gateway Timeout");
     return { currentTick: this.tick, startedAt: this.startedAtFirst, phase: "boom" };
   }
 
   async listActions(): Promise<LedgerAction[]> {
+    if (this.fail) throw new Error("Supabase listActions: Gateway Timeout");
     return [...this.actions];
   }
 
   async listNarration(): Promise<LedgerNarration[]> {
+    if (this.fail) throw new Error("Supabase listNarration: Gateway Timeout");
     return [...this.narrations];
-  }
-
-  async latestAction(agent: string): Promise<LedgerAction | undefined> {
-    return [...this.actions].reverse().find((a) => a.agent === agent);
-  }
-
-  async latestNarration(agent: string): Promise<LedgerNarration | undefined> {
-    return [...this.narrations].reverse().find((n) => n.agent === agent);
   }
 }
 
@@ -221,6 +217,47 @@ describe("RealSource GET contract", () => {
     );
     expect(pending).toHaveLength(1);
     expect(pending[0]?.id).toBe("2");
+  });
+
+  it("/health returns real tick", async () => {
+    const app = createApp(source);
+    expect(await (await app.request("/health")).json()).toEqual({
+      ok: true,
+      mode: "real",
+      tick: 1,
+    });
+  });
+
+  it("applies narration from listNarration without per-agent queries", async () => {
+    const ledger = new TestLedger();
+    ledger.narrations.push({ tick: 1, agent: "bo", text: "Shelves are thin" });
+    ledger.actions.push({
+      tick: 1,
+      agent: "gus",
+      kind: "buy",
+      tx: TX,
+      status: "complete",
+    });
+    source = makeSource({ ledger });
+    await source.ready();
+    const bo = source.getAgents().find((a) => a.name === "bo");
+    const gus = source.getAgents().find((a) => a.name === "gus");
+    expect(bo?.narration).toBe("Shelves are thin");
+    expect(gus?.lastDecision?.kind).toBe("buy");
+  });
+
+  it("keeps last-good cache when ledger times out", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const ledger = new TestLedger();
+    ledger.narrations.push({ tick: 1, agent: "ada", text: "Books balanced" });
+    source = makeSource({ ledger });
+    await source.ready();
+    expect(source.getState().tick).toBe(1);
+    ledger.tick = 2;
+    ledger.fail = true;
+    await source.refresh();
+    expect(source.getState().tick).toBe(1);
+    expect(source.getAgents().find((a) => a.name === "ada")?.narration).toBe("Books balanced");
   });
 });
 

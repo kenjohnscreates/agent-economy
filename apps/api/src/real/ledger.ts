@@ -29,8 +29,19 @@ export interface LedgerReader {
   getTickAnchor(): Promise<TickAnchor>;
   listActions(): Promise<LedgerAction[]>;
   listNarration(): Promise<LedgerNarration[]>;
-  latestAction(agent: AgentName): Promise<LedgerAction | undefined>;
-  latestNarration(agent: AgentName): Promise<LedgerNarration | undefined>;
+}
+
+/** Highest-tick row for an agent from an already-fetched list (avoid per-agent queries). */
+export function latestByTick<T extends { agent: string; tick: number }>(
+  rows: readonly T[],
+  agent: string,
+): T | undefined {
+  let best: T | undefined;
+  for (const row of rows) {
+    if (row.agent !== agent) continue;
+    if (!best || row.tick > best.tick) best = row;
+  }
+  return best;
 }
 
 export class NullLedger implements LedgerReader {
@@ -46,14 +57,6 @@ export class NullLedger implements LedgerReader {
 
   async listNarration(): Promise<LedgerNarration[]> {
     return [];
-  }
-
-  async latestAction(): Promise<LedgerAction | undefined> {
-    return undefined;
-  }
-
-  async latestNarration(): Promise<LedgerNarration | undefined> {
-    return undefined;
   }
 }
 
@@ -116,42 +119,6 @@ export class SupabaseLedgerReader implements LedgerReader {
       agent: row.agent as AgentName,
       text: row.text as string,
     }));
-  }
-
-  async latestAction(agent: AgentName): Promise<LedgerAction | undefined> {
-    const { data, error } = await this.client
-      .from("actions")
-      .select("tick, agent, kind, tx, status")
-      .eq("agent", agent)
-      .order("tick", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(`Supabase latestAction: ${error.message}`);
-    if (!data) return undefined;
-    return {
-      tick: data.tick as number,
-      agent: data.agent as AgentName,
-      kind: data.kind as ActionKind,
-      tx: (data.tx as string | null) ?? null,
-      status: data.status as ActionStatus,
-    };
-  }
-
-  async latestNarration(agent: AgentName): Promise<LedgerNarration | undefined> {
-    const { data, error } = await this.client
-      .from("narration")
-      .select("tick, agent, text")
-      .eq("agent", agent)
-      .order("tick", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(`Supabase latestNarration: ${error.message}`);
-    if (!data) return undefined;
-    return {
-      tick: data.tick as number,
-      agent: data.agent as AgentName,
-      text: data.text as string,
-    };
   }
 }
 
