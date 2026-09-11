@@ -635,3 +635,11 @@ Risks changed: live SSE/speech blocked until backoff + quota reset. Do not hamme
 Next up: T1+#57 squash-merge · M6.6 worktree `/tmp/wt-m6.6` (do not touch primary `apps/api`) · restart API **after 15:22** · Gateway only after wallet gate · Sat record. Do not `--ticks 12 --yes` until #11.
 `touching:` M6.6 `apps/api/src/real/store.ts` (worktree only). Dan #57 `apps/web` RateTooltip + map hud/scene.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 09:03 EDT
+Done: **M5.13** #57 squash-merged `a570ecd`. T1 inherit [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/57#pullrequestreview-5178924853). Rate tooltip click-opens; speech chips stack. Frozen untouched. Live `:3000` two clicks → stayed `expanded`. Nits non-blocking (no RTL tooltip test; mouseleave after click needs Escape/blur).
+In progress: **M6.6** `/tmp/wt-m6.6` · Gateway waits on wallet gate
+Blocked: `revokeName` · 2nd default on **bo** · Studio until **15:22 EDT** · **M9.1 wallets**
+Next up: M6.6 PR → merge → restart API after 15:22. Do not `--ticks 12 --yes` until #11.
+`touching:` M6.6 `apps/api` (worktree). `apps/web` free for Dan.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
