@@ -612,3 +612,9 @@ Done: [`docs/CYCLE.md`](CYCLE.md) — 12-tick do/say + BE footnotes; mock speech
 In progress: live UI walk · Fri Gateway · Sat record
 Blocked: `revokeName` · 2nd default on **bo**
 Next up: walk UI + mayor #11 · Gateway Fri. Do not `--ticks 12 --yes` until #11.
+
+## Fri 11 Sep 01:11 EDT
+Done: Rewrote `Co-authored-by` on #51 squash (`dan@users.noreply.github.com` → `116534345+don-radman@users.noreply.github.com`). Force-pushed `main` (`db4c2b3` → `d8ead6e` then this docs commit). PRD §9 + DAN-LIVE-SPLIT git-email reminder. `origin/card/M5.2-town-map` already gone on remote. GitHub Insights may lag. Don: `git fetch && git reset --hard origin/main` if no unpushed work.
+In progress: live UI walk · Fri Gateway · Sat record
+Blocked: `revokeName` · 2nd default on **bo**
+Next up: walk UI + mayor #11 · Gateway Fri. Do not `--ticks 12 --yes` until #11.

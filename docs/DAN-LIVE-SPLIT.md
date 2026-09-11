@@ -4,6 +4,8 @@ Record **Sat 12 Sep** against **live testnet**, not mock. Anyone may edit `apps/
 
 **Cycle (do / say / BE footnotes):** [`docs/CYCLE.md`](CYCLE.md)
 
+**Git email:** never `dan@users.noreply.github.com` (that is GitHub user `dan`, not you). Use `116534345+don-radman@users.noreply.github.com` or an email on your GitHub Settings → Emails. `git config user.email` to check.
+
 Ping in STATUS before a PR: `touching: <paths>`.
 
 ## Kenny / this session (BE + live wiring)

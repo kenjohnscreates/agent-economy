@@ -8,7 +8,7 @@ You are Master Orchestrator for Agent Town (ETHOnline 2026).
 
 Repo: https://github.com/kenjohnscreates/agent-economy
 Local: /Users/home/Code/ETH Global 26 Virtual Hackathon
-main HEAD **`bc6e112`** (deliver fix). STATUS + this file should match git. Uncommitted at last pickup: `apps/sim/supabase/migrations/001_ledger.sql` (`service_role` GRANT) + docs catch-up.
+main rewritten Fri 01:11 (Co-authored-by on #51). Pre-rewrite SHAs after `9721597` are stale — `git fetch && git reset --hard origin/main`. STATUS + git are source of truth.
 
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 Checkpoints: Thu 10 Sep 22:00 **DONE**. Next: **Sat 12 Sep 12:00**.
@@ -99,6 +99,7 @@ ENS names are on Sepolia; money is Arc USDC. Gateway uses **Circle Sepolia USDC*
 - Rate-tooltip: click races focus+toggle (hover/focus still open it).
 - `#54` 2x `@container (min-width: 1280px)` cannot fire under 1440 shell + 400px rail (1440×900 stays 1x).
 - MCP `apply_migration` does **not** GRANT DML. PostgREST `service_role` needs `SELECT/INSERT/UPDATE/DELETE` on ledger tables. Publishable keys (`sb_publishable_…`) cannot read them.
+- **don-radman git email:** never `dan@users.noreply.github.com` (GitHub user `dan`). Use `116534345+don-radman@users.noreply.github.com`. Fri 01:11: rewrote #51 Co-authored-by + force-pushed `main` (`d8ead6e`). Dan: `git fetch && git reset --hard origin/main` if no unpushed work.
 
 ## Human gates still
 - `revokeName` roster names

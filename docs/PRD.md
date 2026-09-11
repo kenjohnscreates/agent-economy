@@ -118,6 +118,7 @@ Required artefacts: public repo, README with run steps, **architecture diagram**
 - **Source of truth = chain + subgraph**; Supabase only stores narration, tick log, caches.
 - **Secrets**: never in repo; `.env.example` complete; Circle entity secret handled per Circle docs.
 - **Readability**: a senior dev unfamiliar with the repo can follow any module in 10 min (reviewer gate).
+- **Git identity (FE / don-radman):** never set `user.email` to `dan@users.noreply.github.com` — that address belongs to GitHub user `dan` (not our teammate) and paints a stranger onto Insights → Contributors. Use `116534345+don-radman@users.noreply.github.com` or an email verified on [github.com/don-radman](https://github.com/don-radman) (Settings → Emails). Check: `git config user.email`.
 
 ## 10. Demo video outline (2–4 min)
 
