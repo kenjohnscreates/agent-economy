@@ -14,7 +14,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | done | FE | **M5.1** #39 · **M5.2** #51 `9721597` · **M5.4** #42 · **M5.7** #47 · **M5.8** #48 · mock default |
+| M5 Frontend | done | FE | **M5.1–M5.8** on main · **#53/#54 OPEN** (README + shell framing) · mock default |
 | M6 Integration + demo | in_progress | both | **M6.3** #52 · live 12-tick ×4 · **#7/#8 repaid** · mark_default missed (rules repaid first) · accept_job reverts |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
 | M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero (#51) · record still todo |
@@ -553,3 +553,11 @@ Blocked: `revokeName`
 Risks changed: live repay works; live default still unmet unless we hold repay until after t7 and keep an Active non-bo loan. Job settle still broken on shared ERC-8183.
 Next up: Checkpoint Thu 22:00. Optional follow-up: suppress live merchant repay until after t7, then new cy loan + grace for markDefault. Stretch B/D not started.
 Checkpoint call: none (Thu 10 Sep 22:00)
+
+## Thu 10 Sep 20:05 EDT
+Done: Handoff for a fresh Master session (`docs/MASTER-HANDOFF.md`). Context full before mock walk. Dan opened **#53 M5.9** (README) and **#54 M5.10** (shell map framing) — both CI green, MERGEABLE. Did not review/merge this turn. Did not re-deploy. Stretch B/D not started.
+In progress: FE polish PRs #53/#54 · M8 mock walk + record
+Blocked: `revokeName`
+Risks changed: —
+Next up: new session — T1 #53 then #54; mock walk at 1440×900 (`dev:mock` :3001 + web :3000); checkpoint 22:00.
+Checkpoint call: none yet (due 22:00)
