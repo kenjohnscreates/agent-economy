@@ -1,6 +1,6 @@
 // Role rules (PRD §5) — pure decide(agent, ctx.world) → ProposedAction[].
 // Deterministic: no network, no Date, no LLM. Circle txs are M4.3.
-// Worker: accept_job on funded + unassigned (named roster worker → that agent only).
+// Worker: accept_job on funded + unassigned; deliver only while funded (re-submit reverts).
 // Merchant: complete_job on submitted (client match; oldest id).
 // Stipend: tick % STIPEND_EVERY_TICKS === 0 (3, 6, 9, …); treasurer emits it.
 // Flag to mayor = no approve_loan / deny_loan (loan stays pending). No new ActionKind.
@@ -142,13 +142,7 @@ function providerAllowsWorker(provider: string, worker: AgentName): boolean {
 function implicitAssignments(world: WorldState): WorldState["assignments"] {
   const existing = new Set(world.assignments.map((a) => a.jobId));
   const fromJobs = world.jobs
-    .filter(
-      (j) =>
-        isRosterWorker(j.provider) &&
-        j.status !== "completed" &&
-        j.status !== "rejected" &&
-        !existing.has(j.id),
-    )
+    .filter((j) => isRosterWorker(j.provider) && j.status === "funded" && !existing.has(j.id))
     .map((j) => ({
       jobId: j.id,
       worker: j.provider as AgentName,
@@ -177,13 +171,19 @@ function bestFundableJob(
   })[0];
 }
 
+function jobAllowsDeliver(world: WorldState, jobId: string): boolean {
+  const job = world.jobs.find((j) => j.id === jobId);
+  // No job row (fixture overlay assignment) → still deliver. Submitted → skip (re-submit reverts).
+  return !job || job.status === "funded" || job.status === "open";
+}
+
 function decideWorker(agent: RosterEntry, world: WorldState): ProposedAction[] {
   const actions: ProposedAction[] = [];
   const mine = implicitAssignments(world).filter((a) => a.worker === agent.name);
   const due = mine.filter((a) => world.tick >= a.acceptedAtTick + WORKER_DELIVER_TICKS);
   const held = mine.filter((a) => world.tick < a.acceptedAtTick + WORKER_DELIVER_TICKS);
   for (const a of due.sort((x, y) => x.jobId.localeCompare(y.jobId))) {
-    actions.push({ kind: "deliver", jobId: a.jobId });
+    if (jobAllowsDeliver(world, a.jobId)) actions.push({ kind: "deliver", jobId: a.jobId });
   }
   if (held.length === 0) {
     const job = bestFundableJob(world, agent.name);

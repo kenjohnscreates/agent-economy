@@ -240,6 +240,16 @@ describe("worker (PRD §5)", () => {
     });
     expect(decide(dee, ctx(world))).toEqual([{ kind: "idle" }]);
   });
+
+  it("does not re-submit a job that is already submitted", () => {
+    const world = loadWorld(3, {
+      jobs: [
+        { id: "185764", client: "bo", provider: "dee", amountUsdc: "1200000", status: "submitted" },
+      ],
+      assignments: [{ jobId: "185764", worker: "dee", acceptedAtTick: 1 }],
+    });
+    expect(decide(dee, ctx(world))).toEqual([{ kind: "idle" }]);
+  });
 });
 
 describe("treasurer (PRD §5)", () => {

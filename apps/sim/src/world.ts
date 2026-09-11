@@ -236,7 +236,7 @@ function mapSubgraphJob(job: SubgraphJob, roster: WalletRoster): WorldJob | null
 
 function assignmentsFromJobs(tick: number, jobs: WorldJob[]): WorldAssignment[] {
   return jobs
-    .filter((j) => isRosterWorker(j.provider) && j.status !== "completed" && j.status !== "rejected")
+    .filter((j) => isRosterWorker(j.provider) && j.status === "funded")
     .map((j) => ({
       jobId: j.id,
       worker: j.provider as AgentName,

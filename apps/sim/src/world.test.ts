@@ -149,4 +149,28 @@ describe("getWorld jobs", () => {
     expect(world.jobs.find((j) => j.id === "185900")?.provider).toBe(FOREIGN);
     expect(world.assignments.some((a) => a.jobId === "185900")).toBe(false);
   });
+
+  it("does not hydrate assignments for submitted jobs (re-submit would revert)", async () => {
+    const getWorld = createGetWorld(
+      testDeps({
+        roster: jobRoster(),
+        fetchSubgraph: async () => ({
+          jobs: [
+            {
+              id: "185764",
+              amount: "1200000",
+              status: "submitted",
+              createdAt: "1",
+              settledAt: null,
+              client: { id: BO, ensName: "bo.botanica.eth" },
+              provider: { id: DEE, ensName: "dee.botanica.eth" },
+            },
+          ],
+        }),
+      }),
+    );
+    const world = await getWorld(4);
+    expect(world.jobs.find((j) => j.id === "185764")?.status).toBe("submitted");
+    expect(world.assignments.some((a) => a.jobId === "185764")).toBe(false);
+  });
 });
