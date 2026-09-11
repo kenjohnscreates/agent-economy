@@ -14,10 +14,10 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M2 ENSv2 namespace | done | BE | **M2.1–M2.5 LIVE** · Registrar `0xe4A1…0f7F` · 8 names + `bank.botanica.eth` alias → ada `0x97847b3C…` |
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
-| M5 Frontend | done | FE | **M5.1–M5.8** on main · **#53/#54 OPEN** (README + shell framing) · mock default |
+| M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock default |
 | M6 Integration + demo | in_progress | both | **M6.3** #52 · live 12-tick ×4 · **#7/#8 repaid** · mark_default missed (rules repaid first) · accept_job reverts |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero (#51) · record still todo |
+| M8 Video + submission | in_progress | both | **M8.2a** #50 outline · map is hero · **mock walk 1440×900 done** · record still todo |
 
 ## Log
 
@@ -561,3 +561,13 @@ Blocked: `revokeName`
 Risks changed: —
 Next up: new session — T1 #53 then #54; mock walk at 1440×900 (`dev:mock` :3001 + web :3000); checkpoint 22:00.
 Checkpoint call: none yet (due 22:00)
+
+## Thu 10 Sep 21:50 EDT
+Done: T1 APPROVE + squash-merge **#53** `ac04393` (README, docs-only) · **#54** `e3cf45a` (world card frames 640×360 map; tagline under canvas) · **#55** `917a31c` (stream-drop connection card; toasts in-flow under mayor). All Dan, CI green, MERGEABLE, frozen `packages/shared` + MapSlotProps/ZONES/zonePoint untouched. `API_MODE=mock`. `ALLOW_BROADCAST` unset.
+Done: **mock walk 1440×900** http://localhost:3000 + `/map-demo`. Pixi map (8 agents, speech, coin `1.48` on cy→bo). Bank rate stack in DOM (market+spread+premium=town). Mayor Approve L-3 cy → feed `10 treasury → cy 2.00 approve_loan` (fixture toast, not chain). `/map-demo` Pause/speed 0.25x–8x/Restart. Kill :3001 → reload **unreachable** card + **switch to replay** (tick 3 boom, 8 agents, mayor disabled). Mock restarted after the kill. Did not edit `apps/web` beyond merges. Did not re-deploy. Stretch B/D not started.
+Nits (non-blocking): rate-tooltip click races focus+toggle (hover still opens); in-session SSE drop did not paint #55 card in this browser (EventSource `onerror` silent; reload did unreachable); speech bubbles can overlap.
+In progress: M8 record (Sun) · M6 still in_progress (live ≠ §12)
+Blocked: `revokeName`
+Risks changed: —
+Next up: **M8 record** against mock; map is hero. Optional BE only if asked (hold repay past t7; roster-filter `accept_job`). Do not start stretch B/D.
+Checkpoint call: **Thu 22:00 — no scope-cut** (mayor click + map + mock §12 all work). Next checkpoint Sat 12 Sep 12:00.
