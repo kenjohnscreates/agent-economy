@@ -683,3 +683,11 @@ Blocked: faucet 403 · do not fund ada clone · `revokeName` · 2nd default **bo
 Next up: re-review #59 · film Arc-only · 15:22 API. Do not `--ticks 12 --yes` until #11.
 `touching:` #59 `packages/circle`. `apps/web` free.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 12:54 EDT
+Done: #59 fixer `af8e3e2` — gus Sepolia = Arc gus `0x55911428…` (walletId `6a66e891-…`). Ada clone not funded. `ALLOW_BROADCAST`+`--yes` on deposit. Collision reject. Tests 84/84. Faucet still 403.
+In progress: T1 re-review #59 · CI pending · Studio **15:22**
+Blocked: faucet 403 · `revokeName` · 2nd default **bo**
+Next up: T1+#59 merge if APPROVE · film Arc-only · 15:22 API. Do not `--ticks 12 --yes` until #11.
+`touching:` #59 `packages/circle`. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
