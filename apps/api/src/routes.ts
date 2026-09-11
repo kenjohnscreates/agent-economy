@@ -69,9 +69,15 @@ export function createApp(source: DataSource): Hono {
 
   app.notFound((c) => apiError(c, 404, { error: `No route ${c.req.method} ${c.req.path}`, code: "NOT_FOUND" }));
 
-  app.get("/health", (c) =>
-    c.json({ ok: true, mode: source.mode, tick: source.mode === "mock" ? source.getState().tick : null }),
-  );
+  app.get("/health", (c) => {
+    let tick: number | null = null;
+    try {
+      tick = source.getState().tick;
+    } catch {
+      tick = null;
+    }
+    return c.json({ ok: true, mode: source.mode, tick });
+  });
 
   app.get(API_ROUTES.state, (c) => c.json(StateResponseSchema.parse(source.getState())));
   app.get(API_ROUTES.agents, (c) => c.json(AgentsResponseSchema.parse(source.getAgents())));

@@ -38,7 +38,7 @@ import type { Address } from "@agent-town/shared";
 import { SourceError, type DataSource, type SseListener } from "../source.js";
 import { createBalanceReader, type BalanceReader } from "./balances.js";
 import { parseRealEnv, type RealEnv } from "./env.js";
-import { createLedgerReader, type LedgerReader, type TickAnchor } from "./ledger.js";
+import { createLedgerReader, latestByTick, type LedgerReader, type TickAnchor } from "./ledger.js";
 import { graphBackoffActive, retryUntilMs } from "./graphBackoff.js";
 import { mapGdpSeriesPoints, mapJob, mapLoan } from "./map.js";
 import { buildRateBreakdown } from "./rate.js";
@@ -287,15 +287,24 @@ export class RealSource implements DataSource {
   }
 
   async refresh(): Promise<void> {
-    const [anchor, ledgerActions, ledgerNarration] = await Promise.all([
-      this.ledger.getTickAnchor(),
-      this.ledger.listActions(),
-      this.ledger.listNarration(),
-    ]);
+    const prior = this.cache;
+    let anchor: TickAnchor;
+    let ledgerActions: Awaited<ReturnType<LedgerReader["listActions"]>>;
+    let ledgerNarration: Awaited<ReturnType<LedgerReader["listNarration"]>>;
+    try {
+      [anchor, ledgerActions, ledgerNarration] = await Promise.all([
+        this.ledger.getTickAnchor(),
+        this.ledger.listActions(),
+        this.ledger.listNarration(),
+      ]);
+    } catch (err) {
+      if (!prior) throw err;
+      console.error("[api] real ledger refresh failed; keeping last-good:", err);
+      return;
+    }
     const tick = anchor.currentTick;
     const phase = anchor.currentTick > 0 ? anchor.phase : phaseForTick(tick);
     const anchorSec = this.anchorSec(anchor);
-    const prior = this.cache;
 
     const signalsPromise = fetchExternalSignals({
       tick,
@@ -335,39 +344,51 @@ export class RealSource implements DataSource {
 
     const ensByName = new Map<string, ResolvedAgent>();
     const agents: AgentSummary[] = [];
+    const priorByName = new Map(prior?.agents.map((a) => [a.name, a]) ?? []);
 
-    for (const entry of ROSTER) {
-      const arcAddress = this.rosterAddresses.get(entry.name);
-      if (!arcAddress) continue;
-      const ensName = ensNameFor(entry.name, this.env.townName);
-      let resolved: ResolvedAgent | undefined;
-      try {
-        resolved = await this.resolveEns(entry.name);
-        ensByName.set(entry.name, resolved);
-      } catch (err) {
-        console.warn(`[api] ENS resolve ${entry.name}:`, err);
-      }
-      const [balanceUsdc, action, narration] = await Promise.all([
-        this.readBalance(arcAddress),
-        this.ledger.latestAction(entry.name),
-        this.ledger.latestNarration(entry.name),
-      ]);
-
-      const home = HOME_POSITION[entry.home];
-      agents.push({
-        name: entry.name,
-        ensName: resolved?.ensName ?? ensName,
-        role: entry.role,
-        arcAddress,
-        balanceUsdc,
-        creditScore: resolved?.creditScore ?? null,
-        position: { building: entry.home, x: home.x, y: home.y },
-        lastDecision: action
-          ? { tick: action.tick, kind: action.kind, summary: `${action.kind} (tick ${action.tick})` }
-          : null,
-        narration: narration?.text ?? null,
-        avatar: entry.avatar,
-      });
+    const rows = await Promise.all(
+      ROSTER.map(async (entry) => {
+        const arcAddress = this.rosterAddresses.get(entry.name);
+        if (!arcAddress) return undefined;
+        const ensName = ensNameFor(entry.name, this.env.townName);
+        let resolved: ResolvedAgent | undefined;
+        try {
+          resolved = await this.resolveEns(entry.name);
+        } catch (err) {
+          console.warn(`[api] ENS resolve ${entry.name}:`, err);
+        }
+        let balanceUsdc = priorByName.get(entry.name)?.balanceUsdc ?? "0";
+        try {
+          balanceUsdc = await this.readBalance(arcAddress);
+        } catch (err) {
+          console.warn(`[api] balance ${entry.name}:`, err);
+        }
+        const action = latestByTick(ledgerActions, entry.name);
+        const narration = latestByTick(ledgerNarration, entry.name);
+        const home = HOME_POSITION[entry.home];
+        return {
+          resolved,
+          agent: {
+            name: entry.name,
+            ensName: resolved?.ensName ?? ensName,
+            role: entry.role,
+            arcAddress,
+            balanceUsdc,
+            creditScore: resolved?.creditScore ?? null,
+            position: { building: entry.home, x: home.x, y: home.y },
+            lastDecision: action
+              ? { tick: action.tick, kind: action.kind, summary: `${action.kind} (tick ${action.tick})` }
+              : null,
+            narration: narration?.text ?? null,
+            avatar: entry.avatar,
+          } satisfies AgentSummary,
+        };
+      }),
+    );
+    for (const row of rows) {
+      if (!row) continue;
+      if (row.resolved) ensByName.set(row.agent.name, row.resolved);
+      agents.push(row.agent);
     }
 
     const stateResponse: StateResponse = {
