@@ -1,10 +1,10 @@
-// M9.1 — one SCA for gus on ETH-SEPOLIA in the existing Circle wallet set.
+// M9.1 — gus ETH-SEPOLIA SCA = Arc gus identity (same 0x via deriveWallet PUT).
 // Does NOT touch roster.json (Arc gus 0x55911428… stays). Persists gateway-gus.json.
 // Usage (from repo root; load absolute ../../.env from packages/circle):
 //   pnpm --filter @agent-town/circle setup-gateway-gus
 //   pnpm --filter @agent-town/circle setup-gateway-gus --yes
-// Idempotent: listWallets(refId=gus-eth-sepolia) then createWallets(count=1) if missing.
-// Never prints secrets. Default is dry-run; refuses Circle create without --yes.
+// Prefer deriveWallet(Arc gus → ETH-SEPOLIA). createWallets REJECTS roster collisions
+// (ada CREATE2 clone must never be labeled gus). Never prints secrets. Default dry-run.
 import { parseArgs } from "node:util";
 import {
   CircleEnvSchema,
@@ -49,6 +49,7 @@ function plan() {
     artifact: readGatewayGus(),
     artifactPath: DEFAULT_GATEWAY_GUS_PATH,
     envSetId,
+    roster,
   });
   console.log(formatGatewayGusPlan(p));
   return { roster, envSetId, plan: p };
@@ -91,14 +92,16 @@ async function main() {
     throw new Error(`getWalletSet returned ${verified}; expected ${EXISTING_WALLET_SET_ID}`);
   }
 
-  const { walletId, address, created, recovered } = await ensureGatewayGusWallet(
+  const { walletId, address, created, recovered, derived } = await ensureGatewayGusWallet(
     client,
     verified,
-    { log },
+    { log, roster },
   );
+  const prev = readGatewayGus();
+  const keepHistory = prev != null && prev.address.toLowerCase() === address.toLowerCase();
   const artifact = {
     ...toGatewayGusArtifact({ walletSetId: verified, walletId, address }),
-    ...(readGatewayGus() ?? {}),
+    ...(keepHistory ? prev : {}),
     walletId,
     address,
     walletSetId: verified,
@@ -111,6 +114,7 @@ async function main() {
   console.log(`  refId      : ${GUS_SEPOLIA_REF_ID}`);
   console.log(`  created    : ${created ? "yes" : "—"}`);
   console.log(`  recovered  : ${recovered ? "yes" : "—"}`);
+  console.log(`  derived    : ${derived ? "yes (Arc gus → ETH-SEPOLIA)" : "—"}`);
   console.log(`  address    : ${address}`);
   console.log(`  walletId   : ${walletId}`);
   console.log(`  wrote      : ${DEFAULT_GATEWAY_GUS_PATH}`);
@@ -130,7 +134,7 @@ async function main() {
   writeGatewayGus({ ...artifact, faucet: { ok: faucet.ok, status: faucet.status, detail: faucet.detail } });
   if (faucet.ok) {
     console.log(`  faucet      : ok (${faucet.status}) ${faucet.detail}`);
-    console.log("  next        : pnpm --filter @agent-town/circle gateway-deposit --yes");
+    console.log("  next        : ALLOW_BROADCAST=true pnpm --filter @agent-town/circle gateway-deposit --yes");
     return;
   }
   console.log(`  faucet      : ${faucet.status} ${faucet.detail}`);
@@ -142,6 +146,7 @@ async function main() {
 }
 
 main().catch((e: unknown) => {
-  console.error(`\nsetup-gateway-gus failed: ${e instanceof Error ? e.message : String(e)}`);
+  const code = e && typeof e === "object" && "code" in e ? ` [${String((e as { code: unknown }).code)}]` : "";
+  console.error(`\nsetup-gateway-gus failed: ${e instanceof Error ? e.message : String(e)}${code}`);
   process.exit(1);
 });

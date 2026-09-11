@@ -3,6 +3,7 @@
 //   pnpm --filter @agent-town/circle gateway-deposit
 //   pnpm --filter @agent-town/circle gateway-deposit --yes
 //   pnpm --filter @agent-town/circle gateway-deposit --yes --transfer
+// Broadcast requires ALLOW_BROADCAST=true AND --yes (same pair as seed-cy-loan).
 // Requires gateway-gus.json (setup-gateway-gus --yes) + funded Sepolia USDC + native ETH.
 // Approve + deposit(token, amount) — NEVER a plain ERC-20 transfer to GatewayWallet.
 import { randomBytes } from "node:crypto";
@@ -15,15 +16,19 @@ import {
   GATEWAY_TRANSFER_USDC_6,
   SEPOLIA_GATEWAY_CONFIRMATIONS,
   SEPOLIA_USDC_ADDRESS,
+  assertGatewayDepositBroadcast,
   buildGatewayDepositPlan,
   createCircleClient,
   defaultGatewayRecipient,
   executeGatewayDeposit,
   formatGatewayDepositPlan,
   fromUsdcDecimalString,
-  gatewayWantsLive,
+  gatewayDepositAllowed,
+  gatewayGusAddressOk,
+  missingGatewayDepositGates,
   parseCircleEnv,
   readGatewayGus,
+  readRoster,
   submitGatewayForwardingTransfer,
   waitSepoliaConfirmations,
   writeGatewayGus,
@@ -59,11 +64,23 @@ async function main() {
   );
   console.log(`  transfer      : ${flags.transfer ? "yes (after 65-block wait)" : "no (pass --transfer)"}`);
 
-  if (!gatewayWantsLive({ yes: flags.yes, dryRun: flags["dry-run"] })) {
-    console.log("\nRefusing to broadcast without --yes (default is --dry-run).");
+  const liveFlags = { yes: flags.yes, dryRun: flags["dry-run"] };
+  if (!gatewayDepositAllowed(liveFlags)) {
+    const missing = missingGatewayDepositGates(liveFlags);
+    if (flags.yes && !flags["dry-run"]) {
+      assertGatewayDepositBroadcast(liveFlags);
+    }
+    console.log(
+      `\nRefusing to broadcast without ${missing.join(" and ")} (default is --dry-run).`,
+    );
     return;
   }
   if (!artifact) throw new Error("gateway-gus.json missing — run setup-gateway-gus --yes first");
+  if (!gatewayGusAddressOk(artifact.address, readRoster())) {
+    throw new Error(
+      `gateway-gus.json ${artifact.address} is another roster name (not gus); refusing deposit`,
+    );
+  }
   if (artifact.faucet && !artifact.faucet.ok) {
     console.log(`\nBLOCKED: faucet — last drip ${artifact.faucet.status} ${artifact.faucet.detail}`);
     return;

@@ -10,6 +10,7 @@ import {
   type CreateTransferTransactionInput,
   type CreateWalletSetInput,
   type CreateWalletsInput,
+  type DeriveWalletInput,
   type GetTransactionInput,
   type GetWalletSetInput,
   type GetWalletTokenBalanceInput,
@@ -101,6 +102,8 @@ export interface CircleClient {
   createWalletSet(input: CreateWalletSetInput): Promise<{ data?: { walletSet: { id: string } } }>;
   getWalletSet(input: GetWalletSetInput): Promise<{ data?: { walletSet: { id: string } } }>;
   createWallets(input: CreateWalletsInput): Promise<{ data?: { wallets: CircleWallet[] } }>;
+  /** PUT /v1/w3s/developer/wallets/{id}/blockchains/{blockchain} — same 0x on a new EVM chain. */
+  deriveWallet(input: DeriveWalletInput): Promise<{ data?: { wallet?: CircleWallet } }>;
   listWallets(input?: ListWalletsInput): Promise<{ data?: { wallets: CircleWallet[] } }>;
   createContractExecutionTransaction(
     input: CreateContractExecutionTransactionInput,

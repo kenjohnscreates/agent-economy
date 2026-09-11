@@ -15,9 +15,13 @@ import {
   GATEWAY_DOMAIN_SEPOLIA,
   GATEWAY_WALLET_ADDRESS,
   GUS_SEPOLIA_REF_ID,
+  GUS_VISITOR_NAME,
+  MAX_SEPOLIA_CREATE_ATTEMPTS,
   SEPOLIA_GATEWAY_CONFIRMATIONS,
   SEPOLIA_USDC_ADDRESS,
   GATEWAY_APPROVE_FN,
+  assertGatewayDepositBroadcast,
+  assertNewChainAddressNotForeign,
   buildGatewayDepositPlan,
   buildGatewayGusPlan,
   buildGatewayTransferSpec,
@@ -25,7 +29,10 @@ import {
   executeGatewayDeposit,
   formatGatewayDepositPlan,
   formatGatewayGusPlan,
+  gatewayDepositAllowed,
+  gatewayGusAddressOk,
   gatewayWantsLive,
+  missingGatewayDepositGates,
   pinWalletSetId,
   readGatewayGus,
   toGatewayGusArtifact,
@@ -34,6 +41,21 @@ import {
 } from "./gateway.js";
 
 const ADDR = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const ADA_ADDR = "0x97847b3c015994784ae8cf776ef9a4d563618cf2";
+const GUS_ADDR = "0x55911428be619c98220da9d6d9575d311d3082dc";
+const ARC_GUS_WALLET_ID = "6e6a5c0b-b628-548e-aad6-8a54fe67732e";
+
+function sampleRoster() {
+  return WalletRosterSchema.parse({
+    blockchain: "ARC-TESTNET",
+    accountType: "SCA",
+    walletSetId: EXISTING_WALLET_SET_ID,
+    wallets: [
+      { name: "ada", walletId: "w-ada", address: ADA_ADDR },
+      { name: "gus", walletId: ARC_GUS_WALLET_ID, address: GUS_ADDR },
+    ],
+  });
+}
 
 function mockClient(over: Partial<CircleClient> = {}): CircleClient {
   return {
@@ -52,6 +74,9 @@ function mockClient(over: Partial<CircleClient> = {}): CircleClient {
         ],
       },
     })),
+    deriveWallet: vi.fn(async () => {
+      throw new Error("deriveWallet not configured");
+    }),
     listWallets: vi.fn(async () => ({ data: { wallets: [] } })),
     createContractExecutionTransaction: vi.fn(async () => ({
       data: { id: "tx-exec", state: "INITIATED" },
@@ -72,6 +97,23 @@ describe("gateway CLI gates", () => {
     expect(gatewayWantsLive({ yes: true, dryRun: true })).toBe(false);
     expect(gatewayWantsLive({ yes: true })).toBe(true);
   });
+
+  it("gateway-deposit requires --yes AND ALLOW_BROADCAST=true", () => {
+    expect(gatewayDepositAllowed({}, {})).toBe(false);
+    expect(gatewayDepositAllowed({ yes: true }, {})).toBe(false);
+    expect(gatewayDepositAllowed({ yes: true }, { ALLOW_BROADCAST: "1" })).toBe(false);
+    expect(gatewayDepositAllowed({ yes: true, dryRun: true }, { ALLOW_BROADCAST: "true" })).toBe(
+      false,
+    );
+    expect(gatewayDepositAllowed({ yes: true }, { ALLOW_BROADCAST: "true" })).toBe(true);
+    expect(missingGatewayDepositGates({ yes: true }, {})).toEqual(["ALLOW_BROADCAST=true"]);
+    expect(missingGatewayDepositGates({}, { ALLOW_BROADCAST: "true" })).toEqual(["--yes"]);
+    expect(() => assertGatewayDepositBroadcast({ yes: true }, {})).toThrow(/ALLOW_BROADCAST/);
+    expect(() => assertGatewayDepositBroadcast({}, { ALLOW_BROADCAST: "true" })).toThrow(/--yes/);
+    expect(() =>
+      assertGatewayDepositBroadcast({ yes: true }, { ALLOW_BROADCAST: "true" }),
+    ).not.toThrow();
+  });
 });
 
 describe("setup-gateway-gus plan", () => {
@@ -90,6 +132,25 @@ describe("setup-gateway-gus plan", () => {
     expect(text).toMatch(/NOT gus/);
     expect(text).toMatch(/never create/);
     expect(text).toMatch(/not ENS MockUSDC/);
+  });
+
+  it("rejects an artifact whose 0x is another roster name (ada CREATE2 clone)", () => {
+    const artifact = toGatewayGusArtifact({
+      walletSetId: EXISTING_WALLET_SET_ID,
+      walletId: "16ee5651-81ab-5c52-8bca-610a5cf7785c",
+      address: ADA_ADDR,
+    });
+    const plan = buildGatewayGusPlan({ artifact, roster: sampleRoster() });
+    expect(plan.willCreate).toBe(true);
+    expect(plan.existingAddress).toBeNull();
+    expect(plan.collisionAddress).toBe(ADA_ADDR);
+    expect(plan.arcGusAddress).toBe(GUS_ADDR);
+    expect(formatGatewayGusPlan(plan)).toMatch(/REJECT/);
+    expect(gatewayGusAddressOk(ADA_ADDR, sampleRoster())).toBe(false);
+    expect(gatewayGusAddressOk(GUS_ADDR, sampleRoster())).toBe(true);
+    expect(() => assertNewChainAddressNotForeign(ADA_ADDR, sampleRoster(), GUS_VISITOR_NAME)).toThrow(
+      /already roster ada/,
+    );
   });
 
   it("idempotent skip create when artifact already has the Sepolia SCA", () => {
@@ -114,9 +175,10 @@ describe("setup-gateway-gus plan", () => {
 describe("ensureGatewayGusWallet", () => {
   it("creates one SCA on ETH-SEPOLIA with refId gus-eth-sepolia", async () => {
     const c = mockClient();
-    const r = await ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID);
+    const r = await ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID, { roster: sampleRoster() });
     expect(r.created).toBe(true);
     expect(r.recovered).toBe(false);
+    expect(r.derived).toBe(false);
     expect(r.address).toBe(ADDR);
     expect(c.createWallets).toHaveBeenCalledWith({
       walletSetId: EXISTING_WALLET_SET_ID,
@@ -149,19 +211,103 @@ describe("ensureGatewayGusWallet", () => {
         },
       })),
     });
-    const r = await ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID);
+    const r = await ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID, { roster: sampleRoster() });
     expect(r).toEqual({
       walletId: "w-existing",
       address: ADDR,
       created: false,
       recovered: true,
+      derived: false,
     });
     expect(c.createWallets).not.toHaveBeenCalled();
   });
 
   it("throws if createWallets returns nothing", async () => {
     const c = mockClient({ createWallets: vi.fn(async () => ({ data: { wallets: [] } })) });
-    await expect(ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID)).rejects.toThrow(/no ETH-SEPOLIA/);
+    await expect(
+      ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID, { roster: sampleRoster() }),
+    ).rejects.toThrow(/no ETH-SEPOLIA/);
+  });
+
+  it("derives ETH-SEPOLIA from Arc gus (same 0x) instead of CREATE2-cloning ada", async () => {
+    const c = mockClient({
+      deriveWallet: vi.fn(async () => ({
+        data: {
+          wallet: {
+            id: "w-gus-derived",
+            address: GUS_ADDR,
+            blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+            refId: GUS_SEPOLIA_REF_ID,
+          },
+        },
+      })),
+    });
+    const r = await ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID, { roster: sampleRoster() });
+    expect(r).toEqual({
+      walletId: "w-gus-derived",
+      address: GUS_ADDR,
+      created: false,
+      recovered: false,
+      derived: true,
+    });
+    expect(c.deriveWallet).toHaveBeenCalledWith({
+      id: ARC_GUS_WALLET_ID,
+      blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+      metadata: { name: GUS_SEPOLIA_REF_ID, refId: GUS_SEPOLIA_REF_ID },
+    });
+    expect(c.createWallets).not.toHaveBeenCalled();
+  });
+
+  it("rejects createWallets when the address is already roster ada", async () => {
+    const c = mockClient({
+      createWallets: vi.fn(async () => ({
+        data: {
+          wallets: [
+            {
+              id: "16ee5651-81ab-5c52-8bca-610a5cf7785c",
+              address: ADA_ADDR,
+              blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+              refId: GUS_SEPOLIA_REF_ID,
+            },
+          ],
+        },
+      })),
+    });
+    await expect(
+      ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID, { roster: sampleRoster() }),
+    ).rejects.toThrow(/unique vs roster|already roster ada|refusing to label/);
+    expect(c.createWallets).toHaveBeenCalledTimes(MAX_SEPOLIA_CREATE_ATTEMPTS);
+  });
+
+  it("does not recover an ada CREATE2 clone labeled gus-eth-sepolia; derives real gus", async () => {
+    const c = mockClient({
+      listWallets: vi.fn(async () => ({
+        data: {
+          wallets: [
+            {
+              id: "16ee5651-81ab-5c52-8bca-610a5cf7785c",
+              address: ADA_ADDR,
+              blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+              refId: GUS_SEPOLIA_REF_ID,
+            },
+          ],
+        },
+      })),
+      deriveWallet: vi.fn(async () => ({
+        data: {
+          wallet: {
+            id: "w-gus-derived",
+            address: GUS_ADDR,
+            blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+            refId: GUS_SEPOLIA_REF_ID,
+          },
+        },
+      })),
+    });
+    const r = await ensureGatewayGusWallet(c, EXISTING_WALLET_SET_ID, { roster: sampleRoster() });
+    expect(r.address).toBe(GUS_ADDR);
+    expect(r.derived).toBe(true);
+    expect(c.createWallets).not.toHaveBeenCalled();
   });
 });
 

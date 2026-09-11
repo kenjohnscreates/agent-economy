@@ -1,8 +1,10 @@
-// M9.1 Circle Gateway — gus ETH-SEPOLIA SCA (separate from Arc gus in roster.json).
-// Inputs: injected CircleClient, existing wallet set, optional gateway-gus.json.
+// M9.1 Circle Gateway — gus ETH-SEPOLIA SCA (same 0x as Arc gus via deriveWallet).
+// Inputs: injected CircleClient, existing wallet set, roster.json (read-only), optional gateway-gus.json.
 // Outputs: Sepolia SCA {walletId, address} persisted beside roster (does not touch
-// WalletRosterSchema). Deposit is approve + GatewayWallet.deposit — never ERC-20 transfer.
+// WalletRosterSchema). CREATE2 clones of ada/bo/… are rejected. Deposit is approve +
+// GatewayWallet.deposit — never ERC-20 transfer.
 // Docs: https://developers.circle.com/gateway/howtos/create-unified-usdc-balance
+// Derive: PUT /v1/w3s/developer/wallets/{id}/blockchains/{blockchain}
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,12 +13,21 @@ import { z } from "zod";
 import { ETH_SEPOLIA_BLOCKCHAIN, type CircleClient } from "./client.js";
 import { DEFAULT_FEE, executeContract, waitComplete, type WaitOptions } from "./execute.js";
 import { LIVE_TREASURY_ADDRESS } from "./fund.js";
-import { AddressSchema } from "./roster.js";
+import {
+  AddressSchema,
+  rosterOwnerOfAddress,
+  walletFor,
+  type WalletName,
+  type WalletRoster,
+} from "./roster.js";
 import type { Logger } from "./wallets.js";
 import { silentLogger } from "./wallets.js";
 
 export const EXISTING_WALLET_SET_ID = "949545dc-5e02-5050-8e2f-7e6bc12bfed3";
+export const GUS_VISITOR_NAME = "gus" as const satisfies WalletName;
 export const GUS_SEPOLIA_REF_ID = "gus-eth-sepolia";
+/** CREATE2 on a new chain walks roster order; stop before grinding unused wallets. */
+export const MAX_SEPOLIA_CREATE_ATTEMPTS = 12;
 /** Circle Sepolia USDC — not ENS MockUSDC, not Arc 0x3600…. */
 export const SEPOLIA_USDC_ADDRESS = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
 export const GATEWAY_WALLET_ADDRESS = "0x0077777d7EBA4688BDeF3E311b846F25870A19B9";
@@ -117,6 +128,55 @@ export function gatewayWantsLive(flags: { yes?: boolean; dryRun?: boolean }): bo
   return Boolean(flags.yes) && !flags.dryRun;
 }
 
+/** Deposit broadcast: `--yes` AND `ALLOW_BROADCAST=true` (same pair as seed-cy-loan). */
+export function gatewayDepositAllowed(
+  flags: { yes?: boolean; dryRun?: boolean },
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return gatewayWantsLive(flags) && env.ALLOW_BROADCAST === "true";
+}
+
+export function missingGatewayDepositGates(
+  flags: { yes?: boolean; dryRun?: boolean },
+  env: Record<string, string | undefined> = process.env,
+): string[] {
+  const missing: string[] = [];
+  if (!flags.yes || flags.dryRun) missing.push("--yes");
+  if (env.ALLOW_BROADCAST !== "true") missing.push("ALLOW_BROADCAST=true");
+  return missing;
+}
+
+export function assertGatewayDepositBroadcast(
+  flags: { yes?: boolean; dryRun?: boolean },
+  env: Record<string, string | undefined> = process.env,
+): void {
+  const missing = missingGatewayDepositGates(flags, env);
+  if (missing.length === 0) return;
+  throw new Error(
+    `refusing to broadcast: need ${missing.join(" and ")} (see seed-cy-loan)`,
+  );
+}
+
+export function gatewayGusAddressOk(address: string, roster?: WalletRoster | null): boolean {
+  if (!roster) return true;
+  const owner = rosterOwnerOfAddress(roster, address);
+  return owner == null || owner.name === GUS_VISITOR_NAME;
+}
+
+/** createWallets on a new chain must not reuse another agent's CREATE2 0x. */
+export function assertNewChainAddressNotForeign(
+  address: string,
+  roster: WalletRoster,
+  expectedName: WalletName = GUS_VISITOR_NAME,
+): void {
+  const owner = rosterOwnerOfAddress(roster, address);
+  if (owner && owner.name !== expectedName) {
+    throw new Error(
+      `createWallets returned ${address} which is already roster ${owner.name} (${owner.walletId}); refusing to label it ${expectedName}`,
+    );
+  }
+}
+
 export function pinWalletSetId(envSetId?: string | null): string {
   if (envSetId && envSetId !== EXISTING_WALLET_SET_ID) {
     throw new Error(
@@ -137,16 +197,22 @@ export interface GatewayGusPlan {
   artifactPath: string;
   existingAddress: string | null;
   existingWalletId: string | null;
+  collisionAddress: string | null;
   willCreate: boolean;
+  arcGusAddress: string | null;
+  arcGusWalletId: string | null;
 }
 
 export function buildGatewayGusPlan(opts: {
   artifact: GatewayGusArtifact | null;
   artifactPath?: string;
   envSetId?: string | null;
+  roster?: WalletRoster | null;
 }): GatewayGusPlan {
   const walletSetId = pinWalletSetId(opts.envSetId);
   const existing = opts.artifact;
+  const usable = existing != null && gatewayGusAddressOk(existing.address, opts.roster);
+  const gus = opts.roster ? opts.roster.wallets.find((w) => w.name === GUS_VISITOR_NAME) : undefined;
   return {
     blockchain: ETH_SEPOLIA_BLOCKCHAIN,
     accountType: "SCA",
@@ -156,9 +222,12 @@ export function buildGatewayGusPlan(opts: {
     gatewayWallet: GATEWAY_WALLET_ADDRESS,
     domain: GATEWAY_DOMAIN_SEPOLIA,
     artifactPath: opts.artifactPath ?? DEFAULT_GATEWAY_GUS_PATH,
-    existingAddress: existing?.address ?? null,
-    existingWalletId: existing?.walletId ?? null,
-    willCreate: existing == null,
+    existingAddress: usable && existing ? existing.address : null,
+    existingWalletId: usable && existing ? existing.walletId : null,
+    collisionAddress: existing && !usable ? existing.address : null,
+    willCreate: !usable,
+    arcGusAddress: gus?.address ?? null,
+    arcGusWalletId: gus?.walletId ?? null,
   };
 }
 
@@ -168,25 +237,77 @@ export function formatGatewayGusPlan(plan: GatewayGusPlan): string {
     `  blockchain     : ${plan.blockchain}   accountType: ${plan.accountType}`,
     `  wallet set     : verify ${plan.walletSetId} (getWalletSet; never create)`,
     `  refId          : ${plan.refId}  (NOT gus — Arc gus keeps that)`,
+    `  Arc gus        : ${plan.arcGusAddress ? `${plan.arcGusAddress}  ${plan.arcGusWalletId}` : "—"}`,
     `  token          : ${plan.usdc} (Circle Sepolia USDC, not ENS MockUSDC)`,
     `  GatewayWallet  : ${plan.gatewayWallet}  domain=${plan.domain}`,
     `  already have   : ${plan.existingAddress ? `${plan.existingAddress}  ${plan.existingWalletId}` : "—"}`,
+    ...(plan.collisionAddress
+      ? [
+          `  REJECT         : ${plan.collisionAddress} is another roster name (CREATE2 clone) — will not label as gus`,
+        ]
+      : []),
     `  API calls      : ${
       plan.willCreate
-        ? "1 getWalletSet + 1 listWallets(refId) + maybe 1 createWallets(count=1, ETH-SEPOLIA)"
-        : "1 getWalletSet + 1 listWallets(refId) — artifact complete (idempotent skip create)"
+        ? "1 getWalletSet + listWallets + deriveWallet(Arc gus → ETH-SEPOLIA) or createWallets until unique/gus"
+        : "1 getWalletSet + 1 listWallets — artifact complete (idempotent skip create)"
     }`,
   ];
   return lines.join("\n");
 }
 
+function circleErr(e: unknown): string {
+  if (e && typeof e === "object" && "code" in e && "message" in e) {
+    return `${String((e as { code: unknown }).code)} ${(e as { message: unknown }).message}`;
+  }
+  return e instanceof Error ? e.message : String(e);
+}
+
+function sepoliaWalletOk(
+  w: { id: string; address: string } | undefined,
+  roster: WalletRoster,
+): boolean {
+  return Boolean(w && gatewayGusAddressOk(w.address, roster));
+}
+
 export async function ensureGatewayGusWallet(
   client: CircleClient,
   walletSetId: string,
-  opts: { log?: Logger } = {},
-): Promise<{ walletId: string; address: string; created: boolean; recovered: boolean }> {
+  opts: { log?: Logger; roster: WalletRoster },
+): Promise<{
+  walletId: string;
+  address: string;
+  created: boolean;
+  recovered: boolean;
+  derived: boolean;
+}> {
   const log = opts.log ?? silentLogger;
+  const roster = opts.roster;
   const pinned = pinWalletSetId(walletSetId);
+  const gus = walletFor(roster, GUS_VISITOR_NAME);
+
+  try {
+    const byAddress = await client.listWallets({
+      walletSetId: pinned,
+      address: gus.address,
+      blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+    });
+    const sameAddr = byAddress.data?.wallets?.find(
+      (w) => w.address.toLowerCase() === gus.address.toLowerCase(),
+    );
+    if (sameAddr && sepoliaWalletOk(sameAddr, roster)) {
+      log.info(`Recovered Arc gus on ${ETH_SEPOLIA_BLOCKCHAIN}: ${sameAddr.address} (${sameAddr.id})`);
+      return {
+        walletId: sameAddr.id,
+        address: sameAddr.address,
+        created: false,
+        recovered: true,
+        derived: false,
+      };
+    }
+  } catch (e) {
+    log.warn(`listWallets(address) failed (${circleErr(e)}); continuing`);
+  }
+
   const listed = await client.listWallets({
     walletSetId: pinned,
     refId: GUS_SEPOLIA_REF_ID,
@@ -194,22 +315,69 @@ export async function ensureGatewayGusWallet(
   });
   const found = listed.data?.wallets?.find((w) => w.refId === GUS_SEPOLIA_REF_ID);
   if (found) {
-    log.info(`Recovered existing wallet for ${GUS_SEPOLIA_REF_ID}: ${found.address} (${found.id})`);
-    return { walletId: found.id, address: found.address, created: false, recovered: true };
+    if (sepoliaWalletOk(found, roster)) {
+      log.info(`Recovered existing wallet for ${GUS_SEPOLIA_REF_ID}: ${found.address} (${found.id})`);
+      return {
+        walletId: found.id,
+        address: found.address,
+        created: false,
+        recovered: true,
+        derived: false,
+      };
+    }
+    log.warn(
+      `Ignoring ${GUS_SEPOLIA_REF_ID} ${found.address} (${found.id}) — address is another roster name, not gus`,
+    );
   }
 
-  const res = await client.createWallets({
-    walletSetId: pinned,
-    accountType: "SCA",
-    blockchains: [ETH_SEPOLIA_BLOCKCHAIN],
-    count: 1,
-    metadata: [{ name: GUS_SEPOLIA_REF_ID, refId: GUS_SEPOLIA_REF_ID }],
-  });
-  const wallets = res.data?.wallets ?? [];
-  const w = wallets.find((x) => x.refId === GUS_SEPOLIA_REF_ID) ?? wallets[0];
-  if (!w) throw new Error("createWallets returned no ETH-SEPOLIA gus wallet");
-  log.info(`Created wallet for ${GUS_SEPOLIA_REF_ID}: ${w.address} (${w.id})`);
-  return { walletId: w.id, address: w.address, created: true, recovered: false };
+  try {
+    const derived = await client.deriveWallet({
+      id: gus.walletId,
+      blockchain: ETH_SEPOLIA_BLOCKCHAIN,
+      metadata: { name: GUS_SEPOLIA_REF_ID, refId: GUS_SEPOLIA_REF_ID },
+    });
+    const w = derived.data?.wallet;
+    if (w?.id && w.address) {
+      assertNewChainAddressNotForeign(w.address, roster, GUS_VISITOR_NAME);
+      log.info(`Derived ETH-SEPOLIA from Arc gus ${gus.walletId}: ${w.address} (${w.id})`);
+      return {
+        walletId: w.id,
+        address: w.address,
+        created: false,
+        recovered: false,
+        derived: true,
+      };
+    }
+    log.warn("deriveWallet returned no wallet; falling back to createWallets");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/already roster/.test(msg)) throw e;
+    log.warn(`deriveWallet failed (${circleErr(e)}); falling back to createWallets`);
+  }
+
+  for (let i = 0; i < MAX_SEPOLIA_CREATE_ATTEMPTS; i++) {
+    const res = await client.createWallets({
+      walletSetId: pinned,
+      accountType: "SCA",
+      blockchains: [ETH_SEPOLIA_BLOCKCHAIN],
+      count: 1,
+      metadata: [{ name: GUS_SEPOLIA_REF_ID, refId: GUS_SEPOLIA_REF_ID }],
+    });
+    const wallets = res.data?.wallets ?? [];
+    const w = wallets.find((x) => x.refId === GUS_SEPOLIA_REF_ID) ?? wallets[0];
+    if (!w) throw new Error("createWallets returned no ETH-SEPOLIA gus wallet");
+    try {
+      assertNewChainAddressNotForeign(w.address, roster, GUS_VISITOR_NAME);
+    } catch (e) {
+      log.warn(e instanceof Error ? e.message : String(e));
+      continue;
+    }
+    log.info(`Created wallet for ${GUS_SEPOLIA_REF_ID}: ${w.address} (${w.id})`);
+    return { walletId: w.id, address: w.address, created: true, recovered: false, derived: false };
+  }
+  throw new Error(
+    `createWallets: no ETH-SEPOLIA address unique vs roster (or ${GUS_VISITOR_NAME}) after ${MAX_SEPOLIA_CREATE_ATTEMPTS} attempts`,
+  );
 }
 
 export type GatewayDepositStep =

@@ -7,6 +7,7 @@ import {
   WALLET_NAMES,
   WalletRosterSchema,
   readRoster,
+  rosterOwnerOfAddress,
   walletFor,
   writeRoster,
 } from "./roster.js";
@@ -84,5 +85,17 @@ describe("roster file io", () => {
     const p = join(dir, "bad.json");
     writeFileSync(p, JSON.stringify({ wallets: "nope" }));
     expect(() => readRoster(p)).toThrow();
+  });
+});
+
+describe("rosterOwnerOfAddress", () => {
+  it("matches case-insensitively and misses unknown 0x", () => {
+    const r = WalletRosterSchema.parse({
+      ...EMPTY_ROSTER,
+      walletSetId: "ws",
+      wallets: [{ name: "ada", walletId: "w-ada", address: ADDR }],
+    });
+    expect(rosterOwnerOfAddress(r, ADDR.toUpperCase())?.name).toBe("ada");
+    expect(rosterOwnerOfAddress(r, "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")).toBeUndefined();
   });
 });
