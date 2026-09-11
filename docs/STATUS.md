@@ -667,3 +667,11 @@ Blocked: `revokeName` · 2nd default on **bo** · Studio until 15:22
 Next up: M9.1 PR · 15:22 `pnpm --filter @agent-town/api dev`. Do not `--ticks 12 --yes` until #11.
 `touching:` M9.1 `packages/circle` (worktree). `apps/web` free unless inbound strip — ping first.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 12:37 EDT
+Done: **M9.1** #59 OPEN — https://github.com/kenjohnscreates/agent-economy/pull/59. gus ETH-SEPOLIA SCA created (`refId=gus-eth-sepolia`, walletId `16ee5651-…`). Arc gus roster untouched. **Faucet 403** → no deposit/mint; inbound UI TODO. Address `0x97847b3c…` = Arc **ada** (Circle SCA reuse) — T1 to confirm. T1 inherit in flight.
+In progress: T1 #59 · Studio wait **15:22**
+Blocked: faucet 403 · `revokeName` · 2nd default **bo** · Studio until 15:22
+Next up: T1+#59 · film Arc-only unless faucet later · 15:22 API restart. Do not `--ticks 12 --yes` until #11.
+`touching:` #59 `packages/circle`. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
