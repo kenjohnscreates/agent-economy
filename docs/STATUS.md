@@ -15,7 +15,7 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock default |
-| M6 Integration + demo | in_progress | both | **M6.5** live Arc walk (Gate A) · M6.4 #56 on main · video = live not mock |
+| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick: **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · `API_MODE=real` |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
 | M8 Video + submission | in_progress | both | Record **Sat 12 Sep** live · mock = rehearsal only · Gateway Fri spike |
 
@@ -587,3 +587,12 @@ Blocked: `revokeName`
 Risks changed: mock is rehearsal only; judges need arcscan.
 Next up: seed cy loan + live 12-tick tonight. Stretch B Fri. Do not start D.
 Checkpoint call: none. Record Sat. Freeze Sun 08:00.
+
+## Thu 10 Sep 23:30 EDT
+Done: **M6.5 Gate A live `--ticks 12 --yes`** (~186 s, `execute=LIVE`). Seed **cy #9** 0.2 USDC term 1s [approve 0x3421ad32…](https://testnet.arcscan.app/tx/0x3421ad323c32381fcbd0815b0d44cc3904f2adea706bd5ef606edd3cc0ed6940) → t7 **ada mark_default complete** (loan **#9 Defaulted cy**). t1 gus/hal **buy**, bo/cy **post_job**, bo **request_loan**, dee **deliver**; t2 ada **approve_loan** (#10 bo) + complete_job; t9 **set_rate** + bo **repay complete**. Did **not** default bo. After run: `seed-cy-loan --pending` → **#11 Pending cy** [0xb5f69542…](https://testnet.arcscan.app/tx/0xb5f69542641bd9f3a7503a16b3e656878793cf331c4fd28179bfd77e1d833d75) for mayor Approve. Local `.env`: `API_MODE=real` `ALLOW_BROADCAST=true`.
+Nits: some `dee deliver` ESTIMATION_ERROR (even ticks); others complete. **SUPABASE_URL / SERVICE_KEY empty** — real API feed/speech will be NullLedger until filled (subgraph still has loans/scoreboard).
+In progress: live UI walk (`API_MODE=real`) · Fri Gateway · Sat record
+Blocked: `revokeName` · Supabase keys for live SSE
+Risks changed: live default **landed**. Do not run another 12-tick until mayor uses #11 (ada would auto-approve).
+Next up: fill Supabase if we want bubbles/feed; start real API+web; Fri M9.1 Gateway. Do not start D.
+Checkpoint call: none. Record Sat.

@@ -29,7 +29,10 @@ const TERM_SECONDS = 1;
 
 const { values: flags } = parseArgs({
   args: process.argv.slice(2).filter((a) => a !== "--"),
-  options: { yes: { type: "boolean", default: false } },
+  options: {
+    yes: { type: "boolean", default: false },
+    pending: { type: "boolean", default: false },
+  },
   strict: true,
 });
 
@@ -110,11 +113,16 @@ async function main(): Promise<void> {
       args: [active],
     });
     console.log(`  existing     loan ${active} status=${row.status} dueAt=${row.dueAt}`);
+    if (flags.pending && row.status === 1) {
+      console.log("  skip         cy already has a Pending loan (mayor queue)");
+      return;
+    }
     if (row.status === 2) {
       console.log("  skip         cy already has an Active loan");
       return;
     }
     if (row.status === 1) {
+      if (flags.pending) return;
       console.log("  next         approveLoan on existing Pending");
       if (!broadcast) return;
       await execFn(createCircleClient(process.env), {
@@ -153,6 +161,10 @@ async function main(): Promise<void> {
     args: [cyAddr],
   });
   if (newId === 0n) throw new Error("requestLoan did not set activeLoanOf(cy)");
+  if (flags.pending) {
+    console.log(`  pending      loan ${newId} left Pending for mayor Approve`);
+    return;
+  }
   await execFn(client, {
     walletId: ada.walletId,
     contractAddress: treasury,
