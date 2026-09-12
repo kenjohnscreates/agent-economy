@@ -113,11 +113,7 @@ function draw(role: Role, variant: number, mode: string, frame: number) {
   }
   return pixels;
 }
-mkdirSync(OUT, { recursive: true });
-const seen: Partial<Record<Role, number>> = {};
-for (const agent of ROSTER) {
-  const variant = seen[agent.role] ?? 0;
-  seen[agent.role] = variant + 1;
+function writeSheet(name: string, role: Role, variant: number) {
   const sheet = new Uint8Array(624 * 48 * 4);
   const frames: Record<string, { x: number; y: number; w: number; h: number }> = {};
   let index = 0;
@@ -128,15 +124,24 @@ for (const agent of ROSTER) {
     ["emote", 2],
   ] as const)
     for (let f = 0; f < count; f++) {
-      const pixels = draw(agent.role, variant, mode, f);
+      const pixels = draw(role, variant, mode, f);
       for (let y = 0; y < 48; y++)
         sheet.set(pixels.subarray(y * 192, (y + 1) * 192), (y * 624 + index * 48) * 4);
       frames[`${mode}_${f}`] = { x: index * 48, y: 0, w: 48, h: 48 };
       index++;
     }
-  writeFileSync(resolve(OUT, `${agent.name}.png`), encodePng(624, 48, sheet));
+  writeFileSync(resolve(OUT, `${name}.png`), encodePng(624, 48, sheet));
   writeFileSync(
-    resolve(OUT, `${agent.name}.json`),
+    resolve(OUT, `${name}.json`),
     JSON.stringify({ frames, ground: 47, fps: 10 }, null, 2) + "\n",
   );
 }
+
+mkdirSync(OUT, { recursive: true });
+const seen: Partial<Record<Role, number>> = {};
+for (const agent of ROSTER) {
+  const variant = seen[agent.role] ?? 0;
+  seen[agent.role] = variant + 1;
+  writeSheet(agent.name, agent.role, variant);
+}
+writeSheet("visitor", "consumer", 2);

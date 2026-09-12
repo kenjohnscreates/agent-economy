@@ -254,6 +254,35 @@ export const TxResponseSchema = z.object({
 });
 export type TxResponse = z.infer<typeof TxResponseSchema>;
 
+// ── visitor (M9.6, off-roster) ──────────────────────────────────────────────
+export const VisitorCreateRequestSchema = z.object({
+  label: z.string().min(1).max(32),
+});
+export type VisitorCreateRequest = z.infer<typeof VisitorCreateRequestSchema>;
+
+export const VisitorResponseSchema = z.object({
+  name: z.string().min(1),
+  ensName: z.string().min(1),
+  role: RoleSchema,
+  arcAddress: AddressSchema,
+  balanceUsdc: UsdcSchema,
+  explorerUrl: z.url(),
+  ensUrl: z.url(),
+});
+export type VisitorResponse = z.infer<typeof VisitorResponseSchema>;
+
+export const VisitorChatRequestSchema = z.object({
+  text: z.string().min(1).max(500),
+});
+export type VisitorChatRequest = z.infer<typeof VisitorChatRequestSchema>;
+
+export const VisitorChatResponseSchema = z.object({
+  reply: z.string().min(1).max(500),
+  txHash: TxHashSchema.nullable(),
+  explorerUrl: z.url().nullable(),
+});
+export type VisitorChatResponse = z.infer<typeof VisitorChatResponseSchema>;
+
 // ── errors ──────────────────────────────────────────────────────────────────
 export const ApiErrorSchema = z.object({
   error: z.string().min(1),
@@ -276,4 +305,6 @@ export const API_ROUTES = {
   mayorFund: "/mayor/fund",
   mayorLoanDecision: "/mayor/loan-decision",
   mayorRate: "/mayor/rate",
+  visitor: "/visitor",
+  visitorChat: "/visitor/chat",
 } as const;

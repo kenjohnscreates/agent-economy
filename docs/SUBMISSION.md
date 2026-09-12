@@ -4,7 +4,7 @@
 
 **Honesty statement (verbatim):**
 
-> A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on-chain transaction; agents' decisions are driven by live on-chain data from The Graph, including real DeFi market rates. The Treasury is our own contract; it is not a third-party DeFi protocol.
+> A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on-chain transaction. The eight town agents are rule-bots with real Circle wallets — not LLM agents. A visitor you name can deposit Arc USDC into the bank through allowlisted chat. Agents' decisions are driven by live on-chain data from The Graph, including real DeFi market rates. The Treasury is our own contract; it is not a third-party DeFi protocol.
 
 **Repo:** https://github.com/kenjohnscreates/agent-economy
 
@@ -27,9 +27,9 @@ Select these tracks in the ETHGlobal submission form:
 
 ### Arc — Best Agentic Economy App w/ Circle Agent Stack *(primary)*
 
-Agent Town is a desktop town where eight autonomous agents earn, spend, borrow, and settle jobs with **real USDC on Arc Testnet**. Each agent is a **Circle Developer-Controlled SCA wallet** in wallet set `949545dc-5e02-5050-8e2f-7e6bc12bfed3`; the treasurer (`ada`) and mayor sign treasury and policy actions through the Circle Agent Stack. Money moves on-chain every tick: consumers pay merchants, merchants fund **ERC-8183** job escrow, workers deliver and get paid, workers deposit savings, and the **TownTreasury** contract (`0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1`) lends, collects interest, and marks defaults.
+Agent Town is a desktop town where eight **rule-bot** agents earn, spend, borrow, and settle jobs with **real USDC on Arc Testnet**. Each of those eight is a **Circle Developer-Controlled SCA wallet** in wallet set `949545dc-5e02-5050-8e2f-7e6bc12bfed3` — not an LLM agent (`decide()` is rules; LLM advisor/narrator default off). A judge can mint a **ninth, off-roster visitor** (custom ENS + Circle SCA), fund **Arc USDC**, and chat an allowlisted deposit into the town bank. The treasurer (`ada`) and mayor sign treasury and policy actions through the Circle Agent Stack. Money moves on-chain: consumers pay merchants, merchants fund **ERC-8183** job escrow, workers deliver and get paid, workers deposit savings, the visitor can deposit, and the **TownTreasury** contract (`0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1`) lends, collects interest, and marks defaults.
 
-Agent decisions are not cosmetic — they follow **clear decision logic tied to real signals**: treasury utilisation, borrower credit scores, loan history from our subgraph, and live DeFi market rates (Signal C). The treasurer rules engine approves or flags loans; an optional LLM advisor explains reasoning with hard caps and rules fallback. Judges can verify every payment and loan on [arcscan](https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1), watch the mayor approve a flagged loan in the UI, and see the subgraph update within seconds. This is an agentic economy app: agents hold wallets, make payments, manage risk, and settle jobs — not a static dashboard.
+Agent decisions are not cosmetic — they follow **clear decision logic tied to real signals**: treasury utilisation, borrower credit scores, loan history from our subgraph, and live DeFi market rates (Signal C). The treasurer rules engine approves or flags loans; an optional LLM advisor explains reasoning with hard caps and rules fallback. Judges can verify every payment and loan on [arcscan](https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1), **name a visitor agent in the UI**, watch it deposit, then watch the mayor approve a flagged loan, and see the subgraph update within seconds. This is an agentic economy app: agents hold wallets, make payments, manage risk, and settle jobs — not a static dashboard.
 
 ### Arc — Launch on Arc Testnet & Push to Mainnet
 
@@ -41,7 +41,7 @@ This repository started **8 Sep 2026** with no prior Agent Town code — eligibl
 
 ### ENS — Best Use of ENSv2
 
-**ENSv2 is central, not cosmetic.** Town **`botanica.eth`** owns a dedicated subregistry on the Sepolia hackathon deployment. Eight agents are minted as **`ada.botanica.eth` … `hal.botanica.eth`** via our `TownRegistrar`, with **EAC role-scoped permissions**: the treasurer can write `town.credit-score` and review records across names; workers cannot escalate privileges; consumers have expiring subnames. Each agent carries **`addr(coinType 2152525650)`** binding the Sepolia name to its Arc USDC wallet, plus `addr(60)`, `town.role`, `agent-context`, and avatar text. **`bank.botanica.eth`** is a record alias to `ada` (treasurer), demonstrating agents-as-namespaces. After repay/default the treasurer updates credit scores and appends reviews on-chain — provably permissioned (worker write attempts revert). Resolution goes through **UniversalResolverV2** (`0xd26f2040d083af1cd2962ba303f4bea0c4faf142`). Nothing is hard-coded in the UI: names resolve live from ENS.
+**ENSv2 is central, not cosmetic.** Town **`botanica.eth`** owns a dedicated subregistry on the Sepolia hackathon deployment. Eight roster agents are minted as **`ada.botanica.eth` … `hal.botanica.eth`** via our `TownRegistrar`, and a **visitor can mint a ninth live subname from the UI** (M9.6). **EAC role-scoped permissions**: the treasurer can write `town.credit-score` and review records across names; workers cannot escalate privileges; consumers have expiring subnames. Each agent carries **`addr(coinType 2152525650)`** binding the Sepolia name to its Arc USDC wallet, plus `addr(60)`, `town.role`, `agent-context`, and avatar text. **`bank.botanica.eth`** is a record alias to `ada` (treasurer), demonstrating agents-as-namespaces. After repay/default the treasurer updates credit scores and appends reviews on-chain — provably permissioned (worker write attempts revert). Resolution goes through **UniversalResolverV2** (`0xd26f2040d083af1cd2962ba303f4bea0c4faf142`). Nothing is hard-coded in the UI: names resolve live from ENS.
 
 ---
 
@@ -76,7 +76,7 @@ Canonical JSON: [`packages/ens/town.json`](../packages/ens/town.json), [`package
 
 Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees). Tick-by-tick do/say/backend: [CYCLE.md](CYCLE.md).
 
-**Flow:** boom (buys, jobs, deposits) → merchant borrows with advisor reasoning → worker defaults → rate hike + ENS review → mayor approves flagged loan → recovery. Tick-keyed storyline (`STORYLINE=demo`) replays identically at any speed.
+**Flow (Sat live):** show the town that already ran → **Your agent** mint + Arc USDC + chat deposit → cut to arcscan for cy **#9** / bo **#10** → mayor **Approve #11**. Layout: map → visitor panel → 3×3 cards; right column unchanged. Tick-keyed 12-tick script remains for mock/replay ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees), [CYCLE.md](CYCLE.md)).
 
 **Live chain (film this, not mock):** M6.5 Gate A `--ticks 12 --yes` landed **cy #9 Defaulted**, **bo #10 Repaid**, buys/jobs/rate on [arcscan](https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1). Mayor click is **loan #11 Pending cy** (not fixture `L-3`). Do **not** run another live 12-tick until the mayor uses #11. Fixture ids (`L-1`, `J-demo`) are still skipped on live execute. Mock / `/map-demo` / replay = rehearsal only.
 
@@ -86,7 +86,7 @@ Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-s
 
 - **Option A — external yield vault** on idle treasury USDC: not planned (no live permissionless pool on Arc Testnet; see [RISKS R16](RISKS.md)).
 - **Stretch B (Circle App Kit / Gateway)**: authorized **Fri 11 Sep** (gus ETH-SEPOLIA Circle USDC → Gateway → TownTreasury). Not started at docs catch-up. Drop Saturday if faucet/API blocks — film Arc-only.
-- **Stretch D (open public deposits)**: not started; do not start.
+- **Stretch D (open public deposits / LP shares)**: not started; do not start. M9.6 visitor `deposit(uint256)` is not D.
 - **Arc mainnet deploy**: not done this weekend; contracts are mainnet-portable only.
 - **Subgraph query URL**: not committed (set `SUBGRAPH_URL` locally after Studio deploy).
 
@@ -98,13 +98,13 @@ Target length 2–4 min. Beats are [PRD §10](PRD.md#10-demo-video-outline-24-mi
 
 | Time | Beat |
 |---|---|
-| 0:00 | One-liner + town overview |
-| 0:30 | Agent card: ENS name → Arc wallet → job history (Graph) |
-| 1:00 | Merchant borrows; treasurer advisor reasoning |
-| 1:45 | Worker defaults → rate hike → ENS review record written |
-| 2:30 | Mayor approves loan; tx on arcscan |
-| 3:00 | Architecture slide + sponsor mapping |
-| 3:30 | Close |
+| 0:00 | One-liner + town (8 sprites) |
+| 0:25 | **Your agent:** mint ENS name → 9th card, 3×3 grid |
+| 0:50 | Fund **Arc USDC** + chat deposit 50% → arcscan |
+| 1:20 | Cut to cy **#9** default / bo **#10** repay / Signal C |
+| 2:00 | Mayor **Approve #11** |
+| 2:30 | Architecture + honesty (rule-bots + visitor) |
+| 3:00 | Close |
 
 ### Filming notes (Fri 11 Sep — live, not mock)
 
@@ -116,17 +116,17 @@ pnpm --filter @agent-town/api dev         # :3001 — loads ../../.env
 pnpm --filter @agent-town/web dev         # :3000
 ```
 
-Mayor POSTs need `ALLOW_BROADCAST=true` or they 501. That is required for the **Approve #11** beat.
+Mayor POSTs **and visitor create/chat** need `ALLOW_BROADCAST=true` or they 501. Required for the admit + **Approve #11** beats.
 
 **Hero / map.** PixiJS overworld in the live shell (`:3000` → real `:3001`). `/map-demo` and header **replay** are rehearsal / fallback if testnet is down — not the prize video.
 
-**Mayor click (PRD §8).** Approve **loan #11** (Pending cy 0.2 USDC). Toast hash must be a real [arcscan](https://testnet.arcscan.app) tx. Do **not** `markDefault` **bo**. Do **not** run another `--ticks 12 --yes` before this click (ada would auto-approve #11).
+**Visitor then mayor (PRD §6 / §8).** Film **Your agent** create + Arc USDC + chat deposit **before** Approve **loan #11** (Pending cy 0.2 USDC). Toast hashes must be real [arcscan](https://testnet.arcscan.app) txs. Fund **Arc USDC**, not Sepolia. Do **not** `markDefault` **bo**. Do **not** run another `--ticks 12 --yes` before this click (ada would auto-approve #11).
 
 **What is already on chain (cut to explorer, do not re-run the 12-tick):** cy **#9 Defaulted** [seed approve 0x3421ad32…](https://testnet.arcscan.app/tx/0x3421ad323c32381fcbd0815b0d44cc3904f2adea706bd5ef606edd3cc0ed6940); bo **#10 Repaid**; buys, jobs, `set_rate`. Deliver re-submit bug fixed `bc6e112` (do not film pre-fix ESTIMATION_ERROR as current).
 
 **Feed / speech.** Needs this Supabase project’s ledger. After catch-up the tables exist but are **empty** (`/health` `tick:null`) until sim writes here. Scoreboard + loan book still come from the subgraph.
 
-**Agent cards.** Arcscan wallet + ENS explorer. Town = **botanica** — film `ada.botanica.eth` / `cy.botanica.eth`.
+**UI.** Left: map (8 sprites) → Your agent panel → cards (3×3 with visitor). Right: scoreboard / bank / mayor #11 / feed. Do not put the visitor on the Pixi map.
 
 **Architecture slide (3:00).** ENS Sepolia names → Arc USDC + TownTreasury `0xCE0e…FfC1` → Studio subgraph `agent-town` → Signal C (Aave V3 + Uniswap V3). Optional Fri: Circle Gateway (Sepolia USDC `0x1c7D4B…7238` ≠ ENS MockUSDC). Do not paste `SUBGRAPH_URL`. Cut to [docs/architecture.png](architecture.png) / [ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview).
 

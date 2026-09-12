@@ -23,6 +23,8 @@ export interface TownControls {
   seekTick(tick: number): void;
   /** Refetch `/loans` now (live only), e.g. after a mayor decision, so the queue updates before the next tick. */
   refreshLoans(): void;
+  /** Refetch `/agents` now (live only), e.g. after admitting a visitor. */
+  refreshAgents(): void;
   /** Tear the live connection down and start over: snapshot, then stream. */
   reconnect(): void;
 }
@@ -181,11 +183,18 @@ export function useTown(source: TownSource | null): {
       .then((l) => dispatch({ event: "loans", data: l }))
       .catch(() => undefined);
   }, [source]);
+  const refreshAgents = useCallback(() => {
+    if (!source || source.mode !== "live") return;
+    api
+      .agents(source.apiUrl)
+      .then((a) => dispatch({ event: "agents", data: a }))
+      .catch(() => undefined);
+  }, [source]);
   const reconnect = useCallback(() => setGeneration((g) => g + 1), []);
 
   return {
     state,
-    controls: { pause, resume, setSpeed, seekTick, refreshLoans, reconnect },
+    controls: { pause, resume, setSpeed, seekTick, refreshLoans, refreshAgents, reconnect },
     error,
     info,
     health,

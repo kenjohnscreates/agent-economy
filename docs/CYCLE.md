@@ -9,7 +9,7 @@ Keyed by **tick number**, not the clock. Default cadence `TICK_MS=15000` → ~3 
 | **Mock / `/map-demo` / replay** | Fixture story (`L-1`, `L-2`, `J-demo`, mayor `L-3`) | Rotating role lines below. Snapshot freeze = **tick 7 / default**. |
 | **Live (`API_MODE=real`)** | Real Arc txs + subgraph ids (`#9`…`#11`) | Default **LLM narrator off**: `ada: Cautious town banker… (t7 default mark_default)`. All 8 agents get a row in Supabase each tick. Pixi chip = 3 s, ≤120 chars. |
 
-**Sat 12 Sep film:** do **not** re-run `--ticks 12 --yes` until mayor uses **#11**. Cut to arcscan for beats already landed. Speech/feed stay blank until this Supabase ledger has rows.
+**Sat 12 Sep film:** do **not** re-run `--ticks 12 --yes` until mayor uses **#11**. Order: **Your agent** (name → fund Arc USDC → chat deposit) **then** Approve #11. Cut to arcscan for beats already landed. Map stays 8 sprites; visitor is the 9th card.
 
 ---
 
@@ -28,6 +28,7 @@ Town **`botanica`**. Names resolve on Sepolia → Arc wallets.
 | **gus** | consumer | Homes | Cheerful regular who shops whenever the wallet allows. |
 | **hal** | consumer | Homes | Frugal retiree living on the town stipend and small treats. |
 | **you** | mayor | — | One click: Approve/Deny a **flagged** loan. Live = **#11 cy**. Mock = **L-3**. |
+| **visitor** | consumer (off-roster) | — | Judge-named. **Not** in `decide()` / Pixi map. Chat: balance + deposit only. Live UI only. |
 
 ---
 

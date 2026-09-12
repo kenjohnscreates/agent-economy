@@ -20,6 +20,10 @@ import {
   type SseEvent,
   type StateResponse,
   type TxResponse,
+  type VisitorChatRequest,
+  type VisitorChatResponse,
+  type VisitorCreateRequest,
+  type VisitorResponse,
 } from "@agent-town/shared";
 import {
   createGraphClient,
@@ -50,6 +54,7 @@ import {
   mayorRate as executeMayorRate,
   type MayorDeps,
 } from "./mayor.js";
+import { createVisitorService, type VisitorService } from "./visitor.js";
 
 const HOME_POSITION = {
   bank: { x: 0.5, y: 0.55 },
@@ -94,6 +99,7 @@ export class RealSource implements DataSource {
   private readonly readBalance: BalanceReader;
   private readonly resolveEns: (name: string) => Promise<ResolvedAgent>;
   private readonly mayor: MayorDeps | undefined;
+  private readonly visitor: VisitorService | undefined;
   private readonly rosterAddresses: Map<string, Address>;
 
   private cache: RealCache | undefined;
@@ -115,14 +121,10 @@ export class RealSource implements DataSource {
       createGraphClient({ url: this.env.subgraphUrl, apiKey: this.env.graphApiKey });
     this.ledger = options.ledger ?? createLedgerReader(this.env);
     this.readBalance = options.balanceReader ?? createBalanceReader(this.env.arcRpcUrl);
-    this.resolveEns =
-      options.resolveAgent ??
-      ((name) => createEnsClient().resolveAgent(name));
+    this.resolveEns = options.resolveAgent ?? ((name) => createEnsClient().resolveAgent(name));
     const roster = readRoster();
     this.rosterAddresses = new Map(
-      roster.wallets
-        .filter((w) => w.name !== "mayor")
-        .map((w) => [w.name, w.address as Address]),
+      roster.wallets.filter((w) => w.name !== "mayor").map((w) => [w.name, w.address as Address]),
     );
     if (options.mayorDeps) {
       this.mayor = options.mayorDeps;
@@ -137,6 +139,15 @@ export class RealSource implements DataSource {
       } catch {
         this.mayor = undefined;
       }
+    }
+    if (this.mayor) {
+      this.visitor = createVisitorService({
+        circle: this.mayor.circle,
+        readBalance: this.readBalance,
+        broadcastAllowed: this.env.broadcastAllowed,
+        townName: this.env.townName,
+        env: options.env ?? process.env,
+      });
     }
   }
 
@@ -195,8 +206,7 @@ export class RealSource implements DataSource {
   private noteGraphError(err: unknown): void {
     const until = retryUntilMs(err);
     if (until !== undefined) this.graphBackoffUntilMs = until;
-    const untilIso =
-      until !== undefined ? new Date(until).toISOString() : "next poll";
+    const untilIso = until !== undefined ? new Date(until).toISOString() : "next poll";
     console.error(`[api] real graph refresh failed; backoff until ${untilIso}:`, err);
   }
 
@@ -247,10 +257,7 @@ export class RealSource implements DataSource {
     };
   }
 
-  private bucketJobs(
-    jobs: SubgraphJob[],
-    anchorSec: number,
-  ): Map<string, Job[]> {
+  private bucketJobs(jobs: SubgraphJob[], anchorSec: number): Map<string, Job[]> {
     const jobsByAgent = new Map<string, Job[]>();
     for (const name of this.rosterAddresses.keys()) jobsByAgent.set(name, []);
     for (const raw of jobs) {
@@ -377,7 +384,11 @@ export class RealSource implements DataSource {
             creditScore: resolved?.creditScore ?? null,
             position: { building: entry.home, x: home.x, y: home.y },
             lastDecision: action
-              ? { tick: action.tick, kind: action.kind, summary: `${action.kind} (tick ${action.tick})` }
+              ? {
+                  tick: action.tick,
+                  kind: action.kind,
+                  summary: `${action.kind} (tick ${action.tick})`,
+                }
               : null,
             narration: narration?.text ?? null,
             avatar: entry.avatar,
@@ -389,6 +400,17 @@ export class RealSource implements DataSource {
       if (!row) continue;
       if (row.resolved) ensByName.set(row.agent.name, row.resolved);
       agents.push(row.agent);
+    }
+
+    try {
+      const extra = await this.visitor?.visitorSummary();
+      if (extra && !agents.some((a) => a.name === extra.name)) agents.push(extra);
+      else if (extra) {
+        const i = agents.findIndex((a) => a.name === extra.name);
+        if (i >= 0) agents[i] = extra;
+      }
+    } catch (err) {
+      console.warn("[api] visitor summary:", err);
     }
 
     const stateResponse: StateResponse = {
@@ -471,6 +493,42 @@ export class RealSource implements DataSource {
       throw new SourceError(501, "NOT_IMPLEMENTED", "Circle not configured for rate");
     }
     const res = await executeMayorRate(this.mayor, body);
+    await this.refresh();
+    return res;
+  }
+
+  getVisitor(): VisitorResponse | null {
+    if (!this.visitor) return null;
+    const art = this.visitor.getVisitor();
+    if (!art) return null;
+    const live = this.cache?.agents.find((a) => a.name === art.name);
+    return live
+      ? {
+          name: live.name,
+          ensName: live.ensName,
+          role: live.role,
+          arcAddress: live.arcAddress,
+          balanceUsdc: live.balanceUsdc,
+          explorerUrl: `${ARC_EXPLORER_URL}/address/${live.arcAddress}`,
+          ensUrl: "https://explorer.ens.dev/",
+        }
+      : art;
+  }
+
+  async createVisitor(body: VisitorCreateRequest): Promise<VisitorResponse> {
+    if (!this.visitor) {
+      throw new SourceError(501, "NOT_IMPLEMENTED", "Circle not configured for visitor create");
+    }
+    const res = await this.visitor.createVisitor(body);
+    await this.refresh();
+    return this.getVisitor() ?? res;
+  }
+
+  async chatVisitor(body: VisitorChatRequest): Promise<VisitorChatResponse> {
+    if (!this.visitor) {
+      throw new SourceError(501, "NOT_IMPLEMENTED", "Circle not configured for visitor chat");
+    }
+    const res = await this.visitor.chatVisitor(body);
     await this.refresh();
     return res;
   }

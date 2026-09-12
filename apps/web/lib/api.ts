@@ -10,6 +10,8 @@ import {
   ScoreboardResponseSchema,
   StateResponseSchema,
   TxResponseSchema,
+  VisitorChatResponseSchema,
+  VisitorResponseSchema,
   type AgentDetailResponse,
   type AgentsResponse,
   type LoanStatus,
@@ -20,6 +22,10 @@ import {
   type ScoreboardResponse,
   type StateResponse,
   type TxResponse,
+  type VisitorChatRequest,
+  type VisitorChatResponse,
+  type VisitorCreateRequest,
+  type VisitorResponse,
 } from "@agent-town/shared";
 import { z } from "zod";
 import { API_URL } from "./config";
@@ -94,6 +100,18 @@ export const api = {
     }),
   mayorRate: (body: MayorRateRequest): Promise<TxResponse> =>
     request(API_ROUTES.mayorRate, TxResponseSchema, { method: "POST", body: JSON.stringify(body) }),
+  visitor: (base?: string): Promise<VisitorResponse> =>
+    request(API_ROUTES.visitor, VisitorResponseSchema, undefined, base),
+  createVisitor: (body: VisitorCreateRequest): Promise<VisitorResponse> =>
+    request(API_ROUTES.visitor, VisitorResponseSchema, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  visitorChat: (body: VisitorChatRequest): Promise<VisitorChatResponse> =>
+    request(API_ROUTES.visitorChat, VisitorChatResponseSchema, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   eventsUrl: (base: string = API_URL): string => `${base}${API_ROUTES.events}`,
   baseUrl: (base: string = API_URL): string => base,
   health: (base?: string): Promise<HealthResponse> =>
