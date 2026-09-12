@@ -10,3 +10,4 @@ export * from "./ens.js";
 export * from "./api.js";
 export * from "./events.js";
 export * from "./fixtures.js";
+export * from "./visitor.js";

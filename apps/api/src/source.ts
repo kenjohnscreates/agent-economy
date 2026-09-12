@@ -13,6 +13,10 @@ import type {
   SseEvent,
   StateResponse,
   TxResponse,
+  VisitorChatRequest,
+  VisitorChatResponse,
+  VisitorCreateRequest,
+  VisitorResponse,
 } from "@agent-town/shared";
 
 /** Thrown by a data source; routes map `code` → HTTP status. */
@@ -40,6 +44,9 @@ export interface DataSource {
   mayorFund(body: MayorFundRequest): TxResponse | Promise<TxResponse>;
   mayorLoanDecision(body: MayorLoanDecisionRequest): TxResponse | Promise<TxResponse>;
   mayorRate(body: MayorRateRequest): TxResponse | Promise<TxResponse>;
+  getVisitor(): VisitorResponse | null | Promise<VisitorResponse | null>;
+  createVisitor(body: VisitorCreateRequest): VisitorResponse | Promise<VisitorResponse>;
+  chatVisitor(body: VisitorChatRequest): VisitorChatResponse | Promise<VisitorChatResponse>;
   /** Subscribe to live events; returns an unsubscribe fn. */
   subscribe(listener: SseListener): () => void;
 }

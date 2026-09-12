@@ -10,15 +10,17 @@ import { arcAddressUrl, displayEnsName, ensExplorerUrl } from "@/lib/links";
 export function AgentCard({
   agent,
   selected,
+  you = false,
   onSelect,
 }: {
   agent: AgentSummary;
   selected: boolean;
+  you?: boolean;
   onSelect: (name: string | null) => void;
 }) {
   const ens = displayEnsName(agent.ensName);
   return (
-    <article className="agent" data-selected={selected}>
+    <article className="agent" data-selected={selected} data-you={you || undefined}>
       {/* plain img: sprites are tiny PNGs served from /public, no optimisation wanted */}
       <img src={agent.avatar} alt="" width={48} height={48} />
       <button
@@ -32,6 +34,7 @@ export function AgentCard({
           {ens}
         </span>
         <span className="label">
+          {you ? "you · " : ""}
           {agent.role}
           {agent.creditScore != null ? ` · score ${agent.creditScore}` : ""}
         </span>

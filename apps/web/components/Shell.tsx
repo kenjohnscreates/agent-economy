@@ -6,7 +6,7 @@
 // drops under a page that already has a town on it, a connection card explains why and
 // offers retry or replay; the header shows the API mode and feature flags.
 import { useEffect, useMemo, useState } from "react";
-import { ROSTER } from "@agent-town/shared";
+import { AGENT_NAMES, ROSTER } from "@agent-town/shared";
 import { useTown, type TownSource } from "@/lib/useTown";
 import type { ConnectPhase } from "@/lib/connect";
 import { ReplayFileSchema, type ReplayFile } from "@/lib/replay";
@@ -18,6 +18,7 @@ import { MayorPanel } from "./MayorPanel";
 import { Feed } from "./Feed";
 import { AgentCard } from "./AgentCard";
 import { MapSlot } from "./MapSlot";
+import { VisitorPanel } from "./VisitorPanel";
 import { Wordmark } from "./Wordmark";
 
 type Mode = "live" | "replay";
@@ -63,6 +64,10 @@ export function Shell() {
 
   const { state, controls, error, info, health, speed, paused } = useTown(source);
   const agents = state.order.map((n) => state.agents[n]!).filter(Boolean);
+  const mapAgents = agents.filter((a) => (AGENT_NAMES as readonly string[]).includes(a.name));
+  const visitorName =
+    agents.find((a) => !(AGENT_NAMES as readonly string[]).includes(a.name))?.name ?? null;
+  const visitorLive = mode === "live" && health?.mode === "real";
 
   return (
     <div className="shell">
@@ -124,7 +129,7 @@ export function Shell() {
           <div className="card world">
             <div className="map-frame">
               <MapSlot
-                agents={agents}
+                agents={mapAgents}
                 lastTx={state.lastTx}
                 tick={state.tick}
                 phase={state.phase}
@@ -167,7 +172,13 @@ API_MODE=real pnpm --filter @agent-town/api dev  # real: subgraph + ENS + Arc`}<
             </div>
           ) : null}
 
-          <div className="agents" aria-label="Agents">
+          <VisitorPanel
+            enabled={visitorLive}
+            visitorName={visitorName}
+            onChanged={controls.refreshAgents}
+          />
+
+          <div className="agents" data-count={agents.length || 8} aria-label="Agents">
             {agents.length === 0
               ? ROSTER.map((r) => (
                   <div className="agent" key={r.name} aria-busy="true">
@@ -184,6 +195,7 @@ API_MODE=real pnpm --filter @agent-town/api dev  # real: subgraph + ENS + Arc`}<
                     key={a.name}
                     agent={a}
                     selected={selected === a.name}
+                    you={visitorName === a.name}
                     onSelect={setSelected}
                   />
                 ))}

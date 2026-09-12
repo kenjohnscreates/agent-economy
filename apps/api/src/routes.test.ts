@@ -10,6 +10,8 @@ import {
   ScoreboardResponseSchema,
   StateResponseSchema,
   TxResponseSchema,
+  VisitorChatResponseSchema,
+  VisitorResponseSchema,
   parseSseEvent,
 } from "@agent-town/shared";
 import type { Hono } from "hono";
@@ -107,11 +109,15 @@ describe("errors are ApiError", () => {
 
 describe("mayor POSTs mutate mock state", () => {
   it("fund raises the treasury balance", async () => {
-    const before = ScoreboardResponseSchema.parse(await (await app.request(API_ROUTES.scoreboard)).json());
+    const before = ScoreboardResponseSchema.parse(
+      await (await app.request(API_ROUTES.scoreboard)).json(),
+    );
     const res = await post(API_ROUTES.mayorFund, { amountUsdc: "5000000" });
     expect(res.status).toBe(200);
     TxResponseSchema.parse(await res.json());
-    const after = ScoreboardResponseSchema.parse(await (await app.request(API_ROUTES.scoreboard)).json());
+    const after = ScoreboardResponseSchema.parse(
+      await (await app.request(API_ROUTES.scoreboard)).json(),
+    );
     expect(BigInt(after.treasuryBalanceUsdc) - BigInt(before.treasuryBalanceUsdc)).toBe(5_000_000n);
   });
 
@@ -134,9 +140,42 @@ describe("mayor POSTs mutate mock state", () => {
   it("rate recomputes the breakdown", async () => {
     const res = await post(API_ROUTES.mayorRate, { bps: 900 });
     expect(res.status).toBe(200);
-    const sb = ScoreboardResponseSchema.parse(await (await app.request(API_ROUTES.scoreboard)).json());
+    const sb = ScoreboardResponseSchema.parse(
+      await (await app.request(API_ROUTES.scoreboard)).json(),
+    );
     expect(sb.baseRateBps).toBe(900);
     expect(sb.rate.townRateBps).toBe(900 + sb.rate.defaultPremiumBps);
+  });
+});
+
+describe("visitor", () => {
+  it("404 until create; then 9th agent and 50% deposit chat", async () => {
+    expect((await app.request(API_ROUTES.visitor)).status).toBe(404);
+    const created = await post(API_ROUTES.visitor, { label: "kenny" });
+    expect(created.status).toBe(200);
+    const v = VisitorResponseSchema.parse(await created.json());
+    expect(v.name).toBe("kenny");
+    expect(v.ensName).toBe("kenny.botanica.eth");
+    expect(v.balanceUsdc).toBe("2000000");
+    const agents = AgentsResponseSchema.parse(await (await app.request(API_ROUTES.agents)).json());
+    expect(agents).toHaveLength(9);
+    expect(agents.some((a) => a.name === "kenny" && a.avatar === "/sprites/visitor.png")).toBe(
+      true,
+    );
+    const chat = await post(API_ROUTES.visitorChat, {
+      text: "deposit 50% of our usdc into the town bank",
+    });
+    expect(chat.status).toBe(200);
+    const body = VisitorChatResponseSchema.parse(await chat.json());
+    expect(body.reply).toMatch(/1 USDC/);
+    expect(body.txHash).toMatch(/^0x[0-9a-fA-F]{64}$/);
+    const after = VisitorResponseSchema.parse(await (await app.request(API_ROUTES.visitor)).json());
+    expect(after.balanceUsdc).toBe("1000000");
+    expect((await post(API_ROUTES.visitor, { label: "ivy" })).status).toBe(400);
+    const refuse = VisitorChatResponseSchema.parse(
+      await (await post(API_ROUTES.visitorChat, { text: "approve loan L-2" })).json(),
+    );
+    expect(refuse.txHash).toBeNull();
   });
 });
 

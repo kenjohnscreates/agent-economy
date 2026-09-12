@@ -32,7 +32,18 @@ import {
   type StateResponse,
   type TxEvent,
   type TxResponse,
+  type VisitorChatRequest,
+  type VisitorChatResponse,
+  type VisitorCreateRequest,
+  type VisitorResponse,
+  ensNameFor,
+  formatUsdcHuman,
+  parseVisitorIntent,
+  percentOf,
+  validateVisitorLabel,
+  VISITOR_AVATAR,
 } from "@agent-town/shared";
+import { createHash } from "node:crypto";
 import { SourceError, type DataSource, type SseListener } from "../source.js";
 import { createPrng, type Prng } from "./prng.js";
 
@@ -121,6 +132,7 @@ export class MockStore implements DataSource {
   private listeners = new Set<SseListener>();
   private timer: ReturnType<typeof setInterval> | undefined;
   private readonly now: () => Date;
+  private visitor: VisitorResponse | null = null;
 
   constructor(private readonly opts: MockStoreOptions) {
     this.now = opts.now ?? (() => new Date());
@@ -155,6 +167,7 @@ export class MockStore implements DataSource {
     this.defaultPremiumBps = FIXTURES.rate.defaultPremiumBps;
     // Keep only the GDP points already "in the past" (empty when tick < 1).
     this.gdpSeries = structuredClone(FIXTURES.scoreboard.gdpSeries.filter((p) => p.tick <= tick));
+    this.visitor = null;
   }
 
   /** One mock tick: mutate state deterministically, then fan out SSE events. */
@@ -185,7 +198,10 @@ export class MockStore implements DataSource {
     this.signals = {
       ...this.signals,
       usdcBorrowApyBps: Math.max(0, FIXTURES.signals.usdcBorrowApyBps + rng.int(31) - 15),
-      dexVolume24hUsd: jitterUsdString(FIXTURES.signals.dexVolume24hUsd, rng.int(2_000_000) - 1_000_000),
+      dexVolume24hUsd: jitterUsdString(
+        FIXTURES.signals.dexVolume24hUsd,
+        rng.int(2_000_000) - 1_000_000,
+      ),
       fetchedAt: this.now().toISOString(),
       stale: tick % STALE_EVERY_TICKS === 0,
     };
@@ -196,7 +212,8 @@ export class MockStore implements DataSource {
     const txCount = 1 + rng.int(3);
     for (let i = 0; i < txCount; i++) this.emit({ event: "tx", data: this.randomTx(rng) });
     for (const a of narrated) {
-      if (a.narration) this.emit({ event: "narration", data: { tick, agent: a.name, text: a.narration } });
+      if (a.narration)
+        this.emit({ event: "narration", data: { tick, agent: a.name, text: a.narration } });
     }
     if (flagged) this.emit({ event: "loan_flagged", data: flagged });
     this.emit({ event: "scoreboard", data: this.getScoreboard() });
@@ -226,7 +243,8 @@ export class MockStore implements DataSource {
       defaultedAtTick: null,
       advisor: {
         decision: "flag",
-        reasoning: "Utilisation 9% is fine but town just recorded a default; escalating to the mayor.",
+        reasoning:
+          "Utilisation 9% is fine but town just recorded a default; escalating to the mayor.",
         confidence: 0.55,
         source: "rules",
       },
@@ -329,11 +347,14 @@ export class MockStore implements DataSource {
       treasuryBalanceUsdc: this.treasuryUsdc.toString(),
       outstandingUsdc: outstanding.toString(),
       defaults,
-      defaultRateBps: everApproved.length === 0 ? 0 : Math.round((defaults * 10_000) / everApproved.length),
+      defaultRateBps:
+        everApproved.length === 0 ? 0 : Math.round((defaults * 10_000) / everApproved.length),
       baseRateBps: rate.baseRateBps,
       ticks: this.tick,
       jobsCompleted: this.jobs.filter((j) => j.status === "completed").length,
-      loansOutstanding: this.loans.filter((l) => l.status === "approved" || l.status === "defaulted").length,
+      loansOutstanding: this.loans.filter(
+        (l) => l.status === "approved" || l.status === "defaulted",
+      ).length,
       gdpSeries: this.gdpSeries,
       signals: this.signals,
       rate,
@@ -377,7 +398,9 @@ export class MockStore implements DataSource {
       this.treasuryUsdc -= BigInt(loan.principalUsdc);
       const borrower = this.agents.find((a) => a.name === loan.borrower);
       if (borrower) {
-        borrower.balanceUsdc = (BigInt(borrower.balanceUsdc) + BigInt(loan.principalUsdc)).toString();
+        borrower.balanceUsdc = (
+          BigInt(borrower.balanceUsdc) + BigInt(loan.principalUsdc)
+        ).toString();
       }
     } else {
       loan.status = "denied";
@@ -420,6 +443,100 @@ export class MockStore implements DataSource {
     });
     this.emit({ event: "scoreboard", data: this.getScoreboard() });
     return res;
+  }
+
+  getVisitor(): VisitorResponse | null {
+    return this.visitor;
+  }
+
+  createVisitor(body: VisitorCreateRequest): VisitorResponse {
+    if (this.visitor) {
+      throw new SourceError(400, "BAD_REQUEST", `Visitor already admitted as ${this.visitor.name}`);
+    }
+    let label: string;
+    try {
+      label = validateVisitorLabel(body.label);
+    } catch (e) {
+      throw new SourceError(400, "BAD_REQUEST", e instanceof Error ? e.message : "Invalid name");
+    }
+    const ensName = ensNameFor(label, "botanica");
+    const hex = createHash("sha256").update(`visitor:${label}`).digest("hex").slice(0, 40);
+    const arcAddress = `0x${hex}` as VisitorResponse["arcAddress"];
+    this.visitor = {
+      name: label,
+      ensName,
+      role: "consumer",
+      arcAddress,
+      balanceUsdc: "2000000",
+      explorerUrl: `${ARC_EXPLORER_URL}/address/${arcAddress}`,
+      ensUrl: `https://explorer.ens.dev/`,
+    };
+    this.agents = [
+      ...this.agents.filter((a) => a.name !== label),
+      {
+        name: label,
+        ensName,
+        role: "consumer",
+        arcAddress,
+        balanceUsdc: "2000000",
+        creditScore: null,
+        position: { building: "homes", x: 0.2, y: 0.45 },
+        lastDecision: null,
+        narration: "I just arrived in botanica.",
+        avatar: VISITOR_AVATAR,
+      },
+    ];
+    return this.visitor;
+  }
+
+  chatVisitor(body: VisitorChatRequest): VisitorChatResponse {
+    if (!this.visitor) throw new SourceError(404, "NOT_FOUND", "No visitor agent yet");
+    const intent = parseVisitorIntent(body.text);
+    const agent = this.agents.find((a) => a.name === this.visitor?.name);
+    if (!agent) throw new SourceError(404, "NOT_FOUND", "Visitor missing from roster view");
+    if (intent.kind === "balance") {
+      return {
+        reply: `I hold ${formatUsdcHuman(agent.balanceUsdc)} on Arc.`,
+        txHash: null,
+        explorerUrl: null,
+      };
+    }
+    if (intent.kind === "refuse") {
+      return { reply: intent.reason, txHash: null, explorerUrl: null };
+    }
+    const amount =
+      intent.kind === "deposit_percent"
+        ? percentOf(agent.balanceUsdc, intent.bps)
+        : intent.amountUsdc;
+    if (BigInt(amount) <= 0n) {
+      return { reply: "Nothing to deposit — fund me first.", txHash: null, explorerUrl: null };
+    }
+    if (BigInt(amount) > BigInt(agent.balanceUsdc)) {
+      return { reply: "I don't have that much USDC.", txHash: null, explorerUrl: null };
+    }
+    agent.balanceUsdc = (BigInt(agent.balanceUsdc) - BigInt(amount)).toString();
+    this.visitor.balanceUsdc = agent.balanceUsdc;
+    this.treasuryUsdc += BigInt(amount);
+    const res = this.txResponse();
+    agent.lastDecision = { tick: this.tick, kind: "deposit", summary: `deposit ${amount}` };
+    this.emit({
+      event: "tx",
+      data: {
+        tick: this.tick,
+        agent: agent.name,
+        kind: "deposit",
+        amountUsdc: amount,
+        counterparty: "treasury",
+        txHash: res.txHash,
+        explorerUrl: res.explorerUrl,
+        status: "complete",
+      },
+    });
+    return {
+      reply: `Deposited ${formatUsdcHuman(amount)} into the town bank.`,
+      txHash: res.txHash,
+      explorerUrl: res.explorerUrl,
+    };
   }
 
   subscribe(listener: SseListener): () => void {

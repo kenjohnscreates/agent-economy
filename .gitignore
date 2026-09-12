@@ -43,3 +43,6 @@ broadcast/
 # TypeScript / test output
 *.tsbuildinfo
 coverage/
+
+# Live visitor admit artifact (M9.6) — one SCA + ENS label, not committed
+packages/circle/visitor.json

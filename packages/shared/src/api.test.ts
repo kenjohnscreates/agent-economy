@@ -100,5 +100,7 @@ describe("routes", () => {
     expect(API_ROUTES.agent("ada")).toBe("/agents/ada");
     expect(API_ROUTES.loans).toBe("/loans");
     expect(API_ROUTES.mayorLoanDecision).toBe("/mayor/loan-decision");
+    expect(API_ROUTES.visitor).toBe("/visitor");
+    expect(API_ROUTES.visitorChat).toBe("/visitor/chat");
   });
 });

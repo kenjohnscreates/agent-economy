@@ -14,6 +14,10 @@ import {
   ScoreboardResponseSchema,
   StateResponseSchema,
   TxResponseSchema,
+  VisitorChatRequestSchema,
+  VisitorChatResponseSchema,
+  VisitorCreateRequestSchema,
+  VisitorResponseSchema,
   type ApiError,
 } from "@agent-town/shared";
 import { Hono, type Context } from "hono";
@@ -46,7 +50,9 @@ async function jsonBody(c: Context): Promise<unknown> {
   try {
     return await c.req.json();
   } catch {
-    throw new BadRequestError(new z.ZodError([{ code: "custom", message: "invalid JSON body", path: [] }]));
+    throw new BadRequestError(
+      new z.ZodError([{ code: "custom", message: "invalid JSON body", path: [] }]),
+    );
   }
 }
 
@@ -57,17 +63,24 @@ export function createApp(source: DataSource): Hono {
   app.use("*", cors({ origin: (origin) => origin || "http://localhost:3000" }));
 
   app.onError((err, c) => {
-    if (err instanceof SourceError) return apiError(c, err.status, { error: err.message, code: err.code });
-    if (err instanceof BadRequestError) return apiError(c, 400, { error: err.message, code: "BAD_REQUEST" });
+    if (err instanceof SourceError)
+      return apiError(c, err.status, { error: err.message, code: err.code });
+    if (err instanceof BadRequestError)
+      return apiError(c, 400, { error: err.message, code: "BAD_REQUEST" });
     if (err instanceof z.ZodError) {
       console.error("[api] response failed shared contract:", z.prettifyError(err));
-      return apiError(c, 500, { error: "response failed shared contract", code: "CONTRACT_VIOLATION" });
+      return apiError(c, 500, {
+        error: "response failed shared contract",
+        code: "CONTRACT_VIOLATION",
+      });
     }
     console.error("[api] unhandled:", err);
     return apiError(c, 500, { error: "internal error", code: "INTERNAL" });
   });
 
-  app.notFound((c) => apiError(c, 404, { error: `No route ${c.req.method} ${c.req.path}`, code: "NOT_FOUND" }));
+  app.notFound((c) =>
+    apiError(c, 404, { error: `No route ${c.req.method} ${c.req.path}`, code: "NOT_FOUND" }),
+  );
 
   app.get("/health", (c) => {
     let tick: number | null = null;
@@ -84,7 +97,9 @@ export function createApp(source: DataSource): Hono {
   app.get(`${API_ROUTES.agents}/:name`, (c) =>
     c.json(AgentDetailResponseSchema.parse(source.getAgent(c.req.param("name")))),
   );
-  app.get(API_ROUTES.scoreboard, (c) => c.json(ScoreboardResponseSchema.parse(source.getScoreboard())));
+  app.get(API_ROUTES.scoreboard, (c) =>
+    c.json(ScoreboardResponseSchema.parse(source.getScoreboard())),
+  );
   app.get(API_ROUTES.loans, (c) => {
     const query = parseInput(LoansQuerySchema, c.req.query());
     return c.json(LoansResponseSchema.parse(source.getLoans(query)));
@@ -97,13 +112,25 @@ export function createApp(source: DataSource): Hono {
   });
   app.post(API_ROUTES.mayorLoanDecision, async (c) => {
     const body = parseInput(MayorLoanDecisionRequestSchema, await jsonBody(c));
-    return c.json(
-      TxResponseSchema.parse(await Promise.resolve(source.mayorLoanDecision(body))),
-    );
+    return c.json(TxResponseSchema.parse(await Promise.resolve(source.mayorLoanDecision(body))));
   });
   app.post(API_ROUTES.mayorRate, async (c) => {
     const body = parseInput(MayorRateRequestSchema, await jsonBody(c));
     return c.json(TxResponseSchema.parse(await Promise.resolve(source.mayorRate(body))));
+  });
+
+  app.get(API_ROUTES.visitor, async (c) => {
+    const visitor = await Promise.resolve(source.getVisitor());
+    if (!visitor) throw new SourceError(404, "NOT_FOUND", "No visitor agent yet");
+    return c.json(VisitorResponseSchema.parse(visitor));
+  });
+  app.post(API_ROUTES.visitor, async (c) => {
+    const body = parseInput(VisitorCreateRequestSchema, await jsonBody(c));
+    return c.json(VisitorResponseSchema.parse(await Promise.resolve(source.createVisitor(body))));
+  });
+  app.post(API_ROUTES.visitorChat, async (c) => {
+    const body = parseInput(VisitorChatRequestSchema, await jsonBody(c));
+    return c.json(VisitorChatResponseSchema.parse(await Promise.resolve(source.chatVisitor(body))));
   });
 
   return app;
