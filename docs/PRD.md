@@ -33,9 +33,9 @@ Agent economies are invisible: wallets are hex, decisions are logs, money moves 
 - **Sim engine** (backend) ticking agents through rules; **treasurer LLM advisor** on loan decisions (rules fallback); **LLM narrator** for speech bubbles.
 - **Real‑world signals (C)**: agent rules consume live external DeFi data from existing public subgraphs on The Graph — the treasurer anchors its base rate to the real USDC borrow rate on a major lending market (Messari standardized lending schema, e.g. Aave V3 Ethereum), and merchant pricing/demand reacts to real DEX volume (e.g. Uniswap V3 USDC pools). Town decisions are therefore tied to the real economy, not only to our own contract's state.
 - **Desktop web UI (1440×900)** — layout is a product requirement, not chrome-only:
-  - **Left:** Pixi map (8 roster sprites only) → **Your agent** visitor panel → agent card grid (**4×2** for 8; **3×3 when the visitor card is present**).
-  - **Right (unchanged):** scoreboard, bank, mayor queue (**loan #11**), live event feed.
-  - Visitor card is the 9th `AgentCard` (`data-you`, avatar `/sprites/visitor.png`). It is **not** a 9th map sprite (`MapSlotProps` / `ZONES` / `zonePoint` stay frozen).
+  - **Map:** Pixi overworld, 8 roster sprites only (visitor is never a 9th sprite).
+  - **Header:** white **Add your agent** button (visitor panel) · **Town data** drawer (scoreboard, bank + Gateway inbound, mayor **#11**) · feed as a glass rail on the right.
+  - **Agents tab:** 8 cards, or 9 when a visitor exists (`data-you`). Frozen: `MapSlotProps` / `ZONES` / `zonePoint`.
   - Replay / mock: visitor panel visible but **disabled** (“live town only”). Chat runs only when `api · real`.
 - **Mayor actions**: fund treasury, approve/deny a flagged loan, set base rate.
 - **Visitor actions (live only):** create name, refresh Arc USDC balance, chat `get_balance` / `deposit_percent` / `deposit_usdc` (regex parser; optional Anthropic/OpenAI for paraphrases). Refuse loans, defaults, transfers, `revokeName`.
@@ -99,21 +99,20 @@ Treasurer **LLM advisor** (feature‑flagged): given the same signals as JSON, r
 Target **1440×900**. This layout is in-scope UI work, not a post-hackathon polish pass.
 
 ```
-┌────────────────────────────────┬──────────────────────┐
-│ Map (Pixi · 8 roster sprites)  │ Scoreboard           │
-│                                │ Bank                 │
-│ Your agent (visitor panel)     │ Mayor · loan #11     │
-│                                │ Feed                 │
-│ Agent cards  4×2  or  3×3      │                      │
-└────────────────────────────────┴──────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│ Map (full width · 8 roster sprites)     │ Feed rail    │
+│ Add your agent (header) · Town data drawer             │
+│   drawer: Scoreboard · Bank (+ Gateway inbound) · Mayor│
+│ Agents tab: cards (visitor = 9th, not on the map)      │
+└────────────────────────────────────────────────────────┘
 ```
 
 | Surface | Change |
 |---|---|
 | **Map** | Unchanged contract. Shell passes **roster-only** agents (`AGENT_NAMES`). Visitor never walks the overworld. |
-| **Your agent** | New panel **under the map, above the grid**. Empty → name + Create; wait-for-funds → Arc address + Refresh; funded → chat. Disabled on replay/mock. |
-| **Agent grid** | 8 cards = 4 columns. **9 cards (visitor present) = 3 columns.** Visitor card `data-you`, label `you · consumer`, sprite `/sprites/visitor.png` (first 48×48 frame). |
-| **Right column** | Scoreboard, bank, mayor **#11**, feed — **do not move** for this card. |
+| **Your agent** | White header button. Empty → name + Create; wait-for-funds → Arc address + Refresh; funded → chat. Disabled on replay/mock. |
+| **Agent grid** | Behind the Agents tab. Visitor card `data-you`, label `you · consumer`. |
+| **Town data** | Scoreboard, bank (incl. gus Gateway inbound), mayor **#11**. Feed stays on screen as a rail. |
 
 ### 6.2 Watch the town
 
@@ -128,8 +127,8 @@ Target **1440×900**. This layout is in-scope UI work, not a post-hackathon poli
 1. In **Your agent**, type a 3–16 char label (not `ada`…`hal`, `bank`, `mayor`, `botanica`). Preview `kenny.botanica.eth`.
 2. **Create agent** → Circle SCA + ENS Consumer name + `registerAgent` on TownTreasury. 9th card appears.
 3. Send **Arc Testnet USDC** to that wallet (**not** Sepolia USDC, **not** ENS MockUSDC). Refresh until balance > 0.
-4. Chat the demo line: `deposit 50% of our usdc into the town bank`. Allowlisted tools only (balance / percent deposit / USDC amount). Arcscan link on success.
-5. Then the mayor click (§6.4). Do **not** Approve **#11** before this beat when filming.
+4. Chat the demo line: `deposit 50% of our holdings into town bank and tell me the expected pay out based on the current rate for a 30 day holding period`. Allowlisted tools only. The 30-day extra USDC is **illustrative**. Arcscan link on success.
+5. Film order: Replay → Approve **#11** → this visitor beat. Ivy is dormant; mint a **new** name.
 
 ### 6.4 Mayor
 
@@ -171,7 +170,7 @@ Required artefacts: public repo, README with run steps, **architecture diagram**
 
 ## 10. Demo video outline (2–4 min)
 
-0:00 one‑liner + town (8 sprites, `ada.botanica.eth`) · 0:25 **Your agent**: mint name → 9th card in the 3×3 grid · 0:50 fund **Arc USDC** + chat `deposit 50% of our usdc into the town bank` → arcscan · 1:20 cut to cy **#9** default / bo **#10** repay / Signal C rate · 2:00 mayor **Approve #11** · 2:30 architecture (ENS Sepolia → Arc USDC → Graph → rules + visitor deposit) · 3:00 close.
+0:00 Replay (rule-bot cycle: map, feed, speech) · 0:40 Live · Town data · **Approve loan #11** · 1:10 Bank inbound (gus Gateway, already settled) · 1:30 **Add your agent** mint + Arc USDC + deposit chat · 2:20 architecture + honesty · 3:00 close.
 
 ## 11. Open questions
 
@@ -182,7 +181,7 @@ Resolved during the hackathon (see STATUS):
 - LLM keys optional; rules fallback is the default path.
 - **Visitor (M9.6):** one off-roster agent; custom ENS; not on the Pixi map; chat = balance + deposit only; fund Arc USDC.
 
-Still operational (not product-open): stretch D LP shares off; dirty-ledger mayor click is loan **#11** (after the visitor beat).
+Still operational (not product-open): stretch D LP shares off; dirty-ledger mayor click is loan **#11** (after Replay, before a new visitor mint).
 
 ## 12. Sample demo walkthrough (what the judge sees)
 

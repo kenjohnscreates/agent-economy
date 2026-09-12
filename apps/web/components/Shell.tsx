@@ -1,16 +1,15 @@
 "use client";
-// App shell (M5.1, M5.8, M5.10): Forest surface, world window on the left, panels on the right.
-// The world card frames the map at its whole-number scale and captions it underneath.
-// Runs live against the API by default (mock or real, same contract); the replay toggle
-// loads fixtures/replay.json. While the live snapshot cannot load, or once a live stream
-// drops under a page that already has a town on it, a connection card explains why and
-// offers retry or replay; the header shows the API mode and feature flags.
-import { useEffect, useMemo, useState } from "react";
+// App shell (M5.1, M5.8, M5.10, M5.14): the town is the screen. Map is full-width;
+// scoreboard / bank / mayor live in a Town data drawer; feed is a glass rail; visitor
+// opens from the white header button. Replay loads fixtures/replay.json.
+import { useEffect, useMemo, useRef, useState } from "react";
+import { LayoutGrid, PanelRight, UserPlus } from "lucide-react";
 import { AGENT_NAMES, ROSTER, VISITOR_STORAGE_KEY } from "@agent-town/shared";
+import { Drawer } from "./Drawer";
 import { useTown, type TownSource } from "@/lib/useTown";
 import type { ConnectPhase } from "@/lib/connect";
 import { ReplayFileSchema, type ReplayFile } from "@/lib/replay";
-import { API_URL, TOWN_NAME } from "@/lib/config";
+import { API_URL } from "@/lib/config";
 import { Controls } from "./Controls";
 import { Scoreboard } from "./Scoreboard";
 import { BankPanel } from "./BankPanel";
@@ -23,8 +22,6 @@ import { Wordmark } from "./Wordmark";
 
 type Mode = "live" | "replay";
 
-// Headings for the connection card. The stream ones read differently from the cold-start
-// ones on purpose: there the page has nothing, here the town is on screen but frozen.
 const CONNECT_TITLES: Record<ConnectPhase, string> = {
   warming: "Town API is warming up",
   unreachable: "Cannot reach the town API",
@@ -33,11 +30,18 @@ const CONNECT_TITLES: Record<ConnectPhase, string> = {
   "stream-closed": "Live stream closed",
 };
 
+type Tab = "town" | "agents";
+type DrawerId = "data" | "agent";
+
 export function Shell() {
   const [mode, setMode] = useState<Mode>("live");
   const [replay, setReplay] = useState<ReplayFile | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [tab, setTab] = useState<Tab>("town");
+  const [drawer, setDrawer] = useState<DrawerId | null>(null);
+  const panelsBtn = useRef<HTMLButtonElement>(null);
+  const agentBtn = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -73,6 +77,15 @@ export function Shell() {
     }
   }, []);
 
+  function rememberVisitor() {
+    try {
+      setMyVisitor(localStorage.getItem(VISITOR_STORAGE_KEY));
+    } catch {
+      /* ignore */
+    }
+    controls.refreshAgents();
+  }
+
   const agents = state.order
     .map((n) => state.agents[n]!)
     .filter(Boolean)
@@ -84,14 +97,39 @@ export function Shell() {
   const visitorName =
     agents.find((a) => !(AGENT_NAMES as readonly string[]).includes(a.name))?.name ?? null;
   const visitorLive = mode === "live" && health?.mode === "real";
+  const hasVisitor = Boolean(visitorName ?? myVisitor);
 
   return (
     <div className="shell">
       <header className="header">
         <Wordmark />
         <span className="label">
-          {TOWN_NAME}.eth · tick {state.tick} · {state.phase}
+          round {state.tick} · {state.phase}
         </span>
+
+        <div className="tabs" role="tablist" aria-label="View">
+          <button
+            role="tab"
+            id="tab-town"
+            aria-selected={tab === "town"}
+            aria-controls="panel-town"
+            className="tab"
+            onClick={() => setTab("town")}
+          >
+            Town
+          </button>
+          <button
+            role="tab"
+            id="tab-agents"
+            aria-selected={tab === "agents"}
+            aria-controls="panel-agents"
+            className="tab"
+            onClick={() => setTab("agents")}
+          >
+            <LayoutGrid size={12} aria-hidden="true" /> Agents
+            <span className="tab-count">{agents.length || 8}</span>
+          </button>
+        </div>
         {mode === "live" ? (
           <span className="hchips" aria-label="API status">
             {health ? (
@@ -119,14 +157,40 @@ export function Shell() {
                 >
                   signals · {info.flags.externalSignals ? "live" : "off"}
                 </span>
-                <span className="hchip" title="Seconds per tick">
-                  {Math.round(info.tickMs / 1000)}s tick
+                <span className="hchip tickchip" title="Seconds per decision round">
+                  {Math.round(info.tickMs / 1000)}s round
                 </span>
               </>
             ) : null}
           </span>
         ) : null}
         <span className="spacer" />
+        <button
+          ref={agentBtn}
+          className="btn agent-btn"
+          onClick={() => setDrawer("agent")}
+          aria-haspopup="dialog"
+          aria-expanded={drawer === "agent"}
+        >
+          <UserPlus size={13} aria-hidden="true" />
+          {hasVisitor ? "Your agent" : "Add your agent"}
+        </button>
+        <button
+          ref={panelsBtn}
+          className="btn panels-btn"
+          onClick={() => setDrawer("data")}
+          aria-haspopup="dialog"
+          aria-expanded={drawer === "data"}
+          aria-label="Town data"
+        >
+          <PanelRight size={12} aria-hidden="true" />
+          <span className="btn-text">Town data</span>
+          {state.pendingLoans.length > 0 ? (
+            <span className="pip" aria-label={`${state.pendingLoans.length} waiting on the mayor`}>
+              {state.pendingLoans.length}
+            </span>
+          ) : null}
+        </button>
         <Controls
           mode={mode}
           onMode={setMode}
@@ -141,25 +205,36 @@ export function Shell() {
       </header>
 
       <main className="main">
-        <section className="column" aria-label="Town">
-          <div className="card world">
-            <div className="map-frame">
-              <MapSlot
-                agents={mapAgents}
-                lastTx={state.lastTx}
-                tick={state.tick}
-                phase={state.phase}
-                selected={selected}
-                onSelectAgent={setSelected}
-                reducedMotion={reducedMotion}
-              />
-            </div>
-            <div className="statement">
-              <div className="h2">Agents grow the economy.</div>
-              <div className="label" style={{ marginTop: 6 }}>
-                Plant · Build · Coordinate · Compound
+        <section
+          className="column"
+          role="tabpanel"
+          id="panel-town"
+          aria-labelledby="tab-town"
+          hidden={tab !== "town"}
+          aria-label="Town"
+        >
+          <div className="stage">
+            <div className="map-wrap">
+              <div className="map-frame">
+                <MapSlot
+                  agents={mapAgents}
+                  lastTx={state.lastTx}
+                  tick={state.tick}
+                  phase={state.phase}
+                  selected={selected}
+                  onSelectAgent={setSelected}
+                  reducedMotion={reducedMotion}
+                />
+              </div>
+              <div className="statement">
+                <div className="h2">Agents grow the economy.</div>
+                <div className="label">Plant · Build · Coordinate · Compound</div>
               </div>
             </div>
+
+            <aside className="feedrail" aria-label="Event feed">
+              <Feed items={state.feed} pending={state.pendingLoans} />
+            </aside>
           </div>
 
           {error ? (
@@ -187,21 +262,17 @@ API_MODE=real pnpm --filter @agent-town/api dev  # real: subgraph + ENS + Arc`}<
               </div>
             </div>
           ) : null}
+        </section>
 
-          <VisitorPanel
-            enabled={visitorLive}
-            visitorName={visitorName ?? myVisitor}
-            onChanged={() => {
-              try {
-                setMyVisitor(localStorage.getItem(VISITOR_STORAGE_KEY));
-              } catch {
-                /* ignore */
-              }
-              controls.refreshAgents();
-            }}
-          />
-
-          <div className="agents" data-count={agents.length || 8} aria-label="Agents">
+        <section
+          className="column"
+          role="tabpanel"
+          id="panel-agents"
+          aria-labelledby="tab-agents"
+          hidden={tab !== "agents"}
+          aria-label="Agents"
+        >
+          <div className="agents" data-count={agents.length || 8}>
             {agents.length === 0
               ? ROSTER.map((r) => (
                   <div className="agent" key={r.name} aria-busy="true">
@@ -224,19 +295,40 @@ API_MODE=real pnpm --filter @agent-town/api dev  # real: subgraph + ENS + Arc`}<
                 ))}
           </div>
         </section>
-
-        <aside className="column" aria-label="Panels">
-          <Scoreboard scoreboard={state.scoreboard} reducedMotion={reducedMotion} />
-          <BankPanel scoreboard={state.scoreboard} loans={state.loans} tick={state.tick} />
-          <MayorPanel
-            pendingLoans={state.pendingLoans}
-            scoreboard={state.scoreboard}
-            mode={mode}
-            onLoansChanged={controls.refreshLoans}
-          />
-          <Feed items={state.feed} pending={state.pendingLoans} />
-        </aside>
       </main>
+
+      <Drawer
+        open={drawer === "agent"}
+        title="Your agent"
+        onClose={() => {
+          setDrawer(null);
+          agentBtn.current?.focus();
+        }}
+      >
+        <VisitorPanel
+          enabled={visitorLive}
+          visitorName={visitorName ?? myVisitor}
+          onChanged={rememberVisitor}
+        />
+      </Drawer>
+
+      <Drawer
+        open={drawer === "data"}
+        title="Town data"
+        onClose={() => {
+          setDrawer(null);
+          panelsBtn.current?.focus();
+        }}
+      >
+        <Scoreboard scoreboard={state.scoreboard} reducedMotion={reducedMotion} />
+        <BankPanel scoreboard={state.scoreboard} loans={state.loans} tick={state.tick} />
+        <MayorPanel
+          pendingLoans={state.pendingLoans}
+          scoreboard={state.scoreboard}
+          mode={mode}
+          onLoansChanged={controls.refreshLoans}
+        />
+      </Drawer>
     </div>
   );
 }

@@ -49,7 +49,7 @@ export default function MapDemo() {
         </div>
         <div className="demo-controls">
           <span className="label" aria-live="polite">
-            Tick {state.tick} · {state.phase}
+            Round {state.tick} · {state.phase}
           </span>
           <button
             type="button"

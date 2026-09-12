@@ -1,6 +1,7 @@
 "use client";
 // M9.6/M9.7 visitor panel: mint an off-roster agent, fund Arc USDC, chat to deposit.
 // One name per browser (localStorage). Subagents = ENS subdomains of that name.
+// Opened from the white "Add your agent" button in the header (M5.14). Replay is read-only.
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ensNameFor,

@@ -9,7 +9,7 @@ import { isMonetary, txDirection } from "../../lib/direction";
 import { formatUsdc } from "../../lib/usdc";
 
 export function mapDescription(p: MapSlotProps): string {
-  let description = `Town map, tick ${p.tick}, phase ${p.phase}, ${p.agents.length} agents`;
+  let description = `Town map, round ${p.tick}, phase ${p.phase}, ${p.agents.length} agents`;
   if (p.lastTx && isMonetary(p.lastTx)) {
     const d = txDirection(p.lastTx.kind, p.lastTx.agent, p.lastTx.counterparty);
     description += `, last payment ${d.from} to ${d.to} ${formatUsdc(p.lastTx.amountUsdc)} USDC`;

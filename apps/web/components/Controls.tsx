@@ -39,21 +39,24 @@ export function Controls(props: {
         aria-label={paused ? "Play" : "Pause"}
       >
         {paused ? <Play size={12} aria-hidden="true" /> : <Pause size={12} aria-hidden="true" />}
-        {paused ? "play" : "pause"}
+        <span className="btn-text">{paused ? "play" : "pause"}</span>
       </button>
-      <select
-        className="btn"
-        value={speed}
-        onChange={(e) => onSpeed(Number(e.target.value))}
-        aria-label="Replay speed"
-        disabled={mode === "live"}
-      >
-        {SPEEDS.map((x) => (
-          <option key={x} value={x}>
-            {x}x
-          </option>
-        ))}
-      </select>
+      {/* Speed only does anything in replay, so while live it was a permanently greyed-out
+          control taking 70px of a header that has to stay one row at 1440. */}
+      {mode === "replay" ? (
+        <select
+          className="btn"
+          value={speed}
+          onChange={(e) => onSpeed(Number(e.target.value))}
+          aria-label="Replay speed"
+        >
+          {SPEEDS.map((x) => (
+            <option key={x} value={x}>
+              {x}x
+            </option>
+          ))}
+        </select>
+      ) : null}
     </div>
   );
 }

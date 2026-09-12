@@ -117,9 +117,21 @@ input {
 .header {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 14px 24px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--border);
+}
+.header > .label {
+  white-space: nowrap;
+}
+/* The header must stay one row: a second row costs 40px of vertical, which is exactly
+   what the 720px map needs to fit above the fold at 900. The tick-length chip is the
+   least load-bearing thing in it, so it is the one that waits for a wider window. */
+@media (max-width: 1519px) {
+  .hchip.tickchip {
+    display: none;
+  }
 }
 .wordmark {
   display: flex;
@@ -142,14 +154,21 @@ input {
 .header .spacer {
   flex: 1;
 }
+/* M5.14: one column. The town is the screen; the panels that used to own a permanent
+   400px rail now open in a drawer, and the agent cards live behind a tab. The cap is
+   above 1440 so a wider display actually gets used, since the map can only grow in
+   whole-number steps and 1440 only just clears the 1280 it needs for 2x. */
 .main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 400px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   padding: 20px 24px;
-  max-width: 1440px;
+  max-width: 1720px;
   width: 100%;
   margin: 0 auto;
+}
+.main > [hidden] {
+  display: none;
 }
 .column {
   display: flex;
@@ -172,42 +191,234 @@ input {
   margin-bottom: 12px;
 }
 
-/* world window: the card frames the map at its whole-number scale (640x360 at 1x,
-   1280x720 once 2x fits) and the statement sits in a caption row under the frame,
-   so nothing is ever drawn on top of the canvas. */
-.world {
-  background: var(--surface);
+/* World stage (M5.14).
+   The map takes the largest whole-number scale that fits the width it is given, and the
+   feed rail is docked to the right edge on top of it. `margin-right` hands the rail only
+   the room the map does not need, so the bridge is self-adjusting: at a 1440 window the
+   rail laps well over the town, and past about 1900 it sits clear beside it. The map is
+   never pushed narrower by a panel, which is what kept it stuck at 1x before. */
+.stage {
+  position: relative;
   container-type: inline-size;
 }
-.world .map-frame {
+.map-wrap {
+  margin-right: clamp(0px, calc(100% - 1280px), 300px);
+}
+.map-frame {
   position: relative;
   width: 640px;
   height: 360px;
   max-width: 100%;
   margin: 0 auto;
   overflow: hidden;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-card);
   background: var(--bg);
+  /* Inset shadow, never a border. The map only scales in whole numbers, so a 1px border
+     shrinks the content box to 1278 and drops it from 2x straight back to 1x. */
+  box-shadow: inset 0 0 0 1px var(--border);
 }
-.world .statement {
+.statement {
   width: 640px;
   max-width: 100%;
-  margin: 14px auto 0;
-  text-align: right;
+  margin: 12px auto 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
 }
 @container (min-width: 1280px) {
-  .world .map-frame {
+  .map-frame {
     width: 1280px;
     height: 720px;
   }
-  .world .statement {
+  .statement {
     width: 1280px;
   }
 }
-.world .map-frame canvas,
-.world .map-frame svg {
+.map-frame canvas,
+.map-frame svg {
   display: block;
   image-rendering: pixelated;
+}
+
+/* Feed rail: glass, so the town keeps showing through where it laps over the map. It is
+   docked to the stage, which is exactly the height of the map, so it never runs past it. */
+.feedrail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 360px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    0 18px 50px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+/* The Feed brings its own card. Inside the rail the rail *is* the card, so strip it back
+   to bare content rather than nesting a solid card inside a glass one. */
+.feedrail .card {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.feedrail .feed {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
+/* Must come after the 360px default above, or source order wins and the rail stays short
+   while the map doubles underneath it. */
+@container (min-width: 1280px) {
+  .feedrail {
+    height: 720px;
+  }
+}
+
+/* Header tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab[aria-selected="true"] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.tab-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+/* The one thing a viewer can do, so it is the one solid control in the header. Everything
+   else up there is an outline on forest green; this is a white box, which is the whole
+   point of it. Mist rather than #fff so it still belongs to the palette. */
+.btn.agent-btn {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+  padding: 7px 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+.btn.agent-btn:hover {
+  background: #fff;
+  border-color: #fff;
+  color: var(--bg);
+}
+.btn.agent-btn:focus-visible {
+  outline-color: var(--sand);
+}
+
+/* The one button that opens every number panel */
+.panels-btn {
+  position: relative;
+}
+/* Below 1520 the header has to give up ~70px or it wraps to a second row, and the second
+   row costs exactly the vertical the 720px map needs. The label goes, not the button:
+   the icon plus aria-label still says what it is. */
+@media (max-width: 1519px) {
+  .panels-btn .btn-text,
+  .controls .btn-text {
+    display: none;
+  }
+}
+.panels-btn .pip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: var(--sand);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Drawer */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(4, 18, 11, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 31;
+  width: min(440px, 92vw);
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
+}
+.drawer:focus {
+  outline: none;
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.btn.icon {
+  padding: 6px;
+  line-height: 0;
 }
 
 /* scoreboard */
@@ -227,13 +438,12 @@ input {
 }
 
 /* agents */
+/* M5.14: the cards own the whole width on their own tab now, so they size themselves
+   rather than being forced into four cramped columns beside a 400px rail. */
 .agents {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-.agents[data-count="9"] {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
 }
 .agent {
   background: var(--surface);
@@ -437,6 +647,13 @@ input {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+.inbound {
+  margin-top: 14px;
+}
+.inbound-copy {
+  margin: 4px 0 0;
+  color: var(--text-muted);
 }
 .tip {
   position: relative;
@@ -704,17 +921,17 @@ input {
 /* header chips and connection card (M5.8) */
 .hchips {
   display: inline-flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 .hchip {
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 999px;
   border: 1px solid var(--border);
   color: var(--text-muted);
   font-family: var(--font-label);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -756,7 +973,18 @@ input {
   margin-top: 10px;
 }
 
-/* visitor (M9.6) — under the map, above the agent grid */
+/* visitor (M9.6) — opened from the white header button, so it is the whole drawer body.
+   The drawer head already says "Your agent", so the card sheds its own frame and title
+   and keeps only the live/replay status. Same treatment the feed rail gets. */
+.drawer .visitor {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.drawer .visitor > .card-title .h3 {
+  display: none;
+}
+
 .visitor-copy {
   margin: 0 0 10px;
   color: var(--text-muted);
