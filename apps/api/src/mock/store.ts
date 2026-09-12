@@ -41,7 +41,11 @@ import {
   parseVisitorIntent,
   percentOf,
   validateVisitorLabel,
+  normalizeVisitorLabel,
   VISITOR_AVATAR,
+  MAX_VISITORS,
+  MAX_SUBAGENTS,
+  depositReply,
 } from "@agent-town/shared";
 import { createHash } from "node:crypto";
 import { SourceError, type DataSource, type SseListener } from "../source.js";
@@ -132,7 +136,7 @@ export class MockStore implements DataSource {
   private listeners = new Set<SseListener>();
   private timer: ReturnType<typeof setInterval> | undefined;
   private readonly now: () => Date;
-  private visitor: VisitorResponse | null = null;
+  private visitors = new Map<string, VisitorResponse>();
 
   constructor(private readonly opts: MockStoreOptions) {
     this.now = opts.now ?? (() => new Date());
@@ -167,7 +171,7 @@ export class MockStore implements DataSource {
     this.defaultPremiumBps = FIXTURES.rate.defaultPremiumBps;
     // Keep only the GDP points already "in the past" (empty when tick < 1).
     this.gdpSeries = structuredClone(FIXTURES.scoreboard.gdpSeries.filter((p) => p.tick <= tick));
-    this.visitor = null;
+    this.visitors.clear();
   }
 
   /** One mock tick: mutate state deterministically, then fan out SSE events. */
@@ -445,24 +449,28 @@ export class MockStore implements DataSource {
     return res;
   }
 
-  getVisitor(): VisitorResponse | null {
-    return this.visitor;
+  getVisitor(label?: string): VisitorResponse | null {
+    if (label) return this.visitors.get(normalizeVisitorLabel(label)) ?? null;
+    if (this.visitors.size === 1) return [...this.visitors.values()][0] ?? null;
+    return null;
   }
 
   createVisitor(body: VisitorCreateRequest): VisitorResponse {
-    if (this.visitor) {
-      throw new SourceError(400, "BAD_REQUEST", `Visitor already admitted as ${this.visitor.name}`);
-    }
     let label: string;
     try {
       label = validateVisitorLabel(body.label);
     } catch (e) {
       throw new SourceError(400, "BAD_REQUEST", e instanceof Error ? e.message : "Invalid name");
     }
+    const existing = this.visitors.get(label);
+    if (existing) return existing;
+    if (this.visitors.size >= MAX_VISITORS) {
+      throw new SourceError(400, "BAD_REQUEST", "Visitor cap reached");
+    }
     const ensName = ensNameFor(label, "botanica");
     const hex = createHash("sha256").update(`visitor:${label}`).digest("hex").slice(0, 40);
     const arcAddress = `0x${hex}` as VisitorResponse["arcAddress"];
-    this.visitor = {
+    const visitor: VisitorResponse = {
       name: label,
       ensName,
       role: "consumer",
@@ -470,7 +478,9 @@ export class MockStore implements DataSource {
       balanceUsdc: "2000000",
       explorerUrl: `${ARC_EXPLORER_URL}/address/${arcAddress}`,
       ensUrl: `https://explorer.ens.dev/`,
+      subagents: [],
     };
+    this.visitors.set(label, visitor);
     this.agents = [
       ...this.agents.filter((a) => a.name !== label),
       {
@@ -486,13 +496,13 @@ export class MockStore implements DataSource {
         avatar: VISITOR_AVATAR,
       },
     ];
-    return this.visitor;
+    return visitor;
   }
 
   chatVisitor(body: VisitorChatRequest): VisitorChatResponse {
-    if (!this.visitor) throw new SourceError(404, "NOT_FOUND", "No visitor agent yet");
+    const visitor = this.resolveVisitor(body.label);
     const intent = parseVisitorIntent(body.text);
-    const agent = this.agents.find((a) => a.name === this.visitor?.name);
+    const agent = this.agents.find((a) => a.name === visitor.name);
     if (!agent) throw new SourceError(404, "NOT_FOUND", "Visitor missing from roster view");
     if (intent.kind === "balance") {
       return {
@@ -500,6 +510,24 @@ export class MockStore implements DataSource {
         txHash: null,
         explorerUrl: null,
       };
+    }
+    if (intent.kind === "create_subagent") {
+      if (intent.label === visitor.name) {
+        return { reply: "Pick a different label than your own name.", txHash: null, explorerUrl: null };
+      }
+      if (visitor.subagents.some((s) => s.name === intent.label)) {
+        return {
+          reply: `${intent.label}.${visitor.ensName} already exists.`,
+          txHash: null,
+          explorerUrl: null,
+        };
+      }
+      if (visitor.subagents.length >= MAX_SUBAGENTS) {
+        return { reply: "Subagent cap reached.", txHash: null, explorerUrl: null };
+      }
+      const ensName = `${intent.label}.${visitor.ensName}`;
+      visitor.subagents = [...visitor.subagents, { name: intent.label, ensName }];
+      return { reply: `Minted ${ensName} as a subagent of ${visitor.ensName}.`, txHash: null, explorerUrl: null };
     }
     if (intent.kind === "refuse") {
       return { reply: intent.reason, txHash: null, explorerUrl: null };
@@ -515,7 +543,7 @@ export class MockStore implements DataSource {
       return { reply: "I don't have that much USDC.", txHash: null, explorerUrl: null };
     }
     agent.balanceUsdc = (BigInt(agent.balanceUsdc) - BigInt(amount)).toString();
-    this.visitor.balanceUsdc = agent.balanceUsdc;
+    visitor.balanceUsdc = agent.balanceUsdc;
     this.treasuryUsdc += BigInt(amount);
     const res = this.txResponse();
     agent.lastDecision = { tick: this.tick, kind: "deposit", summary: `deposit ${amount}` };
@@ -533,10 +561,22 @@ export class MockStore implements DataSource {
       },
     });
     return {
-      reply: `Deposited ${formatUsdcHuman(amount)} into the town bank.`,
+      reply: depositReply(amount, this.rate().townRateBps),
       txHash: res.txHash,
       explorerUrl: res.explorerUrl,
     };
+  }
+
+  private resolveVisitor(label?: string): VisitorResponse {
+    const found = this.getVisitor(label);
+    if (!found) {
+      throw new SourceError(
+        404,
+        "NOT_FOUND",
+        label ? `No visitor named ${label}` : "No visitor agent yet",
+      );
+    }
+    return found;
   }
 
   subscribe(listener: SseListener): () => void {

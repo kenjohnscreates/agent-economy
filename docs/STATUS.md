@@ -17,9 +17,17 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
 | M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase · **M6.7** #60 `3aae37f` ledger reuse |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** · visitor then **#11** · **M9.1 Gateway LIVE** · **M9.6** #61 · freeze Sun 08:00 |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** · visitor then **#11** · **M9.1 Gateway LIVE** · **M9.6** #61 merged · **M9.7** public mint · freeze Sun 08:00 |
 
 ## Log
+
+## Sat 12 Sep 12:40 EDT
+Done: **M9.6** squash-merged [#61](https://github.com/kenjohnscreates/agent-economy/pull/61) `37239f5`. **M9.7** `card/M9.7-visitor-public`: public visitor mint (`ALLOW_VISITOR`, mayor stays on `ALLOW_BROADCAST`), one name per browser, ENS subdomain subagents, deposit chat quotes 30-day illustrative interest at live `townRateBps`. Did **not** Approve #11. Did **not** `--ticks 12 --yes`.
+In progress: public API host + Vercel `NEXT_PUBLIC_API_URL`
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: merge M9.7 → point https://agent-town-eight.vercel.app at the public API → film visitor deposit → Approve #11.
+`touching:` `apps/web` + `apps/api` + `packages/shared`. Dan map files not touched.
+Checkpoint call: Sat 12:00 passed.
 
 ## Tue 8 Sep 13:00 EDT
 Done: PRD v0.1 (PRD, ARCHITECTURE, MILESTONES, AGENT-RUNBOOK, RISKS, STATUS)

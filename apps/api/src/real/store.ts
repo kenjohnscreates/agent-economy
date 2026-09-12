@@ -144,8 +144,9 @@ export class RealSource implements DataSource {
       this.visitor = createVisitorService({
         circle: this.mayor.circle,
         readBalance: this.readBalance,
-        broadcastAllowed: this.env.broadcastAllowed,
+        visitorAllowed: this.env.visitorAllowed,
         townName: this.env.townName,
+        getTownRateBps: () => this.cache?.scoreboard.rate.townRateBps ?? 0,
         env: options.env ?? process.env,
       });
     }
@@ -403,11 +404,13 @@ export class RealSource implements DataSource {
     }
 
     try {
-      const extra = await this.visitor?.visitorSummary();
-      if (extra && !agents.some((a) => a.name === extra.name)) agents.push(extra);
-      else if (extra) {
-        const i = agents.findIndex((a) => a.name === extra.name);
-        if (i >= 0) agents[i] = extra;
+      const extras = (await this.visitor?.visitorSummaries()) ?? [];
+      for (const extra of extras) {
+        if (!agents.some((a) => a.name === extra.name)) agents.push(extra);
+        else {
+          const i = agents.findIndex((a) => a.name === extra.name);
+          if (i >= 0) agents[i] = extra;
+        }
       }
     } catch (err) {
       console.warn("[api] visitor summary:", err);
@@ -497,9 +500,9 @@ export class RealSource implements DataSource {
     return res;
   }
 
-  getVisitor(): VisitorResponse | null {
+  getVisitor(label?: string): VisitorResponse | null {
     if (!this.visitor) return null;
-    const art = this.visitor.getVisitor();
+    const art = this.visitor.getVisitor(label);
     if (!art) return null;
     const live = this.cache?.agents.find((a) => a.name === art.name);
     return live
@@ -511,6 +514,7 @@ export class RealSource implements DataSource {
           balanceUsdc: live.balanceUsdc,
           explorerUrl: `${ARC_EXPLORER_URL}/address/${live.arcAddress}`,
           ensUrl: "https://explorer.ens.dev/",
+          subagents: art.subagents,
         }
       : art;
   }

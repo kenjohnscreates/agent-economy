@@ -6,7 +6,7 @@
 // drops under a page that already has a town on it, a connection card explains why and
 // offers retry or replay; the header shows the API mode and feature flags.
 import { useEffect, useMemo, useState } from "react";
-import { AGENT_NAMES, ROSTER } from "@agent-town/shared";
+import { AGENT_NAMES, ROSTER, VISITOR_STORAGE_KEY } from "@agent-town/shared";
 import { useTown, type TownSource } from "@/lib/useTown";
 import type { ConnectPhase } from "@/lib/connect";
 import { ReplayFileSchema, type ReplayFile } from "@/lib/replay";
@@ -63,7 +63,23 @@ export function Shell() {
   }, [mode, replay]);
 
   const { state, controls, error, info, health, speed, paused } = useTown(source);
-  const agents = state.order.map((n) => state.agents[n]!).filter(Boolean);
+  const [myVisitor, setMyVisitor] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      setMyVisitor(localStorage.getItem(VISITOR_STORAGE_KEY));
+    } catch {
+      setMyVisitor(null);
+    }
+  }, []);
+
+  const agents = state.order
+    .map((n) => state.agents[n]!)
+    .filter(Boolean)
+    .filter(
+      (a) =>
+        (AGENT_NAMES as readonly string[]).includes(a.name) || a.name === myVisitor,
+    );
   const mapAgents = agents.filter((a) => (AGENT_NAMES as readonly string[]).includes(a.name));
   const visitorName =
     agents.find((a) => !(AGENT_NAMES as readonly string[]).includes(a.name))?.name ?? null;
@@ -174,8 +190,15 @@ API_MODE=real pnpm --filter @agent-town/api dev  # real: subgraph + ENS + Arc`}<
 
           <VisitorPanel
             enabled={visitorLive}
-            visitorName={visitorName}
-            onChanged={controls.refreshAgents}
+            visitorName={visitorName ?? myVisitor}
+            onChanged={() => {
+              try {
+                setMyVisitor(localStorage.getItem(VISITOR_STORAGE_KEY));
+              } catch {
+                /* ignore */
+              }
+              controls.refreshAgents();
+            }}
           />
 
           <div className="agents" data-count={agents.length || 8} aria-label="Agents">

@@ -19,6 +19,8 @@ export interface RealEnv {
   subgraphUrl?: string;
   graphApiKey?: string;
   broadcastAllowed: boolean;
+  /** Visitor create/chat (public mint). Mayor POSTs still need broadcastAllowed. */
+  visitorAllowed: boolean;
 }
 
 export function parseRealEnv(env: NodeJS.ProcessEnv = process.env): RealEnv {
@@ -39,5 +41,6 @@ export function parseRealEnv(env: NodeJS.ProcessEnv = process.env): RealEnv {
     subgraphUrl: env.SUBGRAPH_URL?.trim() || undefined,
     graphApiKey: env.GRAPH_API_KEY?.trim() || undefined,
     broadcastAllowed: env.ALLOW_BROADCAST === "true",
+    visitorAllowed: env.ALLOW_VISITOR === "true" || env.ALLOW_BROADCAST === "true",
   };
 }
