@@ -137,7 +137,7 @@ export function MayorPanel({
                   </span>
                   <span className="mono">{formatUsdc(l.principalUsdc)} USDC</span>
                   <span className="chip" data-status="pending">
-                    tick {l.requestedAtTick}
+                    round {l.requestedAtTick}
                   </span>
                 </div>
                 {l.advisor ? (

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_GRAPH_429_BACKOFF_MS,
+  MAX_GRAPH_429_BACKOFF_MS,
   graphBackoffActive,
   graphHttpStatus,
   retryUntilMs,
@@ -20,15 +21,15 @@ describe("retryUntilMs", () => {
     expect(until).toBe(NOW + 120_000);
   });
 
-  it("honors Retry-After HTTP-date", () => {
+  it("honors Retry-After HTTP-date when under the cap", () => {
     const until = retryUntilMs(
-      httpErr(429, { "retry-after": "Fri, 11 Sep 2026 19:22:00 GMT" }),
+      httpErr(429, { "retry-after": "Fri, 11 Sep 2026 19:10:00 GMT" }),
       NOW,
     );
-    expect(until).toBe(Date.parse("2026-09-11T19:22:00.000Z"));
+    expect(until).toBe(Date.parse("2026-09-11T19:10:00.000Z"));
   });
 
-  it("honors x-ratelimit-reset unix seconds when remaining=0", () => {
+  it("honors x-ratelimit-reset unix seconds when remaining=0, capped", () => {
     const resetSec = Math.floor(NOW / 1000) + 3_600;
     const until = retryUntilMs(
       httpErr(429, {
@@ -37,7 +38,12 @@ describe("retryUntilMs", () => {
       }),
       NOW,
     );
-    expect(until).toBe(resetSec * 1000);
+    expect(until).toBe(NOW + MAX_GRAPH_429_BACKOFF_MS);
+  });
+
+  it("caps a 22h Retry-After at 15 minutes", () => {
+    const until = retryUntilMs(httpErr(429, { "retry-after": "79056" }), NOW);
+    expect(until).toBe(NOW + MAX_GRAPH_429_BACKOFF_MS);
   });
 
   it("defaults 60s on 429 without headers", () => {

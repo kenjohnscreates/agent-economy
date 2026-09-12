@@ -76,7 +76,7 @@ Canonical JSON: [`packages/ens/town.json`](../packages/ens/town.json), [`package
 
 Full judge script: [PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees). Tick-by-tick do/say/backend: [CYCLE.md](CYCLE.md).
 
-**Flow (Sat live):** show the town that already ran → **Your agent** mint + Arc USDC + chat deposit → cut to arcscan for cy **#9** / bo **#10** → mayor **Approve #11**. Layout: map → visitor panel → 3×3 cards; right column unchanged. Tick-keyed 12-tick script remains for mock/replay ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees), [CYCLE.md](CYCLE.md)).
+**Flow (Sat live):** Replay (bots) → Live **Approve #11** → **Add your agent** mint + Arc USDC + chat deposit. Bank panel shows gus Gateway inbound (already settled). Map stays 8 sprites; visitor is the 9th card. Tick-keyed 12-tick script remains for mock/replay ([PRD §12](PRD.md#12-sample-demo-walkthrough-what-the-judge-sees), [CYCLE.md](CYCLE.md)).
 
 **Live chain (film this, not mock):** M6.5 Gate A `--ticks 12 --yes` landed **cy #9 Defaulted**, **bo #10 Repaid**, buys/jobs/rate on [arcscan](https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1). Mayor click is **loan #11 Pending cy** (not fixture `L-3`). Do **not** run another live 12-tick until the mayor uses #11. Fixture ids (`L-1`, `J-demo`) are still skipped on live execute. Mock / `/map-demo` / replay = rehearsal only.
 
@@ -98,12 +98,11 @@ Target length 2–4 min. Beats are [PRD §10](PRD.md#10-demo-video-outline-24-mi
 
 | Time | Beat |
 |---|---|
-| 0:00 | One-liner + town (8 sprites) |
-| 0:25 | **Your agent:** mint ENS name → 9th card, 3×3 grid |
-| 0:50 | Fund **Arc USDC** + chat deposit 50% → arcscan |
-| 1:20 | Cut to cy **#9** default / bo **#10** repay / Signal C |
-| 2:00 | Mayor **Approve #11** |
-| 2:30 | Architecture + honesty (rule-bots + visitor) |
+| 0:00 | Replay: rule-bot cycle (map, feed, speech) |
+| 0:40 | Live · Town data · **Approve loan #11** |
+| 1:10 | Bank inbound: gus Gateway (already settled) |
+| 1:30 | **Add your agent:** mint + Arc USDC + deposit chat |
+| 2:20 | Architecture + honesty (rule-bots + visitor) |
 | 3:00 | Close |
 
 ### Filming notes (Fri 11 Sep — live, not mock)
@@ -116,17 +115,15 @@ pnpm --filter @agent-town/api dev         # :3001 — loads ../../.env
 pnpm --filter @agent-town/web dev         # :3000
 ```
 
-Mayor POSTs **and visitor create/chat** need `ALLOW_BROADCAST=true` or they 501. Required for the admit + **Approve #11** beats.
+Mayor POSTs need `ALLOW_BROADCAST=true` or they 501. Public visitor mint uses `ALLOW_VISITOR=true` without broadcast.
 
-**Hero / map.** PixiJS overworld in the live shell (`:3000` → real `:3001`). `/map-demo` and header **replay** are rehearsal / fallback if testnet is down — not the prize video.
+**Hero / map.** PixiJS overworld in the live shell. Header **Replay** is the bot-cycle beat (not `/map-demo`). Then switch **Live** for #11 and the visitor.
 
-**Visitor then mayor (PRD §6 / §8).** Film **Your agent** create + Arc USDC + chat deposit **before** Approve **loan #11** (Pending cy 0.2 USDC). Toast hashes must be real [arcscan](https://testnet.arcscan.app) txs. Fund **Arc USDC**, not Sepolia. Do **not** `markDefault` **bo**. Do **not** run another `--ticks 12 --yes` before this click (ada would auto-approve #11).
+**Order.** Replay → **Approve loan #11** on localhost → **Add your agent** (new name, not ivy) + Arc USDC + deposit chat. Toast hashes must be real [arcscan](https://testnet.arcscan.app) txs. Do **not** `markDefault` **bo**. Do **not** run another `--ticks 12 --yes` before the #11 click.
 
-**What is already on chain (cut to explorer, do not re-run the 12-tick):** cy **#9 Defaulted** [seed approve 0x3421ad32…](https://testnet.arcscan.app/tx/0x3421ad323c32381fcbd0815b0d44cc3904f2adea706bd5ef606edd3cc0ed6940); bo **#10 Repaid**; buys, jobs, `set_rate`. Deliver re-submit bug fixed `bc6e112` (do not film pre-fix ESTIMATION_ERROR as current).
+**What is already on chain (cut to explorer, do not re-run the 12-tick):** cy **#9 Defaulted**; bo **#10 Repaid**; buys, jobs, `set_rate`; Gateway mint [0x14fad3ea…](https://testnet.arcscan.app/tx/0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea).
 
-**Feed / speech.** Needs this Supabase project’s ledger. After catch-up the tables exist but are **empty** (`/health` `tick:null`) until sim writes here. Scoreboard + loan book still come from the subgraph.
-
-**UI.** Left: map (8 sprites) → Your agent panel → cards (3×3 with visitor). Right: scoreboard / bank / mayor #11 / feed. Do not put the visitor on the Pixi map.
+**UI.** Map (8 sprites) · feed rail · Town data drawer (scoreboard / bank + Gateway inbound / mayor #11) · Add your agent button · Agents tab. Do not put the visitor on the Pixi map.
 
 **Architecture slide (3:00).** ENS Sepolia names → Arc USDC + TownTreasury `0xCE0e…FfC1` → Studio subgraph `agent-town` → Signal C (Aave V3 + Uniswap V3). Optional Fri: Circle Gateway (Sepolia USDC `0x1c7D4B…7238` ≠ ENS MockUSDC). Do not paste `SUBGRAPH_URL`. Cut to [docs/architecture.png](architecture.png) / [ARCHITECTURE.md §1](ARCHITECTURE.md#1-system-overview).
 

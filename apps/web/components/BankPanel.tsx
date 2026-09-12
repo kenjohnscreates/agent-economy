@@ -9,6 +9,7 @@ import { groupLoans, latestVerdict, utilisationTone, type Tone } from "@/lib/rat
 import { TOWN_NAME } from "@/lib/config";
 import { RateTooltip } from "./RateTooltip";
 import { StaleBadge } from "./StaleBadge";
+import { GATEWAY_INBOUND, gatewayMintExplorerUrl } from "@/lib/gatewayInbound";
 
 /** Wall clock that re-renders every `everyMs` so "fetched 12s ago" keeps moving. */
 function useNow(everyMs: number): number {
@@ -40,14 +41,15 @@ function Tile({
 function loanTiming(loan: Loan): string {
   const parts: string[] = [];
   if (loan.status === "pending") {
-    parts.push(`requested tick ${loan.requestedAtTick}`, "waiting on the mayor");
+    parts.push(`requested round ${loan.requestedAtTick}`, "waiting on the mayor");
   } else if (loan.approvedAtTick != null) {
-    parts.push(`approved tick ${loan.approvedAtTick}`);
+    parts.push(`approved round ${loan.approvedAtTick}`);
   } else {
-    parts.push(`requested tick ${loan.requestedAtTick}`);
+    parts.push(`requested round ${loan.requestedAtTick}`);
   }
-  if (loan.dueAtTick != null && loan.status === "approved") parts.push(`due tick ${loan.dueAtTick}`);
-  if (loan.defaultedAtTick != null) parts.push(`defaulted tick ${loan.defaultedAtTick}`);
+  if (loan.dueAtTick != null && loan.status === "approved")
+    parts.push(`due round ${loan.dueAtTick}`);
+  if (loan.defaultedAtTick != null) parts.push(`defaulted round ${loan.defaultedAtTick}`);
   if (BigInt(loan.repaidUsdc) > 0n) parts.push(`repaid ${formatUsdc(loan.repaidUsdc)}`);
   return parts.join(" · ");
 }
@@ -101,7 +103,7 @@ export function BankPanel({
           <span className="h3">Bank</span>
           <span className="label">waiting for scoreboard</span>
         </div>
-        <div className="empty">The treasury reports on the first tick.</div>
+        <div className="empty">The treasury reports on the first round.</div>
       </section>
     );
   }
@@ -132,6 +134,17 @@ export function BankPanel({
         <Tile label="Default rate" tone={s.defaults > 0 ? "warn" : undefined}>
           {formatBps(s.defaultRateBps)}
         </Tile>
+      </div>
+      <div className="inbound">
+        <div className="label">Inbound · Circle Gateway (already settled)</div>
+        <p className="small inbound-copy">
+          {GATEWAY_INBOUND.agent} · {GATEWAY_INBOUND.source} → {GATEWAY_INBOUND.dest} ·{" "}
+          {formatUsdc(GATEWAY_INBOUND.amountUsdc)} USDC{" "}
+          <a href={gatewayMintExplorerUrl()} target="_blank" rel="noreferrer">
+            arcscan
+          </a>
+          . Not a live replay of the bridge.
+        </p>
       </div>
       {latest?.advisor ? (
         <div className="decision">

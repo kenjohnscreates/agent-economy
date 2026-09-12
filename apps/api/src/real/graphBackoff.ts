@@ -3,6 +3,8 @@
 
 /** Pause when 429 has no Retry-After / x-ratelimit-reset. */
 export const DEFAULT_GRAPH_429_BACKOFF_MS = 60_000;
+/** Studio sometimes returns a 22h reset; do not sleep past the film window. */
+export const MAX_GRAPH_429_BACKOFF_MS = 15 * 60 * 1000;
 
 const UNIX_MS_MIN = 1_000_000_000_000;
 
@@ -65,6 +67,10 @@ function parseRateLimitReset(raw: string): number | undefined {
   return Number.isFinite(ms) ? ms : undefined;
 }
 
+function capBackoff(until: number, now: number): number {
+  return Math.min(until, now + MAX_GRAPH_429_BACKOFF_MS);
+}
+
 /** Absolute time to skip Studio queries; undefined = retry next poll. */
 export function retryUntilMs(err: unknown, now = Date.now()): number | undefined {
   const e = asGraphError(err);
@@ -74,16 +80,18 @@ export function retryUntilMs(err: unknown, now = Date.now()): number | undefined
   const retryAfterRaw = headerValue(headers, "retry-after");
   const resetRaw = headerValue(headers, "x-ratelimit-reset");
 
+  let until: number | undefined;
   if (retryAfterRaw) {
-    const until = parseRetryAfter(retryAfterRaw, now);
-    if (until !== undefined && until > now) return until;
+    until = parseRetryAfter(retryAfterRaw, now);
   }
-  if (resetRaw) {
-    const until = parseRateLimitReset(resetRaw);
-    if (until !== undefined && until > now) return until;
+  if ((until === undefined || until <= now) && resetRaw) {
+    until = parseRateLimitReset(resetRaw);
   }
-  if (status === 429 || remaining === "0") return now + DEFAULT_GRAPH_429_BACKOFF_MS;
-  return undefined;
+  if (until === undefined || until <= now) {
+    if (status === 429 || remaining === "0") until = now + DEFAULT_GRAPH_429_BACKOFF_MS;
+  }
+  if (until === undefined || until <= now) return undefined;
+  return capBackoff(until, now);
 }
 
 export function graphBackoffActive(untilMs: number, now = Date.now()): boolean {

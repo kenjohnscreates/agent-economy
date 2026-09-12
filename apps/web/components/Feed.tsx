@@ -24,7 +24,7 @@ function Line({ e }: { e: SseEvent }) {
     case "tick":
       return (
         <span className="t">
-          tick {e.data.tick} · {e.data.phase}
+          round {e.data.tick} · {e.data.phase}
         </span>
       );
     case "tx": {
@@ -68,7 +68,7 @@ export function Feed({ items, pending }: { items: FeedItem[]; pending: Loan[] })
         </span>
       </div>
       {visible.length === 0 ? (
-        <div className="empty">The town is quiet. Events land here as ticks happen.</div>
+        <div className="empty">The town is quiet. Events land here as rounds happen.</div>
       ) : (
         <ul className="feed">
           {visible.map((i) => (

@@ -44,6 +44,7 @@ import { createBalanceReader, type BalanceReader } from "./balances.js";
 import { parseRealEnv, type RealEnv } from "./env.js";
 import { createLedgerReader, latestByTick, type LedgerReader, type TickAnchor } from "./ledger.js";
 import { graphBackoffActive, retryUntilMs } from "./graphBackoff.js";
+import { readSeedLoans } from "./seedLoans.js";
 import { mapGdpSeriesPoints, mapJob, mapLoan } from "./map.js";
 import { buildRateBreakdown } from "./rate.js";
 import { diffSseEvents, emptySseCursor, type SseCursor } from "./sse.js";
@@ -102,6 +103,7 @@ export class RealSource implements DataSource {
   private readonly visitor: VisitorService | undefined;
   private readonly rosterAddresses: Map<string, Address>;
 
+  private readonly rawEnv: NodeJS.ProcessEnv;
   private cache: RealCache | undefined;
   private readyPromise: Promise<void> | undefined;
   private timer: ReturnType<typeof setInterval> | undefined;
@@ -112,7 +114,8 @@ export class RealSource implements DataSource {
   constructor(options: RealSourceOptions) {
     this.tickMs = options.tickMs;
     this.pollMs = options.pollMs ?? options.tickMs ?? DEFAULT_POLL_MS;
-    this.env = parseRealEnv(options.env);
+    this.rawEnv = options.env ?? process.env;
+    this.env = parseRealEnv(this.rawEnv);
     if (!this.env.subgraphUrl && !options.graphClient) {
       throw new Error("SUBGRAPH_URL is required for API real mode");
     }
@@ -130,7 +133,7 @@ export class RealSource implements DataSource {
       this.mayor = options.mayorDeps;
     } else {
       try {
-        const circle = options.circle ?? createCircleClient(options.env);
+        const circle = options.circle ?? createCircleClient(this.rawEnv);
         this.mayor = {
           circle,
           ...defaultMayorWalletIds(roster),
@@ -147,7 +150,7 @@ export class RealSource implements DataSource {
         visitorAllowed: this.env.visitorAllowed,
         townName: this.env.townName,
         getTownRateBps: () => this.cache?.scoreboard.rate.townRateBps ?? 0,
-        env: options.env ?? process.env,
+        env: this.rawEnv,
       });
     }
   }
@@ -330,7 +333,7 @@ export class RealSource implements DataSource {
           loansOutstanding: 0,
           defaults: 0,
         };
-    let loans = prior?.loans ?? [];
+    let loans = prior?.loans ?? readSeedLoans(this.rawEnv);
     let gdpPoints = prior?.scoreboard.gdpSeries ?? [];
     let jobsByAgent = prior?.jobsByAgent ?? new Map<string, Job[]>();
 
@@ -388,7 +391,7 @@ export class RealSource implements DataSource {
               ? {
                   tick: action.tick,
                   kind: action.kind,
-                  summary: `${action.kind} (tick ${action.tick})`,
+                  summary: `${action.kind} (round ${action.tick})`,
                 }
               : null,
             narration: narration?.text ?? null,

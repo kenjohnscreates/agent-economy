@@ -22,7 +22,7 @@ export function Sparkline({
   width?: number;
   height?: number;
 }) {
-  if (points.length < 2) return <div className="empty">GDP series builds as ticks land.</div>;
+  if (points.length < 2) return <div className="empty">GDP series builds as rounds land.</div>;
   const max = Math.max(...points, 1);
   const min = Math.min(...points, 0);
   const span = max - min || 1;
@@ -39,7 +39,7 @@ export function Sparkline({
       width="100%"
       height={height}
       role="img"
-      aria-label="GDP per tick"
+      aria-label="GDP per round"
     >
       <path d={d} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
       <circle
@@ -66,7 +66,7 @@ export function Scoreboard({
           <span className="h3">Town</span>
           <span className="label">waiting for scoreboard</span>
         </div>
-        <div className="empty">Numbers appear on the first tick.</div>
+        <div className="empty">Numbers appear on the first round.</div>
       </section>
     );
   }
@@ -77,7 +77,7 @@ export function Scoreboard({
     <section className="card" aria-label="Scoreboard">
       <div className="card-title">
         <span className="h3">Town</span>
-        <span className="label">tick {s.ticks}</span>
+        <span className="label">round {s.ticks}</span>
       </div>
       <div className="stats">
         <Tile label="GDP (USDC)">
@@ -97,7 +97,7 @@ export function Scoreboard({
       </div>
       <div style={{ marginTop: 14 }}>
         <div className="label" style={{ marginBottom: 6 }}>
-          GDP per tick · market {formatBps(s.rate.marketApyBps)} + spread{" "}
+          GDP per round · market {formatBps(s.rate.marketApyBps)} + spread{" "}
           {formatBps(s.rate.spreadBps, 0)}
           {s.signals.stale ? " · stale" : ""}
         </div>

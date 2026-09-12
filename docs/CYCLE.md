@@ -9,7 +9,7 @@ Keyed by **tick number**, not the clock. Default cadence `TICK_MS=15000` → ~3 
 | **Mock / `/map-demo` / replay** | Fixture story (`L-1`, `L-2`, `J-demo`, mayor `L-3`) | Rotating role lines below. Snapshot freeze = **tick 7 / default**. |
 | **Live (`API_MODE=real`)** | Real Arc txs + subgraph ids (`#9`…`#11`) | Default **LLM narrator off**: `ada: Cautious town banker… (t7 default mark_default)`. All 8 agents get a row in Supabase each tick. Pixi chip = 3 s, ≤120 chars. |
 
-**Sat 12 Sep film:** do **not** re-run `--ticks 12 --yes` until mayor uses **#11**. Order: **Your agent** (name → fund Arc USDC → chat deposit) **then** Approve #11. Cut to arcscan for beats already landed. Map stays 8 sprites; visitor is the 9th card.
+**Sat 12 Sep film:** do **not** re-run `--ticks 12 --yes` until mayor uses **#11**. Order: **Replay** (bot cycle) → Live **Approve #11** → **Add your agent** (new name, not ivy) + Arc USDC + chat deposit. Gateway inbound is already on the Bank panel. Map stays 8 sprites; visitor is the 9th card.
 
 ---
 
