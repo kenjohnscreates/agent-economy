@@ -17,9 +17,26 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
 | M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase · **M6.7** #60 `3aae37f` ledger reuse |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** · visitor then **#11** · **M9.1 Gateway LIVE** · **M9.6** #61 merged · **M9.7** public mint · freeze Sun 08:00 |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** · Replay → **#11** → new visitor · **M9.1 Gateway on Bank UI** · **M5.14** #64 `41bf932` · freeze Sun 08:00 |
 
 ## Log
+
+## Sat 12 Sep 19:25 EDT
+Done: **M5.14** [#64](https://github.com/kenjohnscreates/agent-economy/pull/64) squash-merged `41bf932`. Dan #62 rebased onto main (M9.7 visitor kept). Town data drawer + feed rail + Add your agent. Bank inbound gus Gateway 0.80 USDC (already settled). User-visible tick → **round**. Graph 429 Retry-After capped 15 min. `GRAPH_LAST_GOOD_LOANS=/tmp/graph-last-good-loans.json` dump has **#11**. [#62](https://github.com/kenjohnscreates/agent-economy/pull/62) closed. Did **not** Approve #11. Did **not** restart `:3002`. Did **not** `gateway-deposit --yes`.
+In progress: **film** Replay → Live Approve **#11** (localhost + last-good loans) → new visitor (not ivy). Wait for Vercel prod `41bf932`.
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · Studio 429 on a fresh `:3001` (use seed file; do not restart tunnel)
+Next up: `GRAPH_LAST_GOOD_LOANS=/tmp/graph-last-good-loans.json` on localhost `:3001` then film. Ask Graph for a Studio quota bump if you can. Stretch D off.
+`touching:` none.
+Checkpoint call: Sat 12:00 passed.
+
+## Sat 12 Sep 17:22 EDT
+Done: Kenny chose merge. **M9.7** [#63](https://github.com/kenjohnscreates/agent-economy/pull/63) squash-merged `90e164a`. T1 [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/63#issuecomment-5648770401). CI green. Vercel prod **READY** `dpl_3T4H2z5N47qgvF8mwkTqtsTVb5jV` sha `90e164a` → https://agent-town-eight.vercel.app. Tunnel `:3002` still up (`ALLOW_VISITOR=true`, `ALLOW_BROADCAST=false`).
+Done: live visitor **ivy.botanica.eth** (Sat ~17:06): SCA `0x0c97608d…` · fund 3 USDC [0xde6b829e…](https://testnet.arcscan.app/tx/0xde6b829e490267b8) · deposit 1.5 USDC [0xf7dbe2cd…](https://testnet.arcscan.app/tx/0xf7dbe2cddf6c000a) · quote 8.28% APY / ~0.010208 USDC extra 30d (illustrative; not credited on-chain) · subagent `scout.ivy.botanica.eth`. Did **not** Approve #11. Did **not** `--ticks 12 --yes`. Did **not** merge [#62](https://github.com/kenjohnscreates/agent-economy/pull/62) (Dan M5.14; base still `card/M9.6-visitor-agent`).
+In progress: **film visitor now** on public URL. Local `:3001` `tsx --watch` restarted on the pull → Studio **429** → loan book **empty** (tick 1 from ledger). Tunnel `:3002` still has **#11** + ivy — **do not restart it**.
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · local mayor queue empty until we reuse `:3002` last-good (no `ALLOW_BROADCAST` on `:3002`)
+Next up: record visitor (ivy 1.50 + chat; optional 2nd deposit / kenny mint) · arcscan deposit tx · then #11 plan (do not restart tunnel; do not new graph polls). Stretch D off. #62 rebase after film if wanted.
+`touching:` none. `apps/web` free after film.
+Checkpoint call: Sat 12:00 passed.
 
 ## Sat 12 Sep 12:40 EDT
 Done: **M9.6** squash-merged [#61](https://github.com/kenjohnscreates/agent-economy/pull/61) `37239f5`. **M9.7** `card/M9.7-visitor-public`: public visitor mint (`ALLOW_VISITOR`, mayor stays on `ALLOW_BROADCAST`), one name per browser, ENS subdomain subagents, deposit chat quotes 30-day illustrative interest at live `townRateBps`. Did **not** Approve #11. Did **not** `--ticks 12 --yes`.

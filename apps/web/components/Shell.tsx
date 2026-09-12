@@ -103,9 +103,7 @@ export function Shell() {
     <div className="shell">
       <header className="header">
         <Wordmark />
-        <span className="label">
-          round {state.tick} · {state.phase}
-        </span>
+        <span className="label">round {state.tick}</span>
 
         <div className="tabs" role="tablist" aria-label="View">
           <button

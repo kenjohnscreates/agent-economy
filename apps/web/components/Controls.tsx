@@ -18,10 +18,12 @@ export function Controls(props: {
   const { mode, onMode, status, paused, speed, onPause, onResume, onSpeed, onReconnect } = props;
   return (
     <div className="controls" role="group" aria-label="Stream controls">
-      <span className="badge" data-status={status}>
-        <span className="dot" />
-        {status}
-      </span>
+      {status !== mode ? (
+        <span className="badge" data-status={status}>
+          <span className="dot" />
+          {status}
+        </span>
+      ) : null}
       {mode === "live" && (status === "error" || status === "reconnecting") ? (
         <button className="btn" onClick={onReconnect} aria-label="Reconnect to the town API">
           <RefreshCw size={12} aria-hidden="true" /> reconnect
