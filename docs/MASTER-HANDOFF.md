@@ -13,13 +13,13 @@ Local: `/Users/home/Code/ETH Global 26 Virtual Hackathon`
 Deadline: **Sun 13 Sep 12:00 EDT**. Code freeze Sun 08:00. Submit by 11:00.
 Checkpoints: Thu 10 Sep 22:00 **DONE**. Next: **Sat 12 Sep 12:00**.
 
-Spec: `docs/PRD.md`, **`docs/CYCLE.md`** (12-tick do/say/BE), ARCHITECTURE.md, MILESTONES.md, AGENT-RUNBOOK.md, RISKS.md, **STATUS.md** (source of truth with git), SUBMISSION.md, DAN-LIVE-SPLIT.md.
+Spec: `docs/PRD.md` **v0.3** (visitor + UI layout), **`docs/CYCLE.md`**, ARCHITECTURE.md, MILESTONES.md, AGENT-RUNBOOK.md, RISKS.md, **STATUS.md** (source of truth with git), SUBMISSION.md, DAN-LIVE-SPLIT.md.
 This file is a snapshot; **STATUS + git win** if they disagree.
 
 ## Protocol
 - One builder per card. Worktrees `/tmp/wt-…`. Branch `card/<id>-<slug>`. PR → T1 inherit review → comment `VERDICT: APPROVE` or `VERDICT: REQUEST_CHANGES` → squash-merge from **primary**.
 - File split: `docs/DAN-LIVE-SPLIT.md`. Kenny: sim/api/circle + bank inbound + mayor live queue. Dan (`don-radman`): Pixi speech/dashboard. Ping `touching:` in STATUS before overlapping PRs.
-- Frozen: `packages/shared` schemas, `MapSlotProps` / `ZONES` / `zonePoint`.
+- Frozen: `MapSlotProps` / `ZONES` / `zonePoint`. `packages/shared` visitor routes live in **#61** (FE+BE+mock together). Do not add visitor to `AGENT_NAMES` / sim `decide()` / Pixi map.
 - Town = **botanica**. Never persist ENS tokenIds (R3). No secrets in git.
 - Gate A: `--yes` / `--broadcast` / mayor POST needs `ALLOW_BROADCAST=true`.
 - Do **not** `markDefault` **bo** (already defaulted #2 → 2nd default `revokeName`s `bo.botanica.eth`). Default **cy** only.
@@ -33,7 +33,7 @@ This file is a snapshot; **STATUS + git win** if they disagree.
 - Record **Sat 12 Sep live**. Mock / replay = rehearsal or fallback if testnet is down.
 
 ## Open PRs
-None expected after the M9.1 live push. T1 Dan polish if it lands. Do **not** run another live `--ticks 12 --yes` until mayor uses **#11**.
+**#61** M9.6 visitor agent + UI + PRD v0.3 — `card/M9.6-visitor-agent`. T1 next. Do **not** run another live `--ticks 12 --yes` until mayor uses **#11**. Film order: visitor admit+deposit **then** Approve #11.
 
 ## Live artifacts (do not redo deploys)
 - TownTreasury `0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1` Arc 5042002
@@ -77,16 +77,17 @@ Hotfix in `packages/circle/src/gateway.ts`: POST `/v1/transfer?enableForwarder=t
 Do **not** re-run `gateway-deposit --yes` (deposit already recorded). Inbound BankPanel UI still TODO — ping `touching: apps/web` if you start it; prefer thin API field + existing BankPanel slot.
 
 ## Studio / API
-- Studio 429 quota reset **Fri 15:22 EDT**. Do **not** start real API before then (warm #11 cache dies on restart; first 429 with empty cache zeros the scoreboard).
-- After 15:22: `pnpm --filter @agent-town/api dev` from repo root. Expect `/health` `tick:1` (one dry-run `--once` already wrote this Supabase + 8 narration). Header `api · real`. Mayor **#11**. Speech chips from ledger.
-- Cursor restart previously killed `:3001`. Web `:3000` may still be up.
+- Studio 429 already reset **Fri 15:22 EDT**. Real API is up: `pnpm --filter @agent-town/api dev` → `/health` `tick:1`. Header `api · real`. Mayor **#11**. Speech from ledger.
+- **M6.7** #60 `3aae37f`: no per-agent Supabase `latest*`. Do not restart `:3001` unless it dies (cache is last-good).
+- Web `:3000` was a 19.5h hung `next-server` (TCP accept, 0-byte responses) — that is what made Cursor `browser_lock` look stuck. Restarted Fri 17:18. If UI freezes again, kill `:3000` and `pnpm --filter @agent-town/web dev`; do **not** use agent browser lock.
 - M6.6: refresh honors Retry-After; keeps last-good graph; one `rosterJobs` query.
 
 ## Board
 - M0–M5 **done**. Mock = rehearsal.
 - M6.5 live 12-tick **done**. Deliver re-submit `a475ccb`. `API_MODE=real` + Supabase.
 - **M9.1 LIVE** (above). D off.
-- M8: record **Sat 12 Sep live**. Can cut to Gateway txs + arcscan mint. Freeze Sun 08:00.
+- **M9.6** #61 — visitor + UI (Your agent panel, 9th card, 3×3). Map stays 8.
+- M8: record **Sat 12 Sep live**. Visitor then #11. Freeze Sun 08:00.
 
 ## Video
 ```
@@ -94,7 +95,7 @@ API_MODE=real ALLOW_BROADCAST=true
 pnpm --filter @agent-town/api dev
 pnpm --filter @agent-town/web dev
 ```
-Header must show `api · real`. ENS = Sepolia; money = Arc USDC. Mayor = **#11 cy**, not mock `L-3`.
+Header must show `api · real`. ENS = Sepolia; money = Arc USDC. **Your agent** first (Arc USDC, not Sepolia). Mayor = **#11 cy**, not mock `L-3`.
 
 ## Gotchas
 - Circle faucet 403 (API). Browser faucet or teammate send still works.
@@ -112,8 +113,8 @@ Header must show `api · real`. ENS = Sepolia; money = Arc USDC. Mayor = **#11 c
 - Bank inbound UI (optional; film arcscan if skipped)
 
 ## Next up
-1. **15:22 EDT:** start real API; confirm `api · real`, tick 1, chips, mayor #11.
-2. Optional: BankPanel inbound strip (Kenny; don’t dual-write if Dan has a web PR).
+1. T1 review **#61**. After merge: live admit (name → fund **Arc USDC** → chat deposit) then Approve **#11** when filming.
+2. Human: hard-refresh http://localhost:3000 — `api · real`, tick 1, mayor **#11**. Do not Approve until after the visitor beat.
 3. Record Sat 12th live. Form Sun. Checkpoint Sat 12:00.
 
 Start by reading `docs/STATUS.md` + `docs/CYCLE.md` + `git log -5` + `gh pr list`.

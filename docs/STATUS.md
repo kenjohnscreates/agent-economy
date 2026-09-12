@@ -15,9 +15,9 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M3 Subgraph | done | BE | **M3.1–M3.4 LIVE** · Studio `agent-town` · query URL in local `.env` only · loans 1 repaid / 2 defaulted · graphclient #27 `c703a8a` |
 | M4 Sim, agents, API | done | BE | **M4.1–M4.9 code on main** · **M4.3 LIVE** buys · **M4.6 LIVE** ENS scores · **M4.7** mayor rate LIVE · **M4.8** #34 `d1b91a6` |
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
-| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase ledger · **Studio 429 until Fri 15:22 EDT** |
+| M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase · **M6.7** #60 `3aae37f` ledger reuse |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** (not mock) · **M9.1 Gateway LIVE** (0.8 USDC Sepolia → TownTreasury) · freeze Sun 08:00 |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** · visitor then **#11** · **M9.1 Gateway LIVE** · **M9.6** #61 · freeze Sun 08:00 |
 
 ## Log
 
@@ -706,4 +706,60 @@ In progress: Studio wait **15:22 EDT** then real API
 Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · inbound BankPanel UI
 Next up: 15:22 API restart. Record Sat live (can cut to Gateway txs). Form Sun.
 `touching:` none. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 13:38 EDT — master pickup
+Done: `git fetch` · HEAD **`3578add`** == `origin/main` · 0 open PRs · 1 worktree (this) · town **botanica**. **M9.1 LIVE** confirmed (gus Sepolia 2 USDC → TownTreasury 0.8 [0x14fad3ea…]). Did **not** re-deploy. Did **not** `gateway-deposit --yes`. `:3000` up (PID 99981). `:3001` down (Studio hold).
+In progress: wait Studio reset **15:22 EDT** → `pnpm --filter @agent-town/api dev`
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · Studio until 15:22
+Next up: 15:22 API. Expect `api · real`, tick 1, mayor **#11**. Record Sat live. Stretch D off. Optional Bank inbound after API is up (ping `touching: apps/web`).
+`touching:` none. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 15:22 EDT
+Done: Studio reset. `pnpm --filter @agent-town/api dev` — first boot `SyntaxError: rosterJobs` (stale graphclient `dist`). Rebuilt `pnpm --filter @agent-town/graphclient build`. `/health` `mode=real` · `/state` **tick 1** boom · `/loans?status=pending` **#11** cy 0.20 USDC · 8 narration rows · scoreboard defaults **2** rate **829** treasury **2.22**. Signals not stale. Did **not** `--ticks 12 --yes`. Did **not** click #11.
+In progress: live UI · Sat record
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: mayor #11 on `:3000`. Record Sat live.
+`touching:` none.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 16:40 EDT
+Done: **M6.7** #60 squash-merged `3aae37f`. T1 inherit [VERDICT: APPROVE](https://github.com/kenjohnscreates/agent-economy/pull/60#issuecomment-5640325981). CI green. Root cause: refresh listed actions/narration then 16× `latestAction`/`latestNarration` → **Supabase Gateway Timeout** every poll, cache frozen. Now `latestByTick` on the list; parallel ENS+balance; ledger throw keeps last-good; `/health` reports real tick. `--watch` restarted: `/health` `{"ok":true,"mode":"real","tick":1}` · #11 still pending · 8 chips. No `latest*` errors after restart. Browser `:3000` walk aborted (tool). HEAD `3aae37f` == origin/main. 0 open PRs.
+In progress: Sat live record · optional Bank inbound
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: click **#11** on live UI when filming. Freeze Sun 08:00. Stretch D off.
+`touching:` none. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 17:17 EDT
+Done: Diagnosed Master “stuck on browser tabs”: `:3001` was fine; **`:3000` next-server PID 99981** (~19.5h) accepted TCP then sent **0 bytes** (curl timeout). Killed tree; `pnpm --filter @agent-town/web dev` → GET `/` **200** 27ms (`806713`). Recheck: `/health` `tick:1` · `/loans?status=pending` **#11** · HTML title Botanica. Did **not** `browser_lock`. Did **not** Approve #11.
+In progress: Sat live record
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: human hard-refresh http://localhost:3000 — `api · real`, tick 1, mayor **#11**. Freeze Sun 08:00.
+`touching:` none. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 18:47 EDT — master pickup
+Done: `git fetch` · HEAD **`3aae37f`** == `origin/main` · 0 open PRs · 1 worktree (this) · town **botanica**. Kept uncommitted STATUS + MASTER-HANDOFF. `:3000` GET `/` **200** (~48ms). `:3001` `/health` `{"ok":true,"mode":"real","tick":1}`. `/loans?status=pending` **#11** cy 0.20 USDC. Did **not** click #11. Did **not** re-deploy. Did **not** `gateway-deposit --yes`. Did **not** `--ticks 12 --yes`. No browser tools.
+In progress: idle — wait Kenny UI walk notes (bugs → one card / worktree / PR / T1). Optional Bank inbound only if asked.
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: paste walk notes. Freeze Sun 08:00. Stretch D off.
+`touching:` none. `apps/web` free.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Fri 11 Sep 23:36 EDT
+Done: **M9.6** [#61](https://github.com/kenjohnscreates/agent-economy/pull/61) open `card/M9.6-visitor-agent` `f56e4f0`. Off-roster visitor: custom ENS + Circle SCA + allowlisted deposit chat. Map stays 8 sprites; 9th AgentCard under the map. Mock tests 61+47. Did **not** Approve #11. Did **not** `--ticks 12 --yes`.
+In progress: T1 review #61 · live admit after merge (`ALLOW_BROADCAST=true`, fund Arc USDC)
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: T1 #61. Live demo: create name → fund Arc USDC → chat deposit → then Approve #11 when filming.
+`touching:` #61 `apps/web` + `apps/api` + `packages/shared`. Dan map files not touched.
+Checkpoint call: none. Next **Sat 12 Sep 12:00**.
+
+## Sat 12 Sep 00:40 EDT
+Done: **PRD v0.3** + ARCHITECTURE / MILESTONES / SUBMISSION / CYCLE / README / RUNBOOK / DAN-LIVE-SPLIT / ASTRA-MAP — visitor + **UI layout** (map → Your agent → 3×3 cards; right column unchanged). Docs commit on #61. Honesty: 8 rule-bots, not LLM agents. Film: admit+deposit **then** #11. D still off.
+In progress: T1 #61
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: merge #61 → live visitor → film.
+`touching:` #61 `apps/web` + `apps/api` + `packages/shared` + `docs/*`.
 Checkpoint call: none. Next **Sat 12 Sep 12:00**.
