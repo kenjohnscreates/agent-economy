@@ -1,6 +1,6 @@
 "use client";
 // M9.6 visitor panel: name an off-roster agent, wait for Arc USDC, chat to deposit.
-// Lives under the map so Mayor #11 stays on the right. Replay is read-only.
+// Opened from the white "Add your agent" button in the header (M5.14). Replay is read-only.
 import { useEffect, useState, type FormEvent } from "react";
 import { ensNameFor, normalizeVisitorLabel, validateVisitorLabel } from "@agent-town/shared";
 import { api, ApiRequestError } from "@/lib/api";
