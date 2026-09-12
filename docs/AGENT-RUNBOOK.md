@@ -60,9 +60,9 @@ Handoff between humans: either human can pick any card; the brief + exit criteri
 ## 6. Working agreements
 
 - Chain + subgraph are the source of truth; UI never invents state.
-- FE/BE contract (`packages/shared`) changes require both humans' ack and a mock update in the same PR.
+- FE/BE contract (`packages/shared`) changes require both humans' ack and a mock update in the same PR. **M9.6 visitor routes** ship with mock + UI in that PR (#61).
 - Every on‑chain script is re‑runnable and idempotent (checks before writes).
-- Demo path first: anything not on the 3‑minute storyline is stretch.
+- Demo path first: Sat film is **visitor admit + deposit**, then mayor **#11**. The 12-tick is already on chain.
 - Timebox honoured: report, don't grind.
 
 ## 7. Status update template (master, end of each session)

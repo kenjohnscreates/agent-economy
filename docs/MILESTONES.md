@@ -6,7 +6,7 @@ Rule: one PR per card; reviewer gate before merge; master updates [STATUS](STATU
 
 Checkpoints (master decides scope cuts): **Thu 22:00** (done, no cut) · **Sat 12:00**.
 
-**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). Deliver fix `a475ccb`. `API_MODE=real` + Supabase. M8 = record live Saturday. **M9.1 LIVE** — gus Sepolia 2 USDC → TownTreasury 0.8 USDC. D off. Studio 429 until Fri 15:22 EDT.
+**Board now:** M0–M5 done. M6.5 live 12-tick done (cy #9 defaulted, #11 pending mayor). `API_MODE=real` + Supabase. M8 = record live Saturday. **M9.1 LIVE**. **M9.6 visitor** #61 (UI + admit + deposit chat). D off.
 
 ---
 
@@ -117,13 +117,14 @@ Mock backup footage is rehearsal only. Prize video = **live** (M8.2).
 | ID | Task | Exit |
 |---|---|---|
 | M8.1 | Code freeze Sun 08:00; tag `v0.1-ethonline` | tag pushed |
-| M8.2 | Record 2–4 min video (PRD §10) **Sat 12 Sep live** (`API_MODE=real`, mayor **#11**) | uploaded |
+| M8.2 | Record 2–4 min video (PRD §10) **Sat 12 Sep live** (`API_MODE=real`, visitor admit+deposit, then mayor **#11**) | uploaded |
 | M8.3 | ETHGlobal form: repo, video, tracks (Arc Agentic Economy [+ Launch], Graph AI From Scratch, ENS Best Use of ENSv2) | submitted by **11:00**, 1 h buffer |
 
 ## Stretch (only if M6 exits early; priority order)
 - M9.1 **B — Circle App Kit / Gateway**: treasury wallet holds a unified USDC balance across chains, settles on Arc; show deposit from another testnet landing in the town bank. T1, ~3–5 h. **LIVE** Fri 11 Sep: gus Sepolia deposit 2 USDC [0x27c49e4d…](https://sepolia.etherscan.io/tx/0x27c49e4d9c0b4bb170ffdc3f7e04257b023ccec60d454df0d678392ac15dc54c) → mint 0.8 USDC to TownTreasury [0x14fad3ea…](https://testnet.arcscan.app/tx/0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea) (`contractSigner: true`; ~1.02 USDC Gateway fee). Token = Circle Sepolia USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`. Inbound BankPanel UI still TODO.
-- M9.2 **D — Open deposits**: LP share accounting on `TownTreasury.deposit`; anyone (incl. the mayor) earns the interest agents pay; UI "Deposit" button. T1, ~2–3 h. **Off — do not start.**
-- M9.3 Mayor registers a new agent: mint subname + create Circle wallet from UI. T2.
+- M9.2 **D — Open deposits**: LP share accounting on `TownTreasury.deposit`; anyone (incl. the mayor) earns the interest agents pay; UI "Deposit" button. T1, ~2–3 h. **Off — do not start.** Visitor M9.6 uses existing `deposit(uint256)` — that is not D.
+- M9.3 Mayor registers a new agent (open-ended). **Superseded by M9.6** (one off-roster visitor, not public onboarding).
+- M9.6 **Visitor agent + UI** (#61): custom ENS label, Circle SCA, treasury `registerAgent`, **Your agent** panel under the map, 9th `AgentCard` / 3×3 grid, allowlisted chat (balance + deposit). Map stays 8 sprites. Fund **Arc USDC**. `ALLOW_BROADCAST=true`. T1. **In review.**
 - M9.4 ERC‑8004 registration on Arc + ENSIP‑25 `agent-registration` record loop. T2.
 - M9.5 Arc mainnet deploy script dry‑run (Launch‑to‑Mainnet track). T3.
 - Not planned: **A — external yield vault on Arc Testnet** (no live permissionless pool found; RISKS R16).

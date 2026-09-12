@@ -4,7 +4,7 @@
 
 ETHOnline 2026 hackathon project — a desktop town where autonomous agents earn, spend, and borrow **real USDC** on Arc Testnet, with identities on ENSv2 (Sepolia) and a live scoreboard from The Graph.
 
-> A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on-chain transaction; agents' decisions are driven by live on-chain data from The Graph, including real DeFi market rates. The Treasury is our own contract; it is not a third-party DeFi protocol.
+> A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on-chain transaction. The eight town agents are rule-bots with real Circle wallets — not LLM agents. A visitor you name can deposit Arc USDC into the bank through allowlisted chat. Agents' decisions are driven by live on-chain data from The Graph, including real DeFi market rates. The Treasury is our own contract; it is not a third-party DeFi protocol.
 
 ## Prize / track mapping
 
@@ -25,7 +25,7 @@ Mermaid source (editable): [docs/ARCHITECTURE.md §1](docs/ARCHITECTURE.md#1-sys
 
 ## Deployed artifacts
 
-Town: **`botanica`** (`botanica.eth`). Agents: `ada`, `bo`, `cy`, `dee`, `eli`, `fay`, `gus`, `hal` → `*.botanica.eth`. Bank alias: **`bank.botanica.eth`** → resolves like `ada`.
+Town: **`botanica`** (`botanica.eth`). Roster: `ada`, `bo`, `cy`, `dee`, `eli`, `fay`, `gus`, `hal` → `*.botanica.eth`. Bank alias: **`bank.botanica.eth`** → resolves like `ada`. Optional **visitor** (M9.6): one custom label (e.g. `kenny.botanica.eth`) minted from the UI — not on the map.
 
 ### Arc Testnet (chain id `5042002`)
 
@@ -116,8 +116,9 @@ pnpm --filter @agent-town/api dev         # :3001 — loads repo-root .env
 pnpm --filter @agent-town/web dev         # :3000
 ```
 
-- Header must show `api · real`. Mayor POST actions return **501** unless `ALLOW_BROADCAST=true`.
+- Header must show `api · real`. Mayor POST **and visitor create/chat** return **501** unless `ALLOW_BROADCAST=true`.
 - Sim ticks and Foundry/ENS scripts default to **dry-run**; `--broadcast` / `--yes` also require `ALLOW_BROADCAST=true`.
+- **Visitor (live):** **Your agent** panel under the map. Fund **Arc Testnet USDC** (not Sepolia). Chat `deposit 50% of our usdc into the town bank`. Then Approve loan **#11**.
 - Do **not** run another live `--ticks 12 --yes` until the mayor uses pending loan **#11**.
 
 Never commit `.env` or paste secret values.

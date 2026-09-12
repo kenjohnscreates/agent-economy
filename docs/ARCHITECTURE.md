@@ -14,7 +14,7 @@ flowchart LR
   subgraph arc [Arc Testnet 5042002: USDC is native gas]
     Treasury[TownTreasury.sol]
     Jobs[ERC-8183 AgenticCommerce 0x0747EEf0706327138c69792bF28Cd525089e4583]
-    Wallets[Circle Dev-Controlled SCA wallets: one per agent + mayor]
+    Wallets[Circle Dev-Controlled SCA wallets: 8 roster + optional visitor + mayor]
   end
   subgraph graph [The Graph: Subgraph Studio]
     SG[agent-town subgraph]
@@ -191,8 +191,11 @@ Input JSON: borrower name, credit score (ENS), balance history + defaults (subgr
 | POST | `/mayor/fund` | `{amountUsdc}` → `{txHash, explorerUrl}` |
 | POST | `/mayor/loan-decision` | `{loanId, approve}` → `{txHash, explorerUrl}` |
 | POST | `/mayor/rate` | `{bps 100–2000}` → `{txHash, explorerUrl}` |
+| GET | `/visitor` | `VisitorResponse` or 404 — off-roster admit (M9.6) |
+| POST | `/visitor` | `{label}` → `name, ensName, role, arcAddress, balanceUsdc, explorerUrl, ensUrl` |
+| POST | `/visitor/chat` | `{text}` → `{reply, txHash, explorerUrl}` — balance / deposit only |
 
-**Frozen in M0.6 (PR #5, `902dd74`).** All shapes in `packages/shared/src/api.ts` (zod 4); SSE payloads in `events.ts`; fixtures in `fixtures.ts`. USDC amounts are 6‑decimal integer **strings** (`"3000000"` = 3 USDC), never JS numbers; rates in bps. Default API port `3001`. A mock server (`apps/api --mock`) serves the fixtures so FE work never blocks on chain readiness. Changes after freeze need both humans' ack + mock update in the same PR (RUNBOOK §6).
+**Frozen in M0.6 (PR #5, `902dd74`).** All shapes in `packages/shared/src/api.ts` (zod 4); SSE payloads in `events.ts`; fixtures in `fixtures.ts`. USDC amounts are 6‑decimal integer **strings** (`"3000000"` = 3 USDC), never JS numbers; rates in bps. Default API port `3001`. A mock server (`apps/api --mock`) serves the fixtures so FE work never blocks on chain readiness. Changes after freeze need both humans' ack + mock update in the same PR (RUNBOOK §6). **M9.6 (#61) adds visitor routes + mock + UI in one PR** — visitor is **not** in `AGENT_NAMES` / sim `decide()`.
 
 ### 6.4 Supabase tables
 `ticks(id, ts, phase)`, `actions(tick, agent, kind, tx, status)`, `narration(tick, agent, text)`, `cache_agents(name, json, ts)`.
@@ -261,10 +264,13 @@ SUPABASE_SERVICE_KEY=            # service_role / sb_secret_ only; never publish
 TICK_MS=15000
 NEXT_PUBLIC_API_URL=
 API_MODE=mock                    # real for live demo
-ALLOW_BROADCAST=                 # string `true` for mayor POSTs / sim --yes
+ALLOW_BROADCAST=                 # string `true` for mayor POSTs / sim --yes / visitor create+chat
 ```
 
 ## 9. Frontend (owner: FE dev) — inputs it needs
-- `packages/shared` types, mock server, sprite/role list, SSE event names.
-- Screens: Town map (canvas or CSS grid; 4 buildings; agents move per `position`), Agent card, Bank panel (incl. rate breakdown tooltip from `scoreboard.signals`: market APY, spread, default premium, source subgraph, timestamp, `stale` badge), Scoreboard bar, Event feed, Mayor panel. Desktop 1440×900 target.
+- `packages/shared` types, mock server, sprite/role list, SSE event names. **M9.6:** `API_ROUTES.visitor` / `visitorChat`, `VisitorPanel`, 9th `AgentCard`.
+- Desktop **1440×900** layout (PRD §6.1):
+  - **Left:** Pixi map (roster-only; frozen `MapSlotProps` / `ZONES` / `zonePoint`) → **Your agent** panel → agent grid 4×2 or **3×3 when 9**.
+  - **Right:** Scoreboard, Bank (rate tooltip from `scoreboard.signals`), Mayor (**#11**), Feed.
+- Visitor: not a map sprite. Card `data-you`, `/sprites/visitor.png`. Chat only when `health.mode === "real"`. Replay = panel disabled.
 - Link‑outs: arcscan tx/address, ENS name (app‑side resolution display).

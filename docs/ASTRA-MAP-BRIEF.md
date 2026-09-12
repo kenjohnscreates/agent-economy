@@ -1,5 +1,7 @@
 # Astra brief: the Botanica town map (card M5.2)
 
+**M9.6 (Sat 12 Sep):** the live shell still mounts this map with **exactly 8 roster agents**. Visitor is a 9th `AgentCard` + **Your agent** panel — never a Pixi sprite. Do not widen `MapSlotProps` / `ZONES` / `zonePoint`. Shell filters `agents` to `AGENT_NAMES` before `MapSlot`.
+
 This document is the complete hand-off for building the interactive map layer of Agent Town. It is written for a coding model with no prior context. Read it top to bottom before touching code. Everything you need is in this file or in the repository paths it names.
 
 ```
