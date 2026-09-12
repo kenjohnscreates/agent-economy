@@ -45,5 +45,7 @@ broadcast/
 *.tsbuildinfo
 coverage/
 
-# Live visitor admit artifact (M9.6) — one SCA + ENS label, not committed
+# Live visitor admit artifacts (M9.6/M9.7) — SCAs + ENS labels, not committed
 packages/circle/visitor.json
+packages/circle/visitors.json
+packages/circle/visitors/

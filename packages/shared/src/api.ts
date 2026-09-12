@@ -260,6 +260,12 @@ export const VisitorCreateRequestSchema = z.object({
 });
 export type VisitorCreateRequest = z.infer<typeof VisitorCreateRequestSchema>;
 
+export const VisitorSubagentSchema = z.object({
+  name: z.string().min(1),
+  ensName: z.string().min(1),
+});
+export type VisitorSubagent = z.infer<typeof VisitorSubagentSchema>;
+
 export const VisitorResponseSchema = z.object({
   name: z.string().min(1),
   ensName: z.string().min(1),
@@ -268,16 +274,23 @@ export const VisitorResponseSchema = z.object({
   balanceUsdc: UsdcSchema,
   explorerUrl: z.url(),
   ensUrl: z.url(),
+  subagents: z.array(VisitorSubagentSchema).default([]),
 });
 export type VisitorResponse = z.infer<typeof VisitorResponseSchema>;
 
+export const VisitorQuerySchema = z.object({
+  label: z.string().min(1).max(32).optional(),
+});
+export type VisitorQuery = z.infer<typeof VisitorQuerySchema>;
+
 export const VisitorChatRequestSchema = z.object({
   text: z.string().min(1).max(500),
+  label: z.string().min(1).max(32).optional(),
 });
 export type VisitorChatRequest = z.infer<typeof VisitorChatRequestSchema>;
 
 export const VisitorChatResponseSchema = z.object({
-  reply: z.string().min(1).max(500),
+  reply: z.string().min(1).max(800),
   txHash: TxHashSchema.nullable(),
   explorerUrl: z.url().nullable(),
 });

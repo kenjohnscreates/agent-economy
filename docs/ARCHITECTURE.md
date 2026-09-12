@@ -264,7 +264,8 @@ SUPABASE_SERVICE_KEY=            # service_role / sb_secret_ only; never publish
 TICK_MS=15000
 NEXT_PUBLIC_API_URL=
 API_MODE=mock                    # real for live demo
-ALLOW_BROADCAST=                 # string `true` for mayor POSTs / sim --yes / visitor create+chat
+ALLOW_BROADCAST=                 # string `true` for mayor POSTs / sim --yes
+ALLOW_VISITOR=                   # string `true` for public visitor mint+chat (or inherit ALLOW_BROADCAST)
 ```
 
 ## 9. Frontend (owner: FE dev) — inputs it needs

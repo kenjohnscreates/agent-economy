@@ -25,7 +25,7 @@ Mermaid source (editable): [docs/ARCHITECTURE.md §1](docs/ARCHITECTURE.md#1-sys
 
 ## Deployed artifacts
 
-Town: **`botanica`** (`botanica.eth`). Roster: `ada`, `bo`, `cy`, `dee`, `eli`, `fay`, `gus`, `hal` → `*.botanica.eth`. Bank alias: **`bank.botanica.eth`** → resolves like `ada`. Optional **visitor** (M9.6): one custom label (e.g. `kenny.botanica.eth`) minted from the UI — not on the map.
+Town: **`botanica`** (`botanica.eth`). Roster: `ada`, `bo`, `cy`, `dee`, `eli`, `fay`, `gus`, `hal` → `*.botanica.eth`. Bank alias: **`bank.botanica.eth`** → resolves like `ada`. Optional **visitor** (M9.6/M9.7): mint a custom `*.botanica.eth` from the public UI (one name per browser; that name can mint ENS subdomains). Fund **Arc USDC**. Not on the map.
 
 ### Arc Testnet (chain id `5042002`)
 
@@ -111,14 +111,16 @@ TICK_MS=15000 STORYLINE=demo pnpm --filter @agent-town/sim tick
 Video: **Sat 12 Sep live**. Copy [`.env.example`](.env.example) → `.env` and fill secrets (Circle, RPC URLs, `SUBGRAPH_URL`, Supabase **service_role** / `sb_secret_…` — never `sb_publishable_…`, deployer keys). Then:
 
 ```bash
-# .env: API_MODE=real  ALLOW_BROADCAST=true
+# .env: API_MODE=real
+# Local film: ALLOW_BROADCAST=true (mayor #11)
+# Public mint: ALLOW_VISITOR=true and leave ALLOW_BROADCAST unset
 pnpm --filter @agent-town/api dev         # :3001 — loads repo-root .env
 pnpm --filter @agent-town/web dev         # :3000
 ```
 
-- Header must show `api · real`. Mayor POST **and visitor create/chat** return **501** unless `ALLOW_BROADCAST=true`.
+- Header must show `api · real`. Mayor POSTs return **501** unless `ALLOW_BROADCAST=true`. Visitor create/chat need `ALLOW_VISITOR=true` (or `ALLOW_BROADCAST`).
 - Sim ticks and Foundry/ENS scripts default to **dry-run**; `--broadcast` / `--yes` also require `ALLOW_BROADCAST=true`.
-- **Visitor (live):** **Your agent** panel under the map. Fund **Arc Testnet USDC** (not Sepolia). Chat `deposit 50% of our usdc into the town bank`. Then Approve loan **#11**.
+- **Visitor (live):** **Your agent** panel under the map. Fund **Arc Testnet USDC** (not Sepolia; same asset pays Arc gas). Chat `deposit 50% of our holdings into town bank and tell me the expected pay out based on the current rate for a 30 day holding period`. Then Approve loan **#11**.
 - Do **not** run another live `--ticks 12 --yes` until the mayor uses pending loan **#11**.
 
 Never commit `.env` or paste secret values.

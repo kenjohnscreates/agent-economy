@@ -17,6 +17,7 @@ import {
   VisitorChatRequestSchema,
   VisitorChatResponseSchema,
   VisitorCreateRequestSchema,
+  VisitorQuerySchema,
   VisitorResponseSchema,
   type ApiError,
 } from "@agent-town/shared";
@@ -120,7 +121,8 @@ export function createApp(source: DataSource): Hono {
   });
 
   app.get(API_ROUTES.visitor, async (c) => {
-    const visitor = await Promise.resolve(source.getVisitor());
+    const query = parseInput(VisitorQuerySchema, c.req.query());
+    const visitor = await Promise.resolve(source.getVisitor(query.label));
     if (!visitor) throw new SourceError(404, "NOT_FOUND", "No visitor agent yet");
     return c.json(VisitorResponseSchema.parse(visitor));
   });

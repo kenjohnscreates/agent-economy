@@ -1,8 +1,13 @@
 "use client";
-// M9.6 visitor panel: name an off-roster agent, wait for Arc USDC, chat to deposit.
-// Lives under the map so Mayor #11 stays on the right. Replay is read-only.
+// M9.6/M9.7 visitor panel: mint an off-roster agent, fund Arc USDC, chat to deposit.
+// One name per browser (localStorage). Subagents = ENS subdomains of that name.
 import { useEffect, useState, type FormEvent } from "react";
-import { ensNameFor, normalizeVisitorLabel, validateVisitorLabel } from "@agent-town/shared";
+import {
+  ensNameFor,
+  normalizeVisitorLabel,
+  validateVisitorLabel,
+  VISITOR_STORAGE_KEY,
+} from "@agent-town/shared";
 import { api, ApiRequestError } from "@/lib/api";
 import { TOWN_NAME } from "@/lib/config";
 import { formatUsdc } from "@/lib/usdc";
@@ -11,6 +16,22 @@ interface ChatLine {
   who: "you" | "agent";
   text: string;
   href?: string;
+}
+
+function readStoredLabel(): string | null {
+  try {
+    return localStorage.getItem(VISITOR_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredLabel(label: string): void {
+  try {
+    localStorage.setItem(VISITOR_STORAGE_KEY, label);
+  } catch {
+    /* private mode */
+  }
 }
 
 export function VisitorPanel({
@@ -23,6 +44,7 @@ export function VisitorPanel({
   onChanged: () => void;
 }) {
   const [label, setLabel] = useState("");
+  const [subLabel, setSubLabel] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [chat, setChat] = useState("");
@@ -33,6 +55,7 @@ export function VisitorPanel({
     arcAddress: string;
     balanceUsdc: string;
     explorerUrl: string;
+    subagents: { name: string; ensName: string }[];
   } | null>(null);
 
   const preview = (() => {
@@ -47,16 +70,23 @@ export function VisitorPanel({
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
+    const stored = readStoredLabel() ?? visitorName;
+    if (!stored) {
+      setInfo(null);
+      return;
+    }
     api
-      .visitor()
+      .visitor(stored)
       .then((v) => {
         if (cancelled) return;
+        writeStoredLabel(v.name);
         setInfo({
           name: v.name,
           ensName: v.ensName,
           arcAddress: v.arcAddress,
           balanceUsdc: v.balanceUsdc,
           explorerUrl: v.explorerUrl,
+          subagents: v.subagents,
         });
       })
       .catch((err) => {
@@ -75,12 +105,14 @@ export function VisitorPanel({
     setBusy("create");
     try {
       const v = await api.createVisitor({ label });
+      writeStoredLabel(v.name);
       setInfo({
         name: v.name,
         ensName: v.ensName,
         arcAddress: v.arcAddress,
         balanceUsdc: v.balanceUsdc,
         explorerUrl: v.explorerUrl,
+        subagents: v.subagents,
       });
       onChanged();
     } catch (err) {
@@ -90,19 +122,45 @@ export function VisitorPanel({
     }
   }
 
+  async function loadInfo() {
+    const stored = readStoredLabel();
+    const v = await api.visitor(stored ?? undefined);
+    setInfo({
+      name: v.name,
+      ensName: v.ensName,
+      arcAddress: v.arcAddress,
+      balanceUsdc: v.balanceUsdc,
+      explorerUrl: v.explorerUrl,
+      subagents: v.subagents,
+    });
+  }
+
   async function onRefresh() {
     if (!enabled) return;
     setBusy("refresh");
     try {
-      const v = await api.visitor();
-      setInfo({
-        name: v.name,
-        ensName: v.ensName,
-        arcAddress: v.arcAddress,
-        balanceUsdc: v.balanceUsdc,
-        explorerUrl: v.explorerUrl,
-      });
+      await loadInfo();
       onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function sendChat(text: string) {
+    if (!enabled || !info) return;
+    setLines((prev) => [...prev, { who: "you", text }]);
+    setBusy("chat");
+    setError(null);
+    try {
+      const res = await api.visitorChat({ text, label: info.name });
+      setLines((prev) => [
+        ...prev,
+        { who: "agent", text: res.reply, href: res.explorerUrl ?? undefined },
+      ]);
+      onChanged();
+      await loadInfo().catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -112,35 +170,18 @@ export function VisitorPanel({
 
   async function onChat(e: FormEvent) {
     e.preventDefault();
-    if (!enabled || !info) return;
     const text = chat.trim();
     if (!text) return;
     setChat("");
-    setLines((prev) => [...prev, { who: "you", text }]);
-    setBusy("chat");
-    setError(null);
-    try {
-      const res = await api.visitorChat({ text });
-      setLines((prev) => [
-        ...prev,
-        { who: "agent", text: res.reply, href: res.explorerUrl ?? undefined },
-      ]);
-      onChanged();
-      const v = await api.visitor().catch(() => null);
-      if (v) {
-        setInfo({
-          name: v.name,
-          ensName: v.ensName,
-          arcAddress: v.arcAddress,
-          balanceUsdc: v.balanceUsdc,
-          explorerUrl: v.explorerUrl,
-        });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
+    await sendChat(text);
+  }
+
+  async function onSubagent(e: FormEvent) {
+    e.preventDefault();
+    const n = subLabel.trim();
+    if (!n) return;
+    setSubLabel("");
+    await sendChat(`create subagent ${n}`);
   }
 
   const funded = info != null && BigInt(info.balanceUsdc) > 0n;
@@ -159,7 +200,7 @@ export function VisitorPanel({
         <form className="field" onSubmit={onCreate}>
           <p className="small visitor-copy">
             Mint <span className="mono">{preview}</span>, get a Circle wallet, then tell it to
-            deposit.
+            deposit. One name per browser; that name can mint ENS subagents.
           </p>
           <label className="label" htmlFor="visitor-label">
             Name
@@ -190,9 +231,20 @@ export function VisitorPanel({
             {" · "}
             {formatUsdc(info.balanceUsdc)} USDC
           </p>
+          {info.subagents.length > 0 ? (
+            <p className="small visitor-copy">
+              subagents:{" "}
+              {info.subagents.map((s) => (
+                <span className="mono" key={s.ensName}>
+                  {s.ensName}{" "}
+                </span>
+              ))}
+            </p>
+          ) : null}
           {!funded ? (
             <p className="small visitor-copy">
-              Send Arc USDC to that wallet, then refresh. (Not Sepolia USDC.)
+              Send Arc USDC to that wallet, then refresh. Same asset pays gas on Arc. Sepolia ETH is
+              not required — we mint the ENS name. Not Sepolia USDC.
             </p>
           ) : null}
           <div className="field-row">
@@ -212,7 +264,7 @@ export function VisitorPanel({
                 <span>{l.text}</span>
                 {l.href ? (
                   <a href={l.href} target="_blank" rel="noreferrer">
-                    arcscan
+                    tx
                   </a>
                 ) : null}
               </li>
@@ -228,11 +280,30 @@ export function VisitorPanel({
                 className="input"
                 value={chat}
                 onChange={(ev) => setChat(ev.target.value)}
-                placeholder="deposit 50% of our usdc into the town bank"
+                placeholder="deposit 50% of our holdings into town bank and tell me the expected pay out based on the current rate for a 30 day holding period"
                 disabled={busy != null}
               />
               <button className="btn primary" type="submit" disabled={busy != null || !chat.trim()}>
                 {busy === "chat" ? "Sending…" : "Send"}
+              </button>
+            </div>
+          </form>
+          <form className="field" onSubmit={onSubagent}>
+            <label className="label" htmlFor="visitor-sub">
+              Subagent (ENS subdomain)
+            </label>
+            <div className="field-row">
+              <input
+                id="visitor-sub"
+                className="input"
+                value={subLabel}
+                onChange={(ev) => setSubLabel(ev.target.value)}
+                placeholder="scout"
+                autoComplete="off"
+                disabled={busy != null}
+              />
+              <button className="btn" type="submit" disabled={busy != null || !subLabel.trim()}>
+                Mint subdomain
               </button>
             </div>
           </form>

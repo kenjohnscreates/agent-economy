@@ -100,8 +100,15 @@ export const api = {
     }),
   mayorRate: (body: MayorRateRequest): Promise<TxResponse> =>
     request(API_ROUTES.mayorRate, TxResponseSchema, { method: "POST", body: JSON.stringify(body) }),
-  visitor: (base?: string): Promise<VisitorResponse> =>
-    request(API_ROUTES.visitor, VisitorResponseSchema, undefined, base),
+  visitor: (label?: string, base?: string): Promise<VisitorResponse> =>
+    request(
+      label
+        ? `${API_ROUTES.visitor}?label=${encodeURIComponent(label)}`
+        : API_ROUTES.visitor,
+      VisitorResponseSchema,
+      undefined,
+      base,
+    ),
   createVisitor: (body: VisitorCreateRequest): Promise<VisitorResponse> =>
     request(API_ROUTES.visitor, VisitorResponseSchema, {
       method: "POST",

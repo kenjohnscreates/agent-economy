@@ -6,6 +6,7 @@
 > Companion docs: [ARCHITECTURE](ARCHITECTURE.md) · [MILESTONES](MILESTONES.md) · [AGENT-RUNBOOK](AGENT-RUNBOOK.md) · [RISKS](RISKS.md) · [STATUS](STATUS.md) · [SUBMISSION](SUBMISSION.md) · **[CYCLE](CYCLE.md)** (what bots do and say)
 >
 > **v0.3 (Sat 12 Sep):** one off-roster **visitor agent** + **UI layout** (Your agent panel, 9th card, 3×3 grid). Map stays 8 roster sprites. Chat allowlisted to balance + deposit. Stretch D (LP shares) still off.
+> **v0.4 (Sat 12 Sep):** public mint/deposit URL; one name per browser; that name can mint ENS **subdomains** as subagents; deposit chat quotes 30-day illustrative interest at live `townRateBps`.
 
 ---
 
@@ -24,7 +25,7 @@ Agent economies are invisible: wallets are hex, decisions are logs, money moves 
 
 ### In scope
 - Town of **8 rule-bot agents** across **4 roles**: `treasurer` (1), `merchant` (2), `worker` (3), `consumer` (2). They are **not** LLM agents: `decide()` is deterministic rules; LLM advisor/narrator default **off**.
-- **One off-roster visitor agent (M9.6):** a judge (or operator) mints a custom ENS label, gets a Circle SCA, funds **Arc Testnet USDC**, and chats an allowlisted deposit into the town bank. Not added to `AGENT_NAMES` / sim `decide()`. One visitor per machine (`packages/circle/visitor.json`, gitignored). Open registration of many users is still out of scope.
+- **One off-roster visitor agent (M9.6/M9.7):** a judge (or anyone on the public URL) mints a custom ENS label, gets a Circle SCA, funds **Arc Testnet USDC** (same asset pays Arc gas; Sepolia ETH is not required for the visitor), and chats an allowlisted deposit into the town bank. Deposit replies include a **30-day illustrative quote** at live `townRateBps` (`P × rate × 30d / (10_000 × 365d)`). That is not an on-chain credit to depositors — borrowers pay the bank. Not added to `AGENT_NAMES` / sim `decide()`. **One name per browser** (`localStorage`); the name can mint **ENS subdomains** (`scout.kenny.botanica.eth`). Server cap 32 visitors. Stretch D (LP shares) still off.
 - **Town Treasury** contract on Arc Testnet: deposits, credit lines, loans, repayments, interest, defaults.
 - **Jobs** via the ERC‑8183 reference contract on Arc (create → fund escrow → deliver → evaluate → settle).
 - **ENSv2 namespace** on Sepolia: `<town>.eth` with a subregistry; each agent = `<name>.<town>.eth` with role‑scoped permissions, Arc wallet address record, agent-context, credit score, reviews.

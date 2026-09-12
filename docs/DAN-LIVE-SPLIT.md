@@ -14,7 +14,7 @@ Ping in STATUS before a PR: `touching: <paths>`.
 - Bank panel **inbound** strip (Gateway) if wanted (optional; film arcscan)
 - Mayor live queue = subgraph pending ids (not fixture `L-3`)
 - Visitor admit + chat (`apps/api` + `VisitorPanel`) — #61
-- `API_MODE=real`, `ALLOW_BROADCAST` for mayor POSTs **and** visitor create/chat
+- `API_MODE=real`. Mayor POSTs need `ALLOW_BROADCAST=true`. Visitor mint/deposit need `ALLOW_VISITOR=true` (or `ALLOW_BROADCAST`). Public API should **not** set `ALLOW_BROADCAST` so random visitors cannot Approve #11.
 
 ## Dan / map agent (FE chrome)
 

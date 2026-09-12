@@ -163,17 +163,28 @@ describe("visitor", () => {
       true,
     );
     const chat = await post(API_ROUTES.visitorChat, {
-      text: "deposit 50% of our usdc into the town bank",
+      text: "deposit 50% of our holdings into town bank and tell me the expected pay out based on the current rate for a 30 day holding period",
     });
     expect(chat.status).toBe(200);
     const body = VisitorChatResponseSchema.parse(await chat.json());
     expect(body.reply).toMatch(/1 USDC/);
+    expect(body.reply).toMatch(/APY/);
+    expect(body.reply).toMatch(/not credited on-chain/);
     expect(body.txHash).toMatch(/^0x[0-9a-fA-F]{64}$/);
     const after = VisitorResponseSchema.parse(await (await app.request(API_ROUTES.visitor)).json());
     expect(after.balanceUsdc).toBe("1000000");
-    expect((await post(API_ROUTES.visitor, { label: "ivy" })).status).toBe(400);
+    const ivy = await post(API_ROUTES.visitor, { label: "ivy" });
+    expect(ivy.status).toBe(200);
+    const kenny = VisitorResponseSchema.parse(
+      await (await app.request(`${API_ROUTES.visitor}?label=kenny`)).json(),
+    );
+    expect(kenny.name).toBe("kenny");
+    const sub = VisitorChatResponseSchema.parse(
+      await (await post(API_ROUTES.visitorChat, { text: "create subagent scout", label: "kenny" })).json(),
+    );
+    expect(sub.reply).toMatch(/scout\.kenny\.botanica\.eth/);
     const refuse = VisitorChatResponseSchema.parse(
-      await (await post(API_ROUTES.visitorChat, { text: "approve loan L-2" })).json(),
+      await (await post(API_ROUTES.visitorChat, { text: "approve loan L-2", label: "kenny" })).json(),
     );
     expect(refuse.txHash).toBeNull();
   });
