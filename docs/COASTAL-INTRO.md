@@ -1,6 +1,6 @@
 # Botanica coastal intro
 
-The active intro uses Dan's selected `Use_this_frame_as_the_ending_f.mp4` directly. It replaces the earlier generated cloud animation. The video is H.264, 1280x720, about ten seconds, with its original audio track retained. The webpage plays it muted and inline. It is remuxed for fast-start without re-encoding its picture or audio.
+The active intro uses Dan's selected `Almost_perfect_but_the_first_f.mp4` directly. It replaces the earlier generated cloud animation and first replacement clip. The video is H.264, 1280x720, about ten seconds, with its original audio track retained. The webpage plays it muted and inline. It is remuxed for fast-start without re-encoding its picture or audio.
 
 ## Review
 
