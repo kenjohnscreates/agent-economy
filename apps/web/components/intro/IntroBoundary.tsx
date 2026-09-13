@@ -1,18 +1,17 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { INTRO_SESSION_KEY, introFinished, introMode } from "../../lib/intro";
-import { CoastalScene } from "./CoastalScene";
+import { INTRO_SESSION_KEY, videoIntroFinished, introMode } from "../../lib/intro";
+import { IntroVideo } from "./IntroVideo";
 import { IntroReadiness } from "./readiness";
 import styles from "./intro.module.css";
 
 let seenInMemory = false;
 export function IntroBoundary({ children }: { children: ReactNode }) {
   const [active, setActive] = useState(true);
-  const [assetsReady, setAssetsReady] = useState(false);
-  const [reduced, setReduced] = useState(false);
-  const [time, setTime] = useState(0);
-  const mapReady = useRef(false);
-  const readyAt = useRef<number | null>(null);
+  const [reduced, setReduced] = useState(true);
+  const [motionKnown, setMotionKnown] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
   const content = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const finish = useCallback(() => {
@@ -31,12 +30,12 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
   }, []);
   const notify = useCallback(
     (status: "ready" | "error") => {
-      mapReady.current = true;
+      setMapReady(true);
       if (status === "error") finish();
     },
     [finish],
   );
-  const loaded = useCallback(() => setAssetsReady(true), []);
+  const movieEnded = useCallback(() => setEnded(true), []);
   useEffect(() => {
     let seen = seenInMemory;
     try {
@@ -48,33 +47,18 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
     const media = matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => setReduced(media.matches);
     update();
+    setMotionKnown(true);
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
   useEffect(() => {
     if (!active) return;
-    const timeout = setTimeout(finish, 12000);
+    const timeout = setTimeout(finish, 20000);
     return () => clearTimeout(timeout);
   }, [active, finish]);
   useEffect(() => {
-    if (!active || !assetsReady) return;
-    let frame = 0;
-    const start = performance.now();
-    readyAt.current = null;
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      if (mapReady.current && readyAt.current === null) readyAt.current = elapsed;
-      setTime(elapsed);
-      if (introFinished(elapsed, readyAt.current, reduced)) finish();
-      else frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [active, assetsReady, reduced, finish]);
-  const fade =
-    !reduced && readyAt.current !== null
-      ? Math.max(0, Math.min(1, (time - Math.max(2100, readyAt.current)) / 400))
-      : 0;
+    if (active && motionKnown && videoIntroFinished(mapReady, ended, reduced)) finish();
+  }, [active, motionKnown, mapReady, ended, reduced, finish]);
   return (
     <IntroReadiness.Provider value={notify}>
       <div
@@ -88,13 +72,8 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
         {children}
       </div>
       {active && (
-        <div
-          ref={overlay}
-          className={styles.overlay}
-          style={{ opacity: 1 - fade }}
-          data-intro-overlay
-        >
-          <CoastalScene time={time} reduced={reduced} onReady={loaded} onError={finish} />
+        <div ref={overlay} className={styles.overlay} data-intro-overlay>
+          {motionKnown && <IntroVideo reduced={reduced} onEnded={movieEnded} onError={finish} />}
           <div className={styles.footer}>
             <span role="status">Opening Botanica</span>
             <button onClick={finish}>Skip intro</button>

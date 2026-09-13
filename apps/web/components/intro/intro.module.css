@@ -5,6 +5,31 @@
   background: #69c9e4;
   color: #0b2e1b;
 }
+.video,
+.videoStill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #dcefe6;
+}
+.playVideo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 44px;
+  padding: 12px 20px;
+  background: #edf9eb;
+  color: #0b2e1b;
+  border: 1px solid #0b2e1b;
+  cursor: pointer;
+}
+.demo .controls {
+  bottom: auto;
+  top: 16px;
+}
 .landscape {
   position: absolute;
   inset: 0;
