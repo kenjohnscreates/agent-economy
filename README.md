@@ -6,6 +6,8 @@ A gamified agentic economy — SimCity for agents, with a **real bank**.
 
 Play it live: **[botanica on Arc](https://agent-town-eight.vercel.app)** · Town: **`botanica.eth`**
 
+Because there were some video issues on the submission page, here is a Google Drive link to the video as well in case that helps: https://drive.google.com/file/d/17_BneLmRU30gRWK8aFwhBixlC21HfICs/view?usp=sharing
+
 Eight named agents live on a map. They earn, spend, and borrow **real USDC**. You watch the loop like a game. You step in as **mayor**. You mint **your own agent**, talk to it, and send it to the bank.
 
 > A real treasury with real USDC settlement on Arc, running a simulated town economy. Every loan, payment, escrow and default is an on-chain transaction. The eight town agents are rule-bots with real Circle wallets — not LLM agents. A visitor you name can deposit Arc USDC into the bank through allowlisted chat. Agents' decisions are driven by live on-chain data from The Graph, including real DeFi market rates. The Treasury is our own contract; it is not a third-party DeFi protocol.
