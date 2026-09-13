@@ -1,0 +1,212 @@
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #69c9e4;
+  color: #0b2e1b;
+}
+.landscape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+.robotPlane {
+  position: absolute;
+  width: max(100vw, 177.6833vh);
+  height: max(100vh, 56.2799vw);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.robot {
+  position: absolute;
+  left: 17.9426%;
+  top: 61.6366%;
+  width: 8.3134%;
+  height: 25.7173%;
+  image-rendering: pixelated;
+}
+.identity {
+  position: absolute;
+  top: 25%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.2vw;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 9vw;
+  font-weight: 700;
+  letter-spacing: -0.45vw;
+  line-height: 1;
+}
+.wordmark img {
+  width: 5.8vw;
+  height: 5.8vw;
+  image-rendering: pixelated;
+}
+.wordmark > :global(.wordmark) {
+  display: contents;
+  font: inherit;
+  letter-spacing: inherit;
+}
+.wordmark :global(.mark) {
+  width: 5.8vw;
+  height: 5.8vw;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.identity p {
+  margin: 1.6vw 0 0 7.5vw;
+  font-family: var(--font-space-mono), monospace;
+  font-size: 1.8vw;
+  letter-spacing: 0.43vw;
+  line-height: 1.5;
+}
+.clouds {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #dcefe6;
+}
+:global(html[data-coastal-intro="skip"]) .overlay {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .clouds {
+    display: none;
+  }
+  .robot {
+    transform: none !important;
+  }
+}
+.content:focus {
+  outline: none;
+}
+.footer {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: #0b2e1b;
+  font-family: var(--font-space-mono), monospace;
+  font-size: 12px;
+}
+.footer span[role="status"],
+.footer button,
+.controls {
+  background: #edf9eb;
+  border: 1px solid #0b2e1b;
+  padding: 12px 16px;
+}
+.footer button {
+  color: #0b2e1b;
+  cursor: pointer;
+  font: inherit;
+  min-height: 44px;
+}
+.footer button:focus-visible,
+.controls :focus-visible {
+  outline: 3px solid #0b2e1b;
+  outline-offset: 4px;
+}
+.demo {
+  position: fixed;
+  inset: 0;
+  background: #69c9e4;
+}
+.controls {
+  position: absolute;
+  z-index: 2;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: calc(100vw - 32px);
+  color: #0b2e1b;
+  font:
+    12px var(--font-space-mono),
+    monospace;
+}
+.controls button {
+  background: #0b2e1b;
+  color: #edf9eb;
+  padding: 10px 16px;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+}
+.controls input {
+  width: min(30vw, 320px);
+  accent-color: #176539;
+}
+@media (max-aspect-ratio: 4/5) {
+  .identity {
+    top: 24%;
+  }
+  .wordmark {
+    font-size: 13vw;
+    gap: 3vw;
+    letter-spacing: -0.65vw;
+  }
+  .wordmark img {
+    width: 9vw;
+    height: 9vw;
+  }
+  .wordmark :global(.mark) {
+    width: 9vw;
+    height: 9vw;
+  }
+  .identity p {
+    font-size: 2.9vw;
+    letter-spacing: 0.55vw;
+    margin: 3vw 0 0;
+  }
+  .robotPlane {
+    width: 100%;
+    height: 100%;
+  }
+  .robot {
+    left: 12%;
+    top: auto;
+    bottom: 8%;
+    width: auto;
+    height: 25%;
+  }
+  .controls {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: calc(100vw - 32px);
+  }
+  .footer {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    font-size: 10px;
+  }
+}
