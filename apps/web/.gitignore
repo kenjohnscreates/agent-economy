@@ -1,3 +1,5 @@
 .next/
 next-env.d.ts
 public/replay.json
+.vercel
+.env*

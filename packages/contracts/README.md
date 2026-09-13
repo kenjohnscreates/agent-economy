@@ -1,5 +1,7 @@
 # @agent-town/contracts
 
+The bank and the registrar — **TownTreasury** on Arc, **TownRegistrar** on Sepolia. Config-driven for mainnet later. Pitch: [root README](../../README.md).
+
 Foundry package for Agent Town on Arc Testnet (chain id 5042002).
 
 - Build: `forge build` · Test: `forge test -vv` · Lint: `forge fmt --check`

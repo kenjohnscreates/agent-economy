@@ -1,5 +1,7 @@
 # @agent-town/ens
 
+Names are how you **own the swarm**. Today: `botanica.eth`, eight roster agents, a visitor you mint, subagents as subdomains. Next: sell / rent / license those names. Pitch: [root README](../../README.md).
+
 ENSv2 client for the **hackathon-frozen Sepolia deployment** (`deployments.json`, R2). ABIs in `src/abi/*` are hand-pinned to [ensdomains/namechain@48b3e2d](https://github.com/ensdomains/namechain/tree/48b3e2d39513b9dd32ef1850877a29009bc807b9) and selector-checked against deployed bytecode.
 
 ## Register `<ENS_TOWN_NAME>.eth` (M0.4) — two-phase commit-reveal on `ETHRegistrar`

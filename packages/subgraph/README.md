@@ -1,5 +1,7 @@
 # @agent-town/subgraph
 
+The town's memory. Agents and the UI **decide from this index**, not mocked chain. Pitch: [root README](../../README.md).
+
 Indexes `TownTreasury` + ERC-8183 `AgenticCommerce` on **Arc Testnet**. Network id in the manifest is `arc-testnet` (eip155:5042002), not a made-up name (RISKS R5). Schema matches ARCHITECTURE §5 (entities + `TownStat` timeseries + `TownDaily` hour/day GDP sum). USDC amounts are 6-decimal base units (`BigInt`). Raw ERC-20 `Transfer` is not indexed (RISKS R4).
 
 ## Codegen

@@ -17,9 +17,34 @@ Checkpoints: **Thu 10 Sep 22:00** · **Sat 12 Sep 12:00**
 | M5 Frontend | done | FE | **M5.1–M5.11** on main · #53 README · #54 map framing · #55 stream-drop · mock = clone/rehearsal; **demo = real** |
 | M6 Integration + demo | in_progress | both | **M6.5** live 12-tick done · **cy #9 defaulted** · bo #10 repaid · mayor **#11 Pending** · deliver fix `a475ccb` · `API_MODE=real` + Supabase · **M6.7** #60 `3aae37f` ledger reuse |
 | M7 Review + docs | in_progress | reviewer | **M7.1** #45 · **M7.1b** #46 · **M7.2** #41 · **M7.3** #43 · **M7.1c** #49 `56d9b91` |
-| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live** · Replay → **#11** → new visitor · **M9.1 Gateway on Bank UI** · **M5.14** #64 `41bf932` · freeze Sun 08:00 |
+| M8 Video + submission | in_progress | both | Record **Sat 12 Sep live on Vercel** · Replay → **#11** → new visitor · prod API → `:3001` tunnel (broadcast on for take) · **M5.14** `41bf932` · header `293b25f` · freeze Sun 08:00 |
 
 ## Log
+
+## Sat 12 Sep 21:45 EDT
+Done: Root + package READMEs — vision (watch / direct / own the swarm), stacks, honest now-vs-next (Claude/GPT plug-in, ENS subagents, sell/rent/license). Live URL on README. Did **not** Approve #11.
+In progress: **film** on Vercel. After take: flip `ALLOW_BROADCAST` off + mayor lock popup.
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11**
+Next up: film. Stretch D off.
+`touching:` README.md + package READMEs. `apps/web` UI free.
+Checkpoint call: Sat 12:00 passed.
+
+## Sat 12 Sep 20:52 EDT
+Done: Vercel prod now talks to `:3001` (broadcast on) via tunnel `https://bin-cached-proceedings-formation.trycloudflare.com`. Redeploy `dpl` of `293b25f` aliased to https://agent-town-eight.vercel.app. Bundle has the new URL. Mayor empty POST is **400** not 501. Town data shows **#11 pending** + approve. Did **not** Approve #11. Did **not** restart `:3002`.
+In progress: **film all on Vercel** — Replay → Live Approve **#11** → new visitor (not ivy). After the take: `ALLOW_BROADCAST=false` + mayor 501 popup.
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · Studio 429
+Next up: film. Laptop awake (`:3001` + new tunnel). Stretch D off.
+`touching:` none. `apps/web` free after film (popup then).
+Checkpoint call: Sat 12:00 passed.
+
+## Sat 12 Sep 19:42 EDT
+Done: Header hotfix `293b25f` on main (Kenny, no PR). Header is `round {tick}` only — no boom/phase. Stream-status badge only when status ≠ mode (connecting/error). `SIGNALS · LIVE` stays. Feed still `round N · boom`. `apps/web` free. No follow-up FE card.
+Done: Kenny asked Graph for a Studio quota bump (no reply yet). `GRAPH_LAST_GOOD_LOANS=/tmp/graph-last-good-loans.json` now in local `.env`. Restarted `:3001` only — 429 (Retry-After capped 15 min) but seed loaded: 11 loans, **#11 pending**. Tunnel `:3002` still has the live cache — do not restart it. Did **not** Approve #11.
+In progress: **film** Replay → Live Approve **#11** (localhost) → new visitor (not ivy). Ivy dormant.
+Blocked: `revokeName` · 2nd default **bo** · `--ticks 12 --yes` until mayor **#11** · Studio 429 until Graph bump or 15 min backoff retry
+Next up: film. Stretch D off. Do **not** put header boom copy back. Do **not** Approve #11 until filming.
+`touching:` none. `apps/web` free.
+Checkpoint call: Sat 12:00 passed.
 
 ## Sat 12 Sep 19:25 EDT
 Done: **M5.14** [#64](https://github.com/kenjohnscreates/agent-economy/pull/64) squash-merged `41bf932`. Dan #62 rebased onto main (M9.7 visitor kept). Town data drawer + feed rail + Add your agent. Bank inbound gus Gateway 0.80 USDC (already settled). User-visible tick → **round**. Graph 429 Retry-After capped 15 min. `GRAPH_LAST_GOOD_LOANS=/tmp/graph-last-good-loans.json` dump has **#11**. [#62](https://github.com/kenjohnscreates/agent-economy/pull/62) closed. Did **not** Approve #11. Did **not** restart `:3002`. Did **not** `gateway-deposit --yes`.

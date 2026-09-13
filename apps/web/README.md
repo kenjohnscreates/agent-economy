@@ -1,6 +1,8 @@
 # @agent-town/web
 
-Botanica desktop UI for Agent Town (docs/ARCHITECTURE.md §9). Next.js app router, 1440×900 target, built on the frozen `@agent-town/shared` contract and the mock/real API on port 3001.
+The game window for Agent Town. Watch the swarm on a map. Direct yours from **Add your agent**. Mayor lives in **Town data**.
+
+Live: [agent-town-eight.vercel.app](https://agent-town-eight.vercel.app) · 1440×900 · Next.js + Pixi. Product pitch and stacks: [root README](../../README.md).
 
 ## Run
 
@@ -42,7 +44,7 @@ One object, `TownState` (`lib/store.ts`), holds everything the screen shows. Eve
 - `lib/connect.ts`: retry backoff and the wording for warming / unreachable / failed.
 - `lib/links.ts`: arcscan wallet link, ENS explorer link, and `<town>` placeholder substitution for the mock.
 - `lib/rate.ts`: bank panel helpers: the rate stack (market APY + spread + default premium = town rate), utilisation tone, fetch age, loan book buckets, latest advisor verdict.
-- `components/Shell.tsx`: Forest shell: world window (`MapSlot`), agent cards, scoreboard, bank panel, feed, stream controls.
+- `components/Shell.tsx`: map is the screen. **Town data** drawer = scoreboard / bank / mayor. Feed is a glass rail. **Add your agent** opens the visitor panel. Agents tab = cards (visitor = 9th, never a 9th sprite).
 - `components/BankPanel.tsx`: treasury balance, utilisation, base and town rate, loan book with advisor reasoning. `RateTooltip.tsx` is the hover/focus breakdown of the town rate from `scoreboard.rate` and `scoreboard.signals` (source subgraph, raw market APY, fetch time). `StaleBadge.tsx` appears when `signals.stale` is true.
 - `components/MapSlot.tsx` holds the frozen contract for the map: the `MapSlotProps` type, the `ZONES` rectangles in the 640 by 360 native frame, and `zonePoint()`. It renders `components/map/TownMap.tsx`, which owns the real PixiJS scene (card M5.2, #51). Nothing outside `components/map` knows that Pixi exists, so the rest of the app talks to the map only through those props.
 

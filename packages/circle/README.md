@@ -1,6 +1,8 @@
 # @agent-town/circle
 
-Circle Developer-Controlled **SCA** wallets on `ARC-TESTNET` — 8 agents + `mayor` — plus execute/transfer/poll helpers. No live calls without `--yes`.
+Every agent gets a **Circle SCA** and spends real Arc USDC. Today: 8 rule-bots + mayor + visitor. Next: Claude / GPT / any runtime behind the same wallet. Pitch: [root README](../../README.md).
+
+Developer-Controlled SCAs on `ARC-TESTNET` — 8 agents + `mayor` — plus execute/transfer/poll helpers. No live calls without `--yes`.
 
 **Setup order (human, once)**
 
