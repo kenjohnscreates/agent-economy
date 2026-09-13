@@ -8,10 +8,19 @@ import fixture from "../../fixtures/replay.json";
 import { MapSlot } from "../../components/MapSlot";
 import { openReplay, ReplayFileSchema, type ReplayControls } from "../../lib/replay";
 import { initialState, reduce } from "../../lib/store";
+import { IntroBoundary } from "../../components/intro/IntroBoundary";
 
 const recording = ReplayFileSchema.parse(fixture);
 
 export default function MapDemo() {
+  return (
+    <IntroBoundary>
+      <MapDemoContent />
+    </IntroBoundary>
+  );
+}
+
+function MapDemoContent() {
   const [state, setState] = useState(initialState);
   const [selected, setSelected] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);

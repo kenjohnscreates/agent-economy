@@ -7,6 +7,7 @@ import type { MapSlotProps } from "../MapSlot";
 import type { TownScene } from "./scene";
 import { isMonetary, txDirection } from "../../lib/direction";
 import { formatUsdc } from "../../lib/usdc";
+import { useIntroReadiness } from "../intro/readiness";
 
 export function mapDescription(p: MapSlotProps): string {
   let description = `Town map, round ${p.tick}, phase ${p.phase}, ${p.agents.length} agents`;
@@ -19,6 +20,7 @@ export function mapDescription(p: MapSlotProps): string {
 }
 
 export function TownMap(props: MapSlotProps) {
+  const notifyIntro = useIntroReadiness();
   const host = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const latest = useRef(props);
@@ -61,10 +63,13 @@ export function TownMap(props: MapSlotProps) {
         for (const p of queued.current) owned.set(p);
         queued.current = [];
         element.dataset.ready = "true";
+        notifyIntro("ready");
       })
       .catch((e: unknown) => {
-        if (!cancelled)
+        if (!cancelled) {
           setError(e instanceof Error ? e.message : "Unable to initialize the town map");
+          notifyIntro("error");
+        }
       });
     return () => {
       cancelled = true;
@@ -73,7 +78,7 @@ export function TownMap(props: MapSlotProps) {
       if (scene.current === owned) scene.current = null;
       delete element.dataset.ready;
     };
-  }, []);
+  }, [notifyIntro]);
 
   return (
     <div
