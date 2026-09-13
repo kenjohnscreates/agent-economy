@@ -53,6 +53,8 @@ Mermaid: [docs/ARCHITECTURE.md §1](docs/ARCHITECTURE.md#1-system-overview).
 
 ## Deployed (verify on explorers)
 
+**Full tx list (loans #1–#11, jobs, Gateway, ENS):** [docs/ONCHAIN.md](docs/ONCHAIN.md). Circle SCA txs show as ERC-4337 `handleOps` — open **Logs**, not the top-level `to`.
+
 ### Arc Testnet (`5042002`)
 
 | Contract | Address |
@@ -123,7 +125,7 @@ Mayor POSTs are **501** without `ALLOW_BROADCAST`. Visitor mint/chat need `ALLOW
 
 ## Docs
 
-- [PRD](docs/PRD.md) · [Cycle](docs/CYCLE.md) · [Architecture](docs/ARCHITECTURE.md)
+- [On-chain proof](docs/ONCHAIN.md) · [PRD](docs/PRD.md) · [Cycle](docs/CYCLE.md) · [Architecture](docs/ARCHITECTURE.md)
 - [Submission](docs/SUBMISSION.md) · [Status](docs/STATUS.md) · [Runbook](docs/AGENT-RUNBOOK.md)
 
 ## License
