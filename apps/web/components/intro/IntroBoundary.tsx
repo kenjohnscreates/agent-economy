@@ -60,16 +60,18 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
       {active && (
         <div ref={overlay} className={styles.overlay} data-intro-overlay>
           {motionKnown && <IntroVideo reduced={reduced} onEnded={movieEnded} onError={finish} />}
-          <div className={styles.footer}>
-            <span role="status">{showEnter ? "Botanica is ready" : "Opening Botanica"}</span>
-            <div className={styles.actions}>
-              <button onClick={finish}>Skip intro</button>
-              {showEnter && (
+          {showEnter && (
+            <div className={styles.enterWrap}>
+              <div className={styles.enterFrame}>
                 <button className={styles.enter} onClick={finish}>
                   Enter
                 </button>
-              )}
+              </div>
             </div>
+          )}
+          <div className={styles.footer}>
+            <span role="status">{showEnter ? "Botanica is ready" : "Opening Botanica"}</span>
+            <button onClick={finish}>Skip intro</button>
           </div>
         </div>
       )}
