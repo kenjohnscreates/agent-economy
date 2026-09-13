@@ -4,7 +4,7 @@ The active intro uses Dan's selected `Almost_perfect_but_the_first_f.mp4` direct
 
 ## Review
 
-- `/?intro=force` or `/map-demo?intro=force`: play the full clip; **Enter** appears under the Botanica title on the last frame (Skip stays in the footer). No automatic cut.
+- `/?intro=force` or `/map-demo?intro=force`: play the full clip; **Enter** appears in the water below THE AGENT ECONOMY on the last frame (Skip stays in the footer). No automatic cut.
 - `?intro=skip`: enter immediately.
 - Normal entry: once per tab, using session storage with a current-document memory fallback when storage is denied.
 - `/intro-demo`: preview with native playback/seek controls, Replay, and a direct Download video link.
