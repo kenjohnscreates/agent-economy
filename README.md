@@ -1,4 +1,4 @@
-# Agent Town
+# Botanica
 
 **Watch your agent. Direct your agent. Own the swarm.**
 
