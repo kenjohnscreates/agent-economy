@@ -4,16 +4,16 @@ The active intro uses Dan's selected `Almost_perfect_but_the_first_f.mp4` direct
 
 ## Review
 
-- `/?intro=force` or `/map-demo?intro=force`: play the full clip, then enter the existing town after its canvas is ready.
+- `/?intro=force` or `/map-demo?intro=force`: play the full clip; **Enter** appears on the last frame (Skip stays available). No automatic cut.
 - `?intro=skip`: enter immediately.
 - Normal entry: once per tab, using session storage with a current-document memory fallback when storage is denied.
 - `/intro-demo`: preview with native playback/seek controls, Replay, and a direct Download video link.
 
 The viewport contains the entire 16:9 frame. Narrow phones use a pale background around the video rather than cropping out the robot or lighthouse. The video already contains the chosen visual composition; no generated lettering or extra robot is overlaid.
 
-Reduced motion displays `public/intro/ending.webp`, extracted from the supplied clip near its ending, and does not mount or download a video element. Changing the motion preference during playback pauses and unmounts the video. No motion starts before the preference is known.
+Reduced motion displays `public/intro/ending.webp`, extracted from the supplied clip near its ending, and does not mount or download a video element. **Enter** is available immediately with the still. Changing the motion preference during playback pauses and unmounts the video. No motion starts before the preference is known.
 
-The application initializes behind an inert wrapper. Skip is keyboard accessible and immediately removes the video. The intro never autofocuses; removing a focused Skip control restores focus to the content wrapper without scrolling. Video failure, map initialization failure, or a 20-second safety timeout reveals the application and its existing status. Timeout does not claim readiness. Otherwise, both the real video `ended` event and TownMap readiness are required before automatic dismissal.
+The application initializes behind an inert wrapper. Skip is keyboard accessible and immediately removes the video. After `ended` (or reduced motion), **Enter** appears and is the only way into town besides Skip — no auto-dismiss, no 20-second timeout. The intro never autofocuses; removing a focused footer control restores focus to the content wrapper without scrolling. Video failure still reveals the application. Map readiness no longer dismisses the overlay.
 
 The map readiness context remains frontend-local. MapSlotProps, ZONES, zonePoint, live/replay semantics, visitor rules, API and wallet behavior are unchanged. Muted autoplay rejection presents a Play intro button while Skip remains available.
 

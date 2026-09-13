@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { INTRO_SESSION_KEY, videoIntroFinished, introMode } from "../../lib/intro";
+import { INTRO_SESSION_KEY, enterPromptVisible, introMode } from "../../lib/intro";
 import { IntroVideo } from "./IntroVideo";
 import { IntroReadiness } from "./readiness";
 import styles from "./intro.module.css";
@@ -11,7 +11,6 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
   const [reduced, setReduced] = useState(true);
   const [motionKnown, setMotionKnown] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
   const content = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const finish = useCallback(() => {
@@ -28,13 +27,7 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
       content.current.focus({ preventScroll: true });
     }
   }, []);
-  const notify = useCallback(
-    (status: "ready" | "error") => {
-      setMapReady(true);
-      if (status === "error") finish();
-    },
-    [finish],
-  );
+  const notify = useCallback(() => {}, []);
   const movieEnded = useCallback(() => setEnded(true), []);
   useEffect(() => {
     let seen = seenInMemory;
@@ -51,14 +44,7 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
-  useEffect(() => {
-    if (!active) return;
-    const timeout = setTimeout(finish, 20000);
-    return () => clearTimeout(timeout);
-  }, [active, finish]);
-  useEffect(() => {
-    if (active && motionKnown && videoIntroFinished(mapReady, ended, reduced)) finish();
-  }, [active, motionKnown, mapReady, ended, reduced, finish]);
+  const showEnter = motionKnown && enterPromptVisible(ended, reduced);
   return (
     <IntroReadiness.Provider value={notify}>
       <div
@@ -75,8 +61,15 @@ export function IntroBoundary({ children }: { children: ReactNode }) {
         <div ref={overlay} className={styles.overlay} data-intro-overlay>
           {motionKnown && <IntroVideo reduced={reduced} onEnded={movieEnded} onError={finish} />}
           <div className={styles.footer}>
-            <span role="status">Opening Botanica</span>
-            <button onClick={finish}>Skip intro</button>
+            <span role="status">{showEnter ? "Botanica is ready" : "Opening Botanica"}</span>
+            <div className={styles.actions}>
+              <button onClick={finish}>Skip intro</button>
+              {showEnter && (
+                <button className={styles.enter} onClick={finish}>
+                  Enter
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

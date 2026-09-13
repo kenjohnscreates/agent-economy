@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { introMode, videoIntroFinished } from "./intro";
+import { enterPromptVisible, introMode } from "./intro";
 
 describe("coastal intro lifecycle", () => {
-  it("waits for both the supplied movie ending and the map, except in reduced motion", () => {
-    expect(videoIntroFinished(true, false, false)).toBe(false);
-    expect(videoIntroFinished(false, true, false)).toBe(false);
-    expect(videoIntroFinished(true, true, false)).toBe(true);
-    expect(videoIntroFinished(true, false, true)).toBe(true);
-    expect(videoIntroFinished(false, false, true)).toBe(false);
+  it("shows Enter after the clip ends, or immediately under reduced motion", () => {
+    expect(enterPromptVisible(false, false)).toBe(false);
+    expect(enterPromptVisible(true, false)).toBe(true);
+    expect(enterPromptVisible(false, true)).toBe(true);
+    expect(enterPromptVisible(true, true)).toBe(true);
   });
   it("honors explicit links before the per-tab preference", () => {
     expect(introMode("?intro=force", true)).toBe(true);

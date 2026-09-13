@@ -58,11 +58,20 @@
   border: 1px solid #0b2e1b;
   padding: 12px 16px;
 }
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .footer button {
   color: #0b2e1b;
   cursor: pointer;
   font: inherit;
   min-height: 44px;
+}
+.footer button.enter {
+  background: #0b2e1b;
+  color: #edf9eb;
 }
 .footer button:focus-visible,
 .controls :focus-visible {
