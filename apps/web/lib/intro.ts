@@ -8,9 +8,3 @@ export function introMode(search: string, seen: boolean): boolean {
   const mode = new URLSearchParams(search).get("intro");
   return mode === "force" || (mode !== "skip" && !seen);
 }
-export function revealProgress(time: number, movie = false): number {
-  return Math.max(0, Math.min(1, (time - (movie ? 600 : 350)) / (movie ? 4000 : 1750)));
-}
-export function introFinished(time: number, readyAt: number | null, reduced: boolean): boolean {
-  return readyAt !== null && (reduced || time >= Math.max(2100, readyAt) + 400);
-}

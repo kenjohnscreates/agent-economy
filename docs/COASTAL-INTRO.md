@@ -21,4 +21,4 @@ The map readiness context remains frontend-local. MapSlotProps, ZONES, zonePoint
 
 Web typecheck, lint, unit tests and production build pass. The replacement-specific browser checks cover full playback and ready-map handoff, keyboard Skip, session suppression, reduced-motion media emulation, failed media, phone framing and Replay. Prior generated-animation acceptance reports are historical and do not describe this replacement.
 
-The source video is now a required runtime asset committed at `apps/web/public/intro/reveal.mp4`. Downloading it preserves its audio track; the loading screen stays silent. The old generated renderer remains in source history and is not imported by the active intro or preview.
+The source video is now a required runtime asset committed at `apps/web/public/intro/reveal.mp4`. Downloading it preserves its audio track; the loading screen stays silent. The earlier generated renderer and its landscape and robot assets were removed after the video replacement made them unused.
