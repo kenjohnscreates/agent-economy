@@ -50,6 +50,7 @@ This repository started **8 Sep 2026** with no prior Agent Town code — eligibl
 | Item | Value |
 |---|---|
 | **Repository** | https://github.com/kenjohnscreates/agent-economy |
+| **On-chain proof (all txs)** | [docs/ONCHAIN.md](ONCHAIN.md) |
 | **TownTreasury (Arc)** | https://testnet.arcscan.app/address/0xCE0ed3b88F60EefB8EA77D1daeC5cEE3a9e4FfC1 |
 | **USDC (Arc, 6 dec)** | https://testnet.arcscan.app/address/0x3600000000000000000000000000000000000000 |
 | **ERC-8183 jobs (Arc)** | https://testnet.arcscan.app/address/0x0747EEf0706327138c69792bF28Cd525089e4583 |
@@ -121,7 +122,7 @@ Mayor POSTs need `ALLOW_BROADCAST=true` or they 501. Public visitor mint uses `A
 
 **Order.** Replay → **Approve loan #11** on localhost → **Add your agent** (new name, not ivy) + Arc USDC + deposit chat. Toast hashes must be real [arcscan](https://testnet.arcscan.app) txs. Do **not** `markDefault` **bo**. Do **not** run another `--ticks 12 --yes` before the #11 click.
 
-**What is already on chain (cut to explorer, do not re-run the 12-tick):** cy **#9 Defaulted**; bo **#10 Repaid**; buys, jobs, `set_rate`; Gateway mint [0x14fad3ea…](https://testnet.arcscan.app/tx/0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea).
+**What is already on chain (cut to explorer, do not re-run the 12-tick):** full hashes in [ONCHAIN.md](ONCHAIN.md). cy **#9 Defaulted** [0x8d19ced2…](https://testnet.arcscan.app/tx/0x8d19ced212882014f87be839b349257f9489c0832dafe7a5221d133950a8173d); bo **#10 Repaid** [0x23c9a653…](https://testnet.arcscan.app/tx/0x23c9a653cebdfe44a7bb5509e82a4a40f5820d85282ccc58ac38dec8ba038679); Gateway mint [0x14fad3ea…](https://testnet.arcscan.app/tx/0x14fad3ea624b2343524282dabe26f35900b8e30b0f4e2021516b2cb523a5d3ea).
 
 **UI.** Map (8 sprites) · feed rail · Town data drawer (scoreboard / bank + Gateway inbound / mayor #11) · Add your agent button · Agents tab. Do not put the visitor on the Pixi map.
 
